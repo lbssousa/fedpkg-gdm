@@ -3,91 +3,38 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.0beta2
-Release: 46
+Version: 2.2.3.1
+Release: 16
 Epoch: 1
-Copyright: LGPL/GPL
+License: LGPL/GPL
 Group: User Interface/X
-Source: ftp://ftp.socsci.auc.dk/pub/empl/mkp/gdm-%{PACKAGE_VERSION}.tar.gz
+Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.gz
 Source1: Gnome.session
 Source2: Default.session
 Source5: Failsafe.session
-Source6: gdm-po.tar.gz
 
-# FIXME: remove dead patches once we are sure they are really dead.  :-)
-Patch0: gdm-2.0beta2-rhconf.patch
-# msw says not needed.  :-)
-Patch1: gdm-2.0beta1-installdirs.patch
-# /etc/X11/gdm/gnomerc is missing...
-Patch3: gdm-gnomerc.patch
-# Patch4 not currently applied, but kept around for potential later use
-Patch4: gdm-1.0.0-rhgreeter.patch
-Patch7: gdm-2.0beta1-nosound.patch
-# Patch8 not currently applied; make sure that tab completion isn't there
-Patch8: gdm-1.0.0-notabcmpltion.patch
-# Patch9 should now be unnecessary
-Patch9: gdm-1.0.0-signal.patch
-Patch10: gdm-2.0beta1-sessions.patch
-# Patch11 should now be unnecessary
-Patch11: gdm-1.0.0-nosuspend.patch
-# Patch12 does not seem to be necessary
-Patch12: gdm-1.0.0-dontblastlogo.patch
-# We probably need this, but I don't know how to apply it right now...
-Patch13: gdm-1.0.0-fixlangs2.patch
-# Probably unnecessary
-Patch14: gdm-1.0.0-noclosedspy.patch
-# depends on fixlangs2
-Patch15: gdm-1.0.0-norwegian.patch
-# photo stuff is gone now?
-Patch16: gdm-1.0.0-photofix.patch
-
-## a couple of security backports from GNOME 2.4
-Patch19: gdm-2.0beta2-crash.patch
-
-Patch20: gdm-2.0beta2-sopfixes.patch
-Patch21: gdm-2.0beta2-daemonfixes.patch
-Patch22: gdm-2.0beta2-sop2.patch
-Patch23: gdm-2.0beta2-xdmcp.patch
-Patch24: gdm-2.0beta2-dblclick.patch
-# 25 is RH-specific
-Patch25: gdm-2.0beta2-rhconf2.patch
-Patch26: gdm-2.0beta2-norootcheck.patch
-Patch27: gdm-2.0beta2-dumberrmsg.patch
-#Patch28: gdm-2.0beta2-fixlang.patch
-# 29 is RH-specific
-Patch29: gdm-2.0beta2-noiconify.patch
-#Patch 30 is RH-specific
-Patch30: gdm-2.0beta2-fixsesslang.patch
-
-Patch31: gdm-2.0beta2-loginhang.patch
-Patch32: gdm-2.0beta2-nogdmconfig.patch
-Patch33: gdm-2.0beta2-pipewrite.patch
-
-Patch34: gdm-2.0beta2-i18n.patch
-Patch35: gdm-2.0beta2-ru.patch
-
-Patch36: gdm-2.0beta2-chpass.patch
-Patch37: gdm-2.0beta2-fixmessages.patch
-Patch38: gdm-2.0beta2-fixfirstmessage.patch
-Patch39: gdm-2.0beta2-usershell.patch
-Patch40: gdm-2.0beta2-system-auth.patch
-Patch41: gdm-2.0beta2-security2.patch
-Patch42: gdm-2.0beta2-fdleak.patch
-Patch43: gdm-2.0beta2-loopofdeath.patch
-Patch44: gdm-2.0beta2-it.patch
-Patch45: gdm-2.0beta2-ja.po.patch
-Patch46: gdm-2.0beta2-rhconf3.patch
-Patch47: gdm-2.0beta2-localeh.patch
-Patch48: gdm-2.0beta2-colors.patch
-Patch49: gdm-2.0beta2-setcred.patch
+Patch1: gdm-2.2.3.1-rhconfig.patch
+Patch2: gdm-2.2.3.1-formatstrings.patch
+Patch3: gdm-2.2.3.1-sessionsel.patch
+# Set RUNNING_UNDER_GDM when running the display init script
+Patch4: gdm-2.2.3.1-runningunder.patch
+Patch5: gdm-2.2.3.1-pamcfg.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
 Prereq: /usr/sbin/useradd
+Prereq: /usr/bin/scrollkeeper-update
 Requires: pam >= 0.68
-Requires: gnome-libs >= 1.0.17
+Requires: gnome-libs >= 1.2.13
 Requires: /etc/pam.d/system-auth
 Requires: /etc/X11/xdm/Xsession
+Requires: usermode
+Requires: xinitrc
+Requires: xsri >= 2.0.2
+Requires: /sbin/nologin
+BuildRequires:  scrollkeeper >= 0.1.4
+BuildRequires:  usermode, pam-devel
+BuildRequires:  gnome-libs >= 1.2.13
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -97,76 +44,27 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
-%patch0 -p1 -b .rhconf
-#%patch1 -p1 -b .installdirs
-%patch3 -p1 -b .gnomerc
-#%patch4 -p1 -b .rhgreeter
-# don't know if this is necessary, as gdm.conf adds --disable-sound
-%patch7 -p1 -b .nosound
-#%patch8 -p1 -b .notabcmpltion
-#%patch9 -p1 -b .signal
-%patch10 -p1 -b .sessions
-#%patch11 -p1 -b .nosuspend
-#%patch12 -p1 -b .dontblastlogo
-#%patch13 -p1 -b .fixlangs
-#%patch14 -p1 -b .noclosedspl
-#%patch15 -p1 -b .norwegian
-#%patch16 -p1 -b .photofix
 
-%patch19 -p1 -b .crash
-
-%patch20 -p1 -b .sopgui
-%patch21 -p1 -b .sopdaemon
-%patch22 -p1 -b .soproot
-%patch23 -p1 -b .xdmcp
-%patch24 -p1 -b .dblclick
-%patch25 -p1 -b .rhconf2
-%patch26 -p1 -b .norootcheck
-%patch27 -p1 -b .dumberrmsg
-#%patch28 -p1 -b .fixlang
-%patch29 -p1 -b .noiconify
-%patch30 -p1 -b .fixsesslang
-%patch31 -p1 -b .loginhang
-%patch32 -p1 -b .nogdmconfig
-%patch33 -p1 -b .pipewrite
-%patch34 -p1 -b .i18n
-%patch35 -p1 -b .ru
-%patch36 -p1 -b .chpass
-%patch37 -p1 -b .fixmessages
-%patch38 -p1 -b .fixfirstmessage
-%patch39 -p1 -b .usershell
-%patch40 -p1 -b .system-auth
-%patch41 -p1 -b .security2
-%patch42 -p1 -b .fdleak
-%patch43 -p1 -b .loopofdeath
-%patch44 -p1 -b .it
-%patch45 -p1 -b .jaupdate
-%patch46 -p1 -b .rhconf3
-%patch47 -p1 -b .localeh
-%patch48 -p1 -b .colors
-%patch49 -p1 -b .setcred
-
-# So it doesn't get automatically rebuilt
-touch -t '199001010000' configure.in
-
-# translations
-tar zxf %{SOURCE6}
+%patch1 -p1 -b .rhconfig
+%patch2 -p1 -b .formatstrings
+%patch3 -p1 -b .sessionsel
+%patch4 -p1 -b .runningunder
+%patch5 -p1 -b .pamcfg
 
 %build
-libtoolize --force
-automake
-autoconf
-autoheader
-CFLAGS="-g $RPM_OPT_FLAGS" ./configure --prefix=%prefix --sysconfdir=/etc/X11 --localstatedir=/var
+%configure --prefix=%prefix --sysconfdir=/etc/X11 --with-pam-prefix=$RPM_BUILD_ROOT/etc --localstatedir=/var --enable-console-helper
 make
-(cd config; make gdm.conf gnomerc Gnome)
 
 %install
-rm -rf $RPM_BUILD_ROOT
+[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
-/usr/sbin/useradd -r gdm > /dev/null 2>&1 || /bin/true
 
-make prefix=$RPM_BUILD_ROOT%{prefix} sysconfdir=$RPM_BUILD_ROOT/etc/X11 localstatedir=$RPM_BUILD_ROOT/var install
+make sysconfdir=$RPM_BUILD_ROOT/etc/X11 \
+    prefix=$RPM_BUILD_ROOT%{_prefix} bindir=$RPM_BUILD_ROOT%{_bindir} \
+    datadir=$RPM_BUILD_ROOT%{_datadir} \
+    localstatedir=$RPM_BUILD_ROOT%{_localstatedir} \
+    sbindir=$RPM_BUILD_ROOT%{_sbindir} install
+
 # docs go elsewhere
 rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 
@@ -184,48 +82,146 @@ install -m 644 config/gnomerc $RPM_BUILD_ROOT/etc/X11/gdm/gnomerc
 # change default Init script to be Red Hat default
 ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT/etc/X11/gdm/Init/Default
 
-# run GiveConsole/TakeConsole
-mkdir $RPM_BUILD_ROOT/etc/X11/gdm/PreSession
-mkdir $RPM_BUILD_ROOT/etc/X11/gdm/PostSession
-ln -sf ../../xdm/GiveConsole $RPM_BUILD_ROOT/etc/X11/gdm/PreSession/Default
-ln -sf ../../xdm/TakeConsole $RPM_BUILD_ROOT/etc/X11/gdm/PostSession/Default
-
-# move pam.d stuff to right place
-mv $RPM_BUILD_ROOT/etc/X11/pam.d $RPM_BUILD_ROOT/etc
-
-rm $RPM_BUILD_ROOT%{prefix}/bin/gdmconfig
+# create log dir
+mkdir -p $RPM_BUILD_ROOT/var/log/gdm
 
 %find_lang %name
-
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %pre
-/usr/sbin/useradd -u 42 -r gdm > /dev/null 2>&1
+/usr/sbin/useradd -M -u 42 -d /var/gdm -s /sbin/nologin -r gdm > /dev/null 2>&1
+/usr/sbin/usermod -d /var/gdm -s /sbin/nologin gdm >/dev/null 2>&1
 # ignore errors, as we can't disambiguate between gdm already existed
 # and couldn't create account with the current adduser.
 exit 0
+
+%post
+/sbin/ldconfig
+scrollkeeper-update
+
+%postun
+/sbin/ldconfig
+scrollkeeper-update
 
 %files -f %{name}.lang
 %defattr(-, root, root)
 
 %doc AUTHORS COPYING ChangeLog NEWS README
-%{prefix}/bin/*
-%config /etc/pam.d/gdm
-%config /etc/X11/gdm/gnomerc
+
+%dir /etc/X11/gdm
 %config /etc/X11/gdm/gdm.conf
+/etc/X11/gdm/factory-gdm.conf
+%config /etc/X11/gdm/XKeepsCrashing
 %config /etc/X11/gdm/locale.alias
 %config /etc/X11/gdm/Sessions/*
 %config /etc/X11/gdm/Init/*
 %config /etc/X11/gdm/PreSession/*
 %config /etc/X11/gdm/PostSession/*
-%{prefix}/share/pixmaps/*
-%attr(750, gdm, gdm) %dir /var/gdm
+%config /etc/X11/gdm/gnomerc
+%config /etc/pam.d/gdm
+%config /etc/pam.d/gdmconfig
+%config /etc/security/console.apps/gdmconfig
+%dir /etc/X11/gdm/Sessions
+%dir /etc/X11/gdm/Init
+%dir /etc/X11/gdm/PreSession
+%dir /etc/X11/gdm/PostSession
+%{_datadir}/pixmaps/gdm.xpm
+%{_datadir}/pixmaps/nobody.png
+%{_datadir}/pixmaps/nohost.png
+%{_datadir}/gdm
+%{_datadir}/gnome/apps/Settings/gdmphotosetup.desktop
+%{_datadir}/gnome/apps/System/gdmconfig.desktop
+%{_datadir}/gnome/help/gdm
+%{_datadir}/gnome/help/gdmconfig
+%{_datadir}/omf/gdm
+%{_bindir}/*
+%{_sbindir}/*
+%{_localstatedir}/log/gdm
+
+%attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com>
-- fix a security issue CAN-2003-0547 bugzilla #102275
+* Tue Aug 14 2001 Havoc Pennington <hp@redhat.com>
+- change default title font to work in CJK, #51698
+
+* Wed Aug  8 2001 Bill Nottingham <notting@redhat.com>
+- fix %pre for using /var/gdm as home dir
+
+* Sun Aug  5 2001 Nalin Dahyabhai <nalin@redhat.com>
+- Tweak PAM setup for gdmconfig to match other consolehelper users
+
+* Fri Aug  3 2001 Owen Taylor <otaylor@redhat.com>
+- Set RUNNING_UNDER_GDM when running display init script
+- Run xsri as the background program
+
+* Thu Aug 02 2001 Havoc Pennington <hp@redhat.com>
+- Change how session switching works, #49480
+- don't offer to make Failsafe the default, #49479
+
+* Thu Aug 02 2001 Havoc Pennington <hp@redhat.com>
+- clean up some format string mess, and don't
+  log username to syslog, #5681
+- own some directories #50692
+
+* Wed Aug 01 2001 Havoc Pennington <hp@redhat.com>
+- require/buildrequire latest gnome-libs, to compensate
+  for upstream crackrock. #50554
+
+* Tue Jul 31 2001 Havoc Pennington <hp@redhat.com>
+- get rid of GiveConsole/TakeConsole, bug #33710
+
+* Sun Jul 22 2001 Havoc Pennington <hp@redhat.com>
+- use Raleigh theme for gdm
+
+* Thu Jul 19 2001 Havoc Pennington <hp@redhat.com>
+- depend on usermode, xinitrc
+ 
+* Thu Jul 19 2001 Havoc Pennington <hp@redhat.com>
+- build requires pam-devel, should fix #49448
+
+* Mon Jul 16 2001 Havoc Pennington <hp@redhat.com>
+- log to /var/log/gdm/*
+
+* Mon Jul 16 2001 Havoc Pennington <hp@redhat.com>
+- make Halt... power off
+
+* Tue Jul 10 2001 Havoc Pennington <hp@redhat.com>
+- gdm user's homedir to /var/gdm not /home/gdm
+
+* Mon Jul 09 2001 Havoc Pennington <hp@redhat.com>
+- put pam.d/gdm back in file list
+
+* Sun Jul 08 2001 Havoc Pennington <hp@redhat.com>
+- upgrade to 2.2.3.1, pray this fixes more than it breaks
+
+* Thu Jul 05 2001 Havoc Pennington <hp@redhat.com>
+- add "rpm" user to those not to show in greeter 
+
+* Tue Jul 03 2001 Havoc Pennington <hp@redhat.com>
+- Upgrade to 2.2.3
+- require usermode since configure script now checks for it
+
+* Fri Jun 01 2001 Havoc Pennington <hp@redhat.com>
+- Prereq for scrollkeeper-update
+
+* Thu May 30 2001 Havoc Pennington <hp@redhat.com>
+- New CVS snap with the "no weird sessions" options; 
+  more default settings changes
+
+* Wed May 30 2001 Havoc Pennington <hp@redhat.com>
+- Change a bunch of default settings; remaining fixes will involve C hacking
+
+* Wed May 30 2001 Havoc Pennington <hp@redhat.com>
+- After, oh, 2 years or so, finally upgrade version and set
+  release to 1. Remove all hacks and patches, pretty much;
+  this will break a few things, will be putting them back 
+  via GNOME CVS. All changes should go in 'gdm2' module in 
+  CVS for now.
+
+  This RPM enables all kinds of features that I'm going to turn
+  off shortly, so don't get excited about them. ;-)
 
 * Thu Mar 22 2001 Nalin Dahyabhai <nalin@redhat.com>
 - reinitialize pam credentials after calling initgroups() -- the
