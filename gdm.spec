@@ -1,19 +1,19 @@
-# Note that this is NOT a relocatable package
-%define prefix   /usr
-
-%define gtk2_version 2.0.3-3
-%define libglade2_version 1.99.12
-%define libgnomeui_version 1.117.2
-%define libgnomecanvas_version 1.117.0
-%define librsvg2_version 1.1.6
+%define pango_version 1.0.99
+%define gtk2_version 2.0.5
+%define libglade2_version 2.0.0
+%define libgnomeui_version 2.0.0
+%define libgnomecanvas_version 2.0.0
+%define librsvg2_version 2.0.1
 %define libxml2_version 2.4.21
 %define scrollkeeper_version 0.3.4
 %define pam_version 0.75
+%define desktop_file_utils_version 0.2.90
+%define gail_version 0.17-2
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.4.0.0
-Release: 1
+Version: 2.4.0.7
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -23,7 +23,8 @@ Source1: Gnome.session
 Source2: Default.session
 Source5: Failsafe.session
 
-Patch1: gdm-2.3.90.2-rhconfig.patch
+Patch1: gdm-2.4.0.7-rhconfig.patch
+Patch4: gdm-2.4.0.4-pam_timestamp.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -42,7 +43,10 @@ Requires: usermode
 Requires: xinitrc
 Requires: xsri >= 2.0.2
 Requires: /sbin/nologin
+Requires: redhat-artwork >= 0.9
+Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 BuildRequires: scrollkeeper >= %{scrollkeeper_version}
+BuildRequires: pango-devel >= %{pango_version}
 BuildRequires: gtk2-devel >= %{gtk2_version}
 BuildRequires: libglade2-devel >= %{libglade2_version}
 BuildRequires: libgnomeui-devel >= %{libgnomeui_version}
@@ -51,6 +55,10 @@ BuildRequires: librsvg2-devel >= %{librsvg2_version}
 BuildRequires: libxml2-devel >= %{libxml2_version}
 BuildRequires: usermode
 BuildRequires: pam-devel >= %{pam_version}
+BuildRequires: Xft
+BuildRequires: fontconfig
+BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
+BuildRequires: gail-devel >= %{gail_version}
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -61,11 +69,11 @@ several different X sessions on your local machine at the same time.
 %prep
 %setup -q
 
-
 %patch1 -p1 -b .rhconfig
+%patch4 -p1 -b .pam_timestamp
 
 %build
-%configure --prefix=%prefix --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
+%configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
 make
 
 %install
@@ -85,7 +93,7 @@ rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 # install RH specific session files
 rm -f $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/*
 
-install -m 755 %{SOURCE1} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Gnome
+install -m 755 %{SOURCE1} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/GNOME
 install -m 755 %{SOURCE2} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Default
 install -m 755 %{SOURCE5} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Failsafe
 ln -sf Default $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/default
@@ -99,7 +107,23 @@ ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT/etc/X11/gdm/Init/Default
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
 
-%find_lang %name
+# no dumb flexiserver thing, Xnest is too broken
+rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexi*.desktop
+
+# use patched gdmsetup desktop file
+rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
+(cd $RPM_BUILD_ROOT%{_datadir}/applications && ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop)
+
+# fix the "login photo" file
+desktop-file-install --vendor gnome --delete-original       \
+  --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
+  --add-category X-Red-Hat-Base                             \
+  $RPM_BUILD_ROOT%{_datadir}/gnome/capplets/*
+
+# broken install-data-local in gui/Makefile.am makes this necessary
+(cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
+
+%find_lang gdm-2.4
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -119,7 +143,7 @@ scrollkeeper-update
 /sbin/ldconfig
 scrollkeeper-update
 
-%files -f %{name}.lang
+%files -f gdm-2.4.lang
 %defattr(-, root, root)
 
 %doc AUTHORS COPYING ChangeLog NEWS README
@@ -136,17 +160,15 @@ scrollkeeper-update
 %config /etc/X11/gdm/gnomerc
 %config /etc/pam.d/gdm
 %config /etc/pam.d/gdmsetup
+%config /etc/pam.d/gdm-autologin
 %config /etc/security/console.apps/gdmsetup
 %dir /etc/X11/gdm/Sessions
 %dir /etc/X11/gdm/Init
 %dir /etc/X11/gdm/PreSession
 %dir /etc/X11/gdm/PostSession
-%{_datadir}/pixmaps/gdm.xpm
-%{_datadir}/pixmaps/nobody.png
-%{_datadir}/pixmaps/nohost.png
+%{_datadir}/pixmaps
 %{_datadir}/gdm
-%{_datadir}/gnome/capplets/gdmphotosetup.desktop
-%{_datadir}/applications/gdmsetup.desktop
+%{_datadir}/applications
 #%{_datadir}/gnome/help/gdm
 #%{_datadir}/gnome/help/gdmconfig
 #%{_datadir}/omf/gdm
@@ -157,6 +179,39 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Aug 15 2002 Havoc Pennington <hp@redhat.com>
+- rename Gnome session to GNOME, this was just bugging me
+
+* Thu Aug  8 2002 Havoc Pennington <hp@redhat.com>
+- 2.4.0.7 with bugfixes George kindly did for me, 
+  including mnemonics for the graphical greeter
+- use Wonderland gtk theme for the nongraphical greeter
+- remove patches that are now upstream
+
+* Tue Jul 30 2002 Havoc Pennington <hp@redhat.com>
+- update rhconfig patch
+- use pam_timestamp for the config tool
+- link to a desktop file in redhat-menus
+- update .gnome2 patch, filed upstream bug
+- 2.4.0.4
+- rebuild with new gail, librsvg2
+
+* Tue Jun 25 2002 Owen Taylor <otaylor@redhat.com>
+- Require redhat-artwork, make the default greeter theme Wonderland
+- Look for all configuration in .gnome2 not .gnome. This avoids problems 
+  with changes in the set of session/lang.
+- Remove English from locale.alias, make most locales UTF-8
+- Call find_lang with the right name
+
+* Sun Jun 16 2002 Havoc Pennington <hp@redhat.com>
+- rebuild for new libs
+- put gdm-autologin pam config file in file list, hope
+  its absence wasn't deliberate
+- use desktop-file-install
+
+* Mon Jun 10 2002 Havoc Pennington <hp@redhat.com>
+- rebuild in different environment
+
 * Mon Jun 10 2002 Havoc Pennington <hp@redhat.com>
 - 2.4.0.0
 
