@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 8
+Release: 9
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -135,7 +135,7 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexi*.desktop
 
 # use patched gdmsetup desktop file
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
-(cd $RPM_BUILD_ROOT%{_datadir}/applications && ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop)
+ln -sf %{_datadir}/desktop-menu-patches/gnome-gdmsetup.desktop $RPM_BUILD_ROOT%{_datadir}/applications/gnome-gdmsetup.desktop
 
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
@@ -191,7 +191,7 @@ scrollkeeper-update
 %doc AUTHORS COPYING ChangeLog NEWS README
 
 %dir /etc/X11/gdm
-%config(noreplace) /etc/X11/gdm/gdm.conf
+%config /etc/X11/gdm/gdm.conf
 /etc/X11/gdm/factory-gdm.conf
 %config /etc/X11/gdm/XKeepsCrashing
 %config /etc/X11/gdm/locale.alias
@@ -221,6 +221,10 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
+- remove noreplace on gdm.conf #71309
+- make gnome-gdmsetup absolute, #72910
+
 * Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
 - put /usr/X11R6/bin in path for now fixes #72781
 - use proper i18n algorithm for word wrap, #71937
