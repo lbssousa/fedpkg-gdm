@@ -16,14 +16,14 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
-Patch1: gdm-2.5.90.2-rhconfig.patch
+Patch1: gdm-2.6.0.5-rhconfig.patch
 ## we're going to try UTF-8 CJK
 ## Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
 Patch4: gdm-2.4.2.102-pam_timestamp.patch
@@ -50,7 +50,7 @@ Requires: usermode
 Requires: xinitrc >= 0:3.33-1
 Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
-Requires: redhat-artwork >= 0:0.9
+Requires: redhat-artwork >= 0:0.112-2
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
@@ -244,6 +244,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Oct  7 2004 Alexander Larsson <alexl@redhat.com> - 1:2.6.0.5-4
+- Change default greeter theme to "Default", require redhat-artwork with Default symlink.
+
 * Wed Sep 29 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-3
 - Check if there is a selected node before using iterator.
   (fixes bug #133329).
