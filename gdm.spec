@@ -4,7 +4,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.2.3.1
-Release: 18
+Release: 20
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -20,6 +20,7 @@ Patch3: gdm-2.2.3.1-sessionsel.patch
 # Set RUNNING_UNDER_GDM when running the display init script
 Patch4: gdm-2.2.3.1-runningunder.patch
 Patch5: gdm-2.2.3.1-pamcfg.patch
+Patch6: gdm-2.2.3.1-ukrainian.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -55,6 +56,7 @@ tar zxf %{SOURCE6}
 %patch3 -p1 -b .sessionsel
 %patch4 -p1 -b .runningunder
 %patch5 -p1 -b .pamcfg
+%patch6 -p1 -b .ukrainian
 
 %build
 %configure --prefix=%prefix --sysconfdir=/etc/X11 --with-pam-prefix=$RPM_BUILD_ROOT/etc --localstatedir=/var --enable-console-helper
@@ -148,6 +150,12 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Sep  4 2001 Havoc Pennington <hp@redhat.com>
+- fix #52997 (ukrainian in language list)
+
+* Fri Aug 31 2001 Havoc Pennington <hp@redhat.com>
+- Add po files from sources.redhat.com
+
 * Mon Aug 27 2001 Havoc Pennington <hp@redhat.com>
 - Add po files from sources.redhat.com
 
