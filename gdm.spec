@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -179,6 +179,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Aug 20 2002 Alexander Larsson <alexl@redhat.com>
+- Set UseCirclesInEntry to true in config
+
 * Thu Aug 15 2002 Havoc Pennington <hp@redhat.com>
 - rename Gnome session to GNOME, this was just bugging me
 
