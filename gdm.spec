@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.7
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -252,6 +252,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Mar 11 2005 Alexandre Oliva <aoliva@redhat.com> 1:2.6.0.7-5
+- fix patch for bug 149899 (fixes bug 150745)
+
 * Wed Mar 09 2005 Than Ngo <than@redhat.com> 1:2.6.0.7-4
 - add OnlyShowIn=GNOME;
 
