@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.6.0.3
-Release: 5
+Version: 2.6.0.5
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -27,9 +27,6 @@ Patch1: gdm-2.5.90.2-rhconfig.patch
 ## we're going to try UTF-8 CJK
 ## Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
 Patch4: gdm-2.4.2.102-pam_timestamp.patch
-## there's no greek font so don't translate greek in language picker,
-## it looks awful
-Patch11: gdm-2.4.0.7-nogreek.patch
 Patch13: gdm-selinux.patch
 Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
@@ -89,7 +86,6 @@ several different X sessions on your local machine at the same time.
 %patch1 -p1 -b .rhconfig
 ## %patch2 -p1 -b .cjk-no-utf8
 %patch4 -p1 -b .pam_timestamp
-%patch11 -p1 -b .nogreek
 %patch13 -p1 -b .selinux
 %patch14 -p1 -b .session-errors
 %patch15 -p1 -b .update-switchdesk-location
@@ -159,6 +155,7 @@ ln -sf %{_datadir}/desktop-menu-patches/gnome-gdmsetup.desktop $RPM_BUILD_ROOT%{
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
   --add-category X-Red-Hat-Base                             \
+  --remove-category Settings                                \
   $RPM_BUILD_ROOT%{_datadir}/gnome/capplets/*
 
 # broken install-data-local in gui/Makefile.am makes this necessary
@@ -166,7 +163,7 @@ desktop-file-install --vendor gnome --delete-original       \
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
-%find_lang gdm-2.6
+%find_lang gdm
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -205,7 +202,7 @@ exit 0
 /sbin/ldconfig
 scrollkeeper-update
 
-%files -f gdm-2.6.lang
+%files -f gdm.lang
 %defattr(-, root, root)
 
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
@@ -247,6 +244,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep 20 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-1
+- update to 2.6.0.5
+
 * Tue Aug 3 2004 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.3-5
 - fix messed up changelog
 
