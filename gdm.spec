@@ -4,7 +4,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.2.3.1
-Release: 22
+Release: 23
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -21,6 +21,9 @@ Patch3: gdm-2.2.3.1-sessionsel.patch
 # Set RUNNING_UNDER_GDM when running the display init script
 Patch4: gdm-2.2.3.1-runningunder.patch
 Patch5: gdm-2.2.3.1-pamcfg.patch
+
+## a couple of security backports from GNOME 2.4
+Patch19: gdm-2.4.1.3-crash.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -56,6 +59,8 @@ tar zxf %{SOURCE6}
 %patch3 -p1 -b .sessionsel
 %patch4 -p1 -b .runningunder
 %patch5 -p1 -b .pamcfg
+
+%patch19 -p1 -b .crash
 
 rm config/locale.alias && cp %{SOURCE7} config/locale.alias
 
@@ -154,6 +159,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com>
+- fix a security issue CAN-2003-0547 bugzilla #102275
+
 * Mon Apr 15 2002 Havoc Pennington <hp@redhat.com>
 - merge translations
 
