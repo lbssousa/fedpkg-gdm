@@ -1,19 +1,19 @@
-%define pango_version 1.0.99
-%define gtk2_version 2.0.5
+%define pango_version 1.2.0
+%define gtk2_version 2.2.0
 %define libglade2_version 2.0.0
-%define libgnomeui_version 2.0.0
+%define libgnomeui_version 2.2.0
 %define libgnomecanvas_version 2.0.0
 %define librsvg2_version 2.0.1
 %define libxml2_version 2.4.21
 %define scrollkeeper_version 0.3.4
 %define pam_version 0.75
 %define desktop_file_utils_version 0.2.90
-%define gail_version 0.17-2
+%define gail_version 1.2.0
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.4.0.7
-Release: 14
+Version: 2.4.1.3
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -27,24 +27,32 @@ Source6: gdm.png
 ## temporary ja.po hack for date format
 Source7: gdm-ja.po
 
-Patch1: gdm-2.4.0.7-rhconfig.patch
+Patch1: gdm-2.4.0.12-rhconfig.patch
+Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
 Patch4: gdm-2.4.0.4-pam_timestamp.patch
-Patch5: gdm-2.4.0.7-sid-fix.patch
-Patch6: gdm-2.4.0.7-facelimit-64902.patch
 Patch7: gdm-2.4.0.7-dbllogin-66486.patch
-Patch8: gdm-2.4.0.7-basicpath-68483.patch
-Patch9: gdm-2.4.0.7-confdocs-71308.patch
-Patch10: gdm-2.4.0.7-photobrowser.patch
 ## there's no greek font so don't translate greek in language picker,
 ## it looks awful
 Patch11: gdm-2.4.0.7-nogreek.patch
-## http://bugzilla.gnome.org/show_bug.cgi?id=91921
-Patch12: gdm-2.4.0.7-wordwrap.patch
 Patch13: gdm-2.4.0.7-xsessionowner.patch
+Patch14: gdm-2.4.0.7-multilib-pam.patch
+# http://bugzilla.gnome.org/show_bug.cgi?id=105145
+Patch15: gdm-2.4.1.1-setlocale.patch
 
-## a couple of security backports from GNOME 2.4
-Patch18: gdm-2.4.1.3-no-show-xsession-errors.patch
-Patch19: gdm-2.4.1.3-crash.patch
+# http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=83334
+# george applied an upstream fix, we're testing it now
+Patch16: gdm-2.4.1.1-64bit.patch
+
+# Run the error dialogs under /bin/sh --login, so we
+# get lang.sh, and thus unicode_start running. Fixes
+# the X-doesn't-start dialog showing up as random
+# blinking characters.
+#
+# http://bugzilla.gnome.org/show_bug.cgi?id=106656
+# http://bugzilla.gnome.org/show_bug.cgi?id=106657
+# http://bugzilla.gnome.org/show_bug.cgi?id=106658
+#
+Patch17: gdm-2.4.1.3-consoleencoding.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -75,7 +83,6 @@ BuildRequires: librsvg2-devel >= %{librsvg2_version}
 BuildRequires: libxml2-devel >= %{libxml2_version}
 BuildRequires: usermode
 BuildRequires: pam-devel >= %{pam_version}
-BuildRequires: Xft
 BuildRequires: fontconfig
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
 BuildRequires: gail-devel >= %{gail_version}
@@ -90,19 +97,15 @@ several different X sessions on your local machine at the same time.
 %setup -q
 
 %patch1 -p1 -b .rhconfig
+%patch2 -p1 -b .cjk-no-utf8
 %patch4 -p1 -b .pam_timestamp
-%patch5 -p1 -b .sid-fix
-%patch6 -p1 -b .facelimit
 %patch7 -p1 -b .dbllogin
-%patch8 -p1 -b .basicpath
-%patch9 -p1 -b .confdocs
-%patch10 -p1 -b .photobrowser
 %patch11 -p1 -b .nogreek
-%patch12 -p1 -b .wordwrap
 %patch13 -p1 -b .xsessionowner
-
-%patch18 -p1 -b .no-show-xsession-errors
-%patch19 -p1 -b .crash
+%patch14 -p1 -b .multilib-pam
+%patch15 -p1 -b .setlocale
+#%patch16 -p1 -b .64bit
+%patch17 -p1 -b .consoleencoding
 
 ## put in ja translation
 cp -f %{SOURCE7} po/ja.po
@@ -189,7 +192,7 @@ PIDFILE=`grep '^PidFile=' %{_sysconfdir}/X11/gdm/gdm.conf | sed -e 's/^PidFile=/
 if test x$PIDFILE = x ; then
 	PIDFILE=/var/run/gdm.pid
 fi
-if test -w $FIFOFILE && test -f $PIDFILE && kill -0 `cat $PIDFILE` ; then
+if test -w $FIFOFILE && test -f $PIDFILE && kill -0 `cat $PIDFILE` 2>/dev/null ; then
 	(echo;echo SOFT_RESTART) >> $FIFOFILE
 fi
 # ignore error in the above
@@ -235,9 +238,54 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com>
-- fix a couple security issues CAN-2003-0547
-  bugzilla #102275
+* Mon Feb 24 2003 Elliot Lee <sopwith@redhat.com>
+- debuginfo rebuild
+
+* Thu Feb 20 2003 Owen Taylor <otaylor@redhat.com>
+- Run the error dialogs under /bin/sh --login, so we
+  get lang.sh, and thus unicode_start running. Fixes
+  the X-doesn't-start dialog showing up as random
+  blinking characters.
+
+* Fri Feb 14 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.3-2
+- nuke buildreq Xft
+
+* Wed Feb  5 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.3-1
+- upgrade to 2.4.1.3
+
+* Mon Feb  3 2003 Matt Wilson <msw@redhat.com> 1:2.4.1.1-6
+- added gdm-2.4.1.1-64bit.patch to fix 64 bit crash in cookie
+  generation (#83334)
+
+* Mon Feb  3 2003 Owen Taylor <otaylor@redhat.com>
+- Add patch to fix problem where setting LC_COLLATE=C would give LC_MESSAGES=wa_BE (#82019)
+
+* Thu Jan 30 2003 Matt Wilson <msw@redhat.com> 1:2.4.1.1-3
+- fix pam.d entry, pam_env wasn't properly patched
+- disable optimizations on x86_64 to work around gcc bug
+
+* Wed Jan 22 2003 Tim Powers <timp@redhat.com>
+- rebuilt
+
+* Mon Jan 20 2003 Owen Taylor <otaylor@redhat.com>
+- Upgrade to 2.4.1.1 (Fixes #81907)
+- Redirect stdout of kill to /dev/null (#80814)
+
+* Thu Jan  9 2003 Havoc Pennington <hp@redhat.com>
+- 2.4.1.0
+- add patch from george to ask "are you sure?" for shutdown/reboot since it's now just one click away
+
+* Thu Dec 19 2002 Havoc Pennington <hp@redhat.com>
+- 2.4.0.12
+- update new patch for no-utf8-in-cjk
+- drop patch to photo setup, now upstream
+- drop confdocs patch now upstream
+- move all the gdm.conf changes into single "rhconfig" patch
+- remove "sid-fix" patch now upstream
+
+* Mon Nov 11 2002 Nalin Dahyabhai <nalin@redhat.com> 2.4.0.7-14
+- remove the directory part of module specifications from the PAM config files,
+  allowing the same PAM config to work for either arch on multilib boxes
 
 * Thu Sep  5 2002 Owen Taylor <otaylor@redhat.com>
 - Change zh_CN entry in language menu to zh_CN.GB18030
