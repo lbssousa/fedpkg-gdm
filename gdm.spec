@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 8
+Release: 9
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -35,6 +35,7 @@ Patch17: gdm-2.6.0.5-check-selection.patch
 Patch18: gdm-2.6.0.5-fix-norwegian.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
 Patch20: gdm-2.6.0.5-sort-session-list.patch
+Patch21: gdm-2.6.0.5-use-cannonical-username.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -98,6 +99,7 @@ several different X sessions on your local machine at the same time.
 %patch18 -p1 -b .fix-norwegian
 %patch19 -p1 -b .cleanup-xses
 %patch20 -p1 -b .sort-session-list
+%patch21 -p1 -b .use-cannonical-username
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -250,6 +252,11 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Dec  1 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-9 
+- Look up and use username instead of assuming that user entered 
+  login is cannonical.  Patch from
+  Mike Patnode <mike.patnode@centrify.com> (fixes bug 141380).
+
 * Thu Nov 11 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-8 
 - Sort session list so that default session comes out on top
   (fixes bug 107324)
