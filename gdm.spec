@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -154,9 +154,7 @@ ln -sf %{_datadir}/desktop-menu-patches/gnome-gdmsetup.desktop $RPM_BUILD_ROOT%{
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
-  --add-category X-Red-Hat-Base                             \
-  --remove-category Settings                                \
-  $RPM_BUILD_ROOT%{_datadir}/gnome/capplets/*
+  $RPM_BUILD_ROOT%{_datadir}/gnome/capplets/gdmphotosetup.desktop
 
 # broken install-data-local in gui/Makefile.am makes this necessary
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
@@ -244,7 +242,11 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Thu Sep 20 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-1
+* Fri Sep 24 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-2
+- Don't mess with gdmphotosetup categories.  Upstream categories
+  are fine.
+
+* Mon Sep 20 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-1
 - update to 2.6.0.5
 
 * Tue Aug 3 2004 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.3-5
