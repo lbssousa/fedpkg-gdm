@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.6.0.5
-Release: 11
+Version: 2.6.0.7
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -31,8 +31,6 @@ Patch13: gdm-selinux.patch
 Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
 Patch16: gdm-2.6.0.0-pie.patch
-Patch17: gdm-2.6.0.5-check-selection.patch
-Patch18: gdm-2.6.0.5-fix-norwegian.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
 Patch20: gdm-2.6.0.5-sort-session-list.patch
 Patch21: gdm-2.6.0.5-use-cannonical-username.patch
@@ -95,8 +93,6 @@ several different X sessions on your local machine at the same time.
 %patch14 -p1 -b .session-errors
 %patch15 -p1 -b .update-switchdesk-location
 %patch16 -p1 -b .pie
-%patch17 -p1 -b .check-selection
-%patch18 -p1 -b .fix-norwegian
 %patch19 -p1 -b .cleanup-xses
 %patch20 -p1 -b .sort-session-list
 %patch21 -p1 -b .use-cannonical-username
@@ -252,6 +248,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Feb  2 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.7-1
+- Update to 2.6.0.7
+
 * Tue Jan 25 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-11
 - Fix bug in greeter sort-session-list patch where selecting
   a session did nothing (bug 145626)
