@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 11
+Release: 12
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -98,7 +98,7 @@ several different X sessions on your local machine at the same time.
 %patch13 -p1 -b .xsessionowner
 
 ## put in ja translation
-cp -f %{SOURCE7} po
+cp -f %{SOURCE7} po/ja.po
 ## put in new gdm.png instead of ugly gdm.xpm
 cp -f %{SOURCE6} pixmaps
 perl -pi -e 's/gdm.xpm/gdm.png/' pixmaps/Makefile* gui/*.desktop*
@@ -228,6 +228,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep  5 2002 Akira TAGOH <tagoh@redhat.com> 2.4.0.7-12
+- copied gdm-ja.po to ja.po.
+
 * Mon Sep  2 2002 Owen Taylor <otaylor@redhat.com>
 - Fix problem where gdm was opening ~/.xsession-errors itself to bad effect
 
