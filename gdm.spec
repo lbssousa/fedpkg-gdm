@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -25,6 +25,7 @@ Source5: Failsafe.session
 
 Patch1: gdm-2.4.0.7-rhconfig.patch
 Patch4: gdm-2.4.0.4-pam_timestamp.patch
+Patch5: gdm-2.4.0.7-sid-fix.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -71,6 +72,7 @@ several different X sessions on your local machine at the same time.
 
 %patch1 -p1 -b .rhconfig
 %patch4 -p1 -b .pam_timestamp
+%patch5 -p1 -b .sid-fix
 
 %build
 %configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
@@ -179,6 +181,11 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Aug 25 2002 Havoc Pennington <hp@redhat.com>
+- put in a patch from george to fix some setsid()/kill() confusion
+  possibly fixing #72295
+- turn off UseCirclesInEntry for now, fixes #72433
+
 * Tue Aug 20 2002 Alexander Larsson <alexl@redhat.com>
 - Set UseCirclesInEntry to true in config
 
