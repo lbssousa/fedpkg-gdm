@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.0
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -245,6 +245,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri May 21 2004 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.0-5
+- rebuild
+
 * Mon May 17 2004 Than Ngo <than@redhat.com> 1:2.6.0.0-4
 - add patch to build gdm-binary with PIE
 
