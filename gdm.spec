@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -31,6 +31,7 @@ Patch13: gdm-selinux.patch
 Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
 Patch16: gdm-2.6.0.0-pie.patch
+Patch17: gdm-2.6.0.5-check-selection.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -90,6 +91,7 @@ several different X sessions on your local machine at the same time.
 %patch14 -p1 -b .session-errors
 %patch15 -p1 -b .update-switchdesk-location
 %patch16 -p1 -b .pie
+%patch17 -p1 -b .check-selection
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -242,6 +244,10 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Sep 29 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-3
+- Check if there is a selected node before using iterator.
+  (fixes bug #133329).
+
 * Fri Sep 24 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-2
 - Don't mess with gdmphotosetup categories.  Upstream categories
   are fine.
