@@ -9,19 +9,23 @@
 %define pam_version 0.75
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
-##%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
-%define WITH_SELINUX 0
-##%endif
+%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
+%define WITH_SELINUX 1
+%endif
 
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.4.5
-Release: 1.2
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
+
+## FIXME: is this relevant?
+## temporary ja.po hack for date format
+Source7: gdm-ja.po
 
 Patch1: gdm-2.4.4.3-rhconfig.patch
 ## we're going to try UTF-8 CJK
@@ -36,50 +40,40 @@ Patch13: gdm-selinux.patch
 ## autotools hates me!
 Patch20: gdm-2.4.4.5-autofoo.patch
 
-Patch30: gdm-2.4.4.5-xdmcp_sessions.patch
-
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
 Prereq: /usr/sbin/useradd
 Prereq: /usr/bin/scrollkeeper-update
-Requires: gtk2 >= 0:%{gtk2_version}
-Requires: libglade2 >= 0:%{libglade2_version}
-Requires: libgnomeui >= 0:%{libgnomeui_version}
-Requires: libgnomecanvas >= 0:%{libgnomecanvas_version}
-Requires: librsvg2 >= 0:%{librsvg2_version}
-Requires: libxml2 >= 0:%{libxml2_version}
-Requires: pam >= 0:%{pam_version}
+Requires: gtk2 >= %{gtk2_version}
+Requires: libglade2 >= %{libglade2_version}
+Requires: libgnomeui >= %{libgnomeui_version}
+Requires: libgnomecanvas >= %{libgnomecanvas_version}
+Requires: librsvg2 >= %{librsvg2_version}
+Requires: libxml2 >= %{libxml2_version}
+Requires: pam >= %{pam_version}
 Requires: /etc/pam.d/system-auth
 Requires: /etc/X11/xdm/Xsession
 Requires: usermode
-Requires: xinitrc >= 0:3.33-1
+Requires: xinitrc >= 3.33-1
 Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
-Requires: redhat-artwork >= 0:0.9
+Requires: redhat-artwork >= 0.9
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
-BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
-BuildRequires: pango-devel >= 0:%{pango_version}
-BuildRequires: gtk2-devel >= 0:%{gtk2_version}
-BuildRequires: libglade2-devel >= 0:%{libglade2_version}
-BuildRequires: libgnomeui-devel >= 0:%{libgnomeui_version}
-BuildRequires: libgnomecanvas-devel >= 0:%{libgnomecanvas_version}
-BuildRequires: librsvg2-devel >= 0:%{librsvg2_version}
-BuildRequires: libxml2-devel >= 0:%{libxml2_version}
+BuildRequires: scrollkeeper >= %{scrollkeeper_version}
+BuildRequires: pango-devel >= %{pango_version}
+BuildRequires: gtk2-devel >= %{gtk2_version}
+BuildRequires: libglade2-devel >= %{libglade2_version}
+BuildRequires: libgnomeui-devel >= %{libgnomeui_version}
+BuildRequires: libgnomecanvas-devel >= %{libgnomecanvas_version}
+BuildRequires: librsvg2-devel >= %{librsvg2_version}
+BuildRequires: libxml2-devel >= %{libxml2_version}
 BuildRequires: usermode
-BuildRequires: pam-devel >= 0:%{pam_version}
+BuildRequires: pam-devel >= %{pam_version}
 BuildRequires: fontconfig
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
-BuildRequires: gail-devel >= 0:%{gail_version}
+BuildRequires: gail-devel >= %{gail_version}
 BuildRequires: libgsf-devel
-BuildRequires: libtool automake14 autoconf
-BuildRequires: libcroco-devel
-BuildRequires: libattr-devel
-BuildRequires: gettext 
-
-%if %{WITH_SELINUX}
-BuildRequires: libselinux-devel
-%endif
-
+BuildRequires: libtool automake autoconf
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -99,10 +93,8 @@ several different X sessions on your local machine at the same time.
 
 %patch20 -p1 -b .autofoo
 
-%patch30 -p1 -b .xdmcp_session
-
-# fix the time format for ja
-perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
+## put in ja translation
+cp -f %{SOURCE7} po/ja.po
 
 %build
 intltoolize --force --copy
@@ -255,22 +247,6 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Wed Feb 04 2004 Warren Togami <wtogami@redhat.com> 1:2.4.4.5-1.2
-- renamed for FC1 update
-
-* Tue Feb 03 2004 Warren Togami <wtogami@redhat.com> 1:2.4.4.5-9
-- add two lines to match upstream CVS to xdmcp_sessions.patch
-  Fully resolves #110315 and #113154
-
-* Sun Feb 01 2004 Warren Togami <wtogami@redhat.com> 1:2.4.4.5-8
-- patch30 xdmcp_session counter fix from gdm-2.5.90.0 #110315
-- automake14 really needed, not automake
-- BR libcroco-devel, libcroco-devel, libattr-devel, gettext
-- conditionally BR libselinux-devel
-- explicit epoch in all deps
-- make the ja.po time format change with a sed expression rather than
-  overwriting the whole file (Petersen #113995)
-
 * Thu Jan 29 2004 Jeremy Katz <katzj@redhat.com> - 1:2.4.4.5-7
 - fix build with current auto*
 
