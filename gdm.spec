@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 12
+Release: 13
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -228,6 +228,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep  5 2002 Owen Taylor <otaylor@redhat.com>
+- Change zh_CN entry in language menu to zh_CN.GB18030
+
 * Thu Sep  5 2002 Akira TAGOH <tagoh@redhat.com> 2.4.0.7-12
 - copied gdm-ja.po to ja.po.
 
