@@ -4,7 +4,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.2.3.1
-Release: 16
+Release: 17
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -143,6 +143,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 15 2001 Nalin Dahyabhai <nalin@redhat.com>
+- set SESSION to true in console.apps control file
+
 * Tue Aug 14 2001 Havoc Pennington <hp@redhat.com>
 - change default title font to work in CJK, #51698
 
