@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.0
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -33,6 +33,7 @@ Patch11: gdm-2.4.0.7-nogreek.patch
 Patch13: gdm-selinux.patch
 Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
+Patch16: gdm-2.6.0.0-pie.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -92,6 +93,7 @@ several different X sessions on your local machine at the same time.
 %patch13 -p1 -b .selinux
 %patch14 -p1 -b .session-errors
 %patch15 -p1 -b .update-switchdesk-location
+%patch16 -p1 -b .pie
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -243,6 +245,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon May 17 2004 Than Ngo <than@redhat.com> 1:2.6.0.0-4
+- add patch to build gdm-binary with PIE
+
 * Thu Apr 22 2004 Mark McLoughlin <markmc@redhat.com> - 1:2.6.0.0-3
 - Update the "use switchdesk" message to only be display when
   switchdesk-gui is installed and to not reference a non existant
