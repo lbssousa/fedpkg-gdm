@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.7
-Release: 7
+Release: 8
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -31,6 +31,7 @@ Patch13: gdm-selinux.patch
 Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
 Patch16: gdm-2.6.0.0-pie.patch
+Patch18: gdm-2.6.0.5-wait-for-bootup.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
 Patch20: gdm-2.6.0.5-sort-session-list.patch
 Patch21: gdm-2.6.0.5-use-cannonical-username.patch
@@ -95,6 +96,7 @@ several different X sessions on your local machine at the same time.
 %patch14 -p1 -b .session-errors
 %patch15 -p1 -b .update-switchdesk-location
 %patch16 -p1 -b .pie
+%patch18 -p1 -b .wait-for-bootup
 %patch19 -p1 -b .cleanup-xses
 %patch20 -p1 -b .sort-session-list
 %patch21 -p1 -b .use-cannonical-username
@@ -260,6 +262,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Mar 28 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.7-8
+- Add a --wait-for-system-startup cmdline option.
+
 * Mon Mar 28 2005 Christopher Aillon <caillon@redhat.com>
 - rebuilt
 
@@ -311,7 +316,8 @@ fi
 - Prefer nb_NO over no_NO for Norwegian (fixes bug #136033)
 
 * Thu Oct  7 2004 Alexander Larsson <alexl@redhat.com> - 1:2.6.0.5-4
-- Change default greeter theme to "Default", require redhat-artwork with Default symlink.
+- Change default greeter theme to "Default", require 
+  redhat-artwork with Default symlink.
 
 * Wed Sep 29 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-3
 - Check if there is a selected node before using iterator.
