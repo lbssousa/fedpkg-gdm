@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.3
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -247,6 +247,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Aug 3 2004 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.3-5
+- fix messed up changelog
+
 * Tue Aug 3 2004 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.3-4
 - rebuilt
 
@@ -270,12 +273,12 @@ scrollkeeper-update
 
 * Thu Apr 22 2004 Mark McLoughlin <markmc@redhat.com> - 1:2.6.0.0-3
 - Update the "use switchdesk" message to only be display when
-switchdesk-gui is installed and to not reference a non existant
-menu item (bug #121460)
+  switchdesk-gui is installed and to not reference a non existant
+  menu item (bug #121460)
 
 * Fri Apr  2 2004 Colin Walters <walters@redhat.com> 1:2.6.0.0-2
 - Always put session errors in /tmp, in preparation for
-completely preventing gdm from writing to /home/
+  completely preventing gdm from writing to /home/
 
 * Thu Apr  1 2004 Alex Larsson <alexl@redhat.com> 1:2.6.0.0-1
 - update to 2.6.0.0
@@ -300,7 +303,7 @@ completely preventing gdm from writing to /home/
 
 * Tue Feb 03 2004 Warren Togami <wtogami@redhat.com> 1:2.4.4.5-9
 - add two lines to match upstream CVS to xdmcp_sessions.patch
-Fully resolves #110315 and #113154
+  Fully resolves #110315 and #113154
 
 * Sun Feb 01 2004 Warren Togami <wtogami@redhat.com> 1:2.4.4.5-8
 - patch30 xdmcp_session counter fix from gdm-2.5.90.0 #110315
@@ -309,7 +312,7 @@ Fully resolves #110315 and #113154
 - conditionally BR libselinux-devel
 - explicit epoch in all deps
 - make the ja.po time format change with a sed expression rather than
-overwriting the whole file (Petersen #113995)
+  overwriting the whole file (Petersen #113995)
 
 * Thu Jan 29 2004 Jeremy Katz <katzj@redhat.com> - 1:2.4.4.5-7
 - fix build with current auto*
@@ -378,7 +381,7 @@ overwriting the whole file (Petersen #113995)
 - updated to 2.4.2.102
 - removed outdated patches
 - Use Xsetup_0 only for :0 since that's the way it works
-for xdm
+  for xdm
 - remove the gnome.desktop file, its going into gnome-session
 
 * Thu Aug 14 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.6-1
