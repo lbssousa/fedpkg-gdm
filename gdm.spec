@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 5
+Release: 6
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,6 +26,10 @@ Source5: Failsafe.session
 Patch1: gdm-2.4.0.7-rhconfig.patch
 Patch4: gdm-2.4.0.4-pam_timestamp.patch
 Patch5: gdm-2.4.0.7-sid-fix.patch
+Patch6: gdm-2.4.0.7-facelimit-64902.patch
+Patch7: gdm-2.4.0.7-dbllogin-66486.patch
+Patch8: gdm-2.4.0.7-basicpath-68483.patch
+Patch9: gdm-2.4.0.7-confdocs-71308.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -73,6 +77,10 @@ several different X sessions on your local machine at the same time.
 %patch1 -p1 -b .rhconfig
 %patch4 -p1 -b .pam_timestamp
 %patch5 -p1 -b .sid-fix
+%patch6 -p1 -b .facelimit
+%patch7 -p1 -b .dbllogin
+%patch8 -p1 -b .basicpath
+%patch9 -p1 -b .confdocs
 
 %build
 %configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
@@ -141,6 +149,25 @@ exit 0
 /sbin/ldconfig
 scrollkeeper-update
 
+# Attempt to restart GDM softly by use of the fifo.  Wont work on older
+# then 2.2.3.1 versions but should work nicely on later upgrades.
+# FIXME: this is just way too complex
+FIFOFILE=`grep '^ServAuthDir=' %{_sysconfdir}/X11/gdm/gdm.conf | sed -e 's/^ServAuthDir=//'`
+if test x$FIFOFILE = x ; then
+	FIFOFILE=%{localstatedir}/gdm/.gdmfifo
+else
+	FIFOFILE="$FIFOFILE"/.gdmfifo
+fi
+PIDFILE=`grep '^PidFile=' %{_sysconfdir}/X11/gdm/gdm.conf | sed -e 's/^PidFile=//'`
+if test x$PIDFILE = x ; then
+	PIDFILE=/var/run/gdm.pid
+fi
+if test -w $FIFOFILE && test -f $PIDFILE && kill -0 `cat $PIDFILE` ; then
+	(echo;echo SOFT_RESTART) >> $FIFOFILE
+fi
+# ignore error in the above
+exit 0
+
 %postun
 /sbin/ldconfig
 scrollkeeper-update
@@ -151,7 +178,7 @@ scrollkeeper-update
 %doc AUTHORS COPYING ChangeLog NEWS README
 
 %dir /etc/X11/gdm
-%config /etc/X11/gdm/gdm.conf
+%config(noreplace) /etc/X11/gdm/gdm.conf
 /etc/X11/gdm/factory-gdm.conf
 %config /etc/X11/gdm/XKeepsCrashing
 %config /etc/X11/gdm/locale.alias
@@ -181,6 +208,11 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Aug 26 2002 Elliot Lee <sopwith@redhat.com> 2.4.0.7-6
+- Patches for #64902, #66486, #68483, #71308
+- post-install script changes from the gdm.spec mentioned in #70965
+- noreplace on gdm.conf for #71309
+
 * Sun Aug 25 2002 Havoc Pennington <hp@redhat.com>
 - put in a patch from george to fix some setsid()/kill() confusion
   possibly fixing #72295
