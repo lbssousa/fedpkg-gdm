@@ -13,15 +13,16 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
-Source1: Gnome.session
+
 Source2: Default.session
 Source5: Failsafe.session
+Source6: gdm.png
 
 Patch1: gdm-2.4.0.7-rhconfig.patch
 Patch4: gdm-2.4.0.4-pam_timestamp.patch
@@ -30,6 +31,7 @@ Patch6: gdm-2.4.0.7-facelimit-64902.patch
 Patch7: gdm-2.4.0.7-dbllogin-66486.patch
 Patch8: gdm-2.4.0.7-basicpath-68483.patch
 Patch9: gdm-2.4.0.7-confdocs-71308.patch
+Patch10: gdm-2.4.0.7-photobrowser.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -81,6 +83,11 @@ several different X sessions on your local machine at the same time.
 %patch7 -p1 -b .dbllogin
 %patch8 -p1 -b .basicpath
 %patch9 -p1 -b .confdocs
+%patch10 -p1 -b .photobrowser
+
+## put in new gdm.png instead of ugly gdm.xpm
+cp -f %{SOURCE6} pixmaps
+perl -pi -e 's/gdm.xpm/gdm.png/' pixmaps/Makefile* gui/*.desktop*
 
 %build
 %configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
@@ -103,7 +110,6 @@ rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 # install RH specific session files
 rm -f $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/*
 
-install -m 755 %{SOURCE1} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/GNOME
 install -m 755 %{SOURCE2} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Default
 install -m 755 %{SOURCE5} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Failsafe
 ln -sf Default $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/default
@@ -208,6 +214,12 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
+- improve gdmsetup icon
+- remove GNOME session, we will instead put it in gnome-session
+- apply patch from george to make gdmphotosetup file selector 
+  work
+
 * Mon Aug 26 2002 Elliot Lee <sopwith@redhat.com> 2.4.0.7-6
 - Patches for #64902, #66486, #68483, #71308
 - post-install script changes from the gdm.spec mentioned in #70965
