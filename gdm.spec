@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 13
+Release: 14
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -41,6 +41,10 @@ Patch11: gdm-2.4.0.7-nogreek.patch
 ## http://bugzilla.gnome.org/show_bug.cgi?id=91921
 Patch12: gdm-2.4.0.7-wordwrap.patch
 Patch13: gdm-2.4.0.7-xsessionowner.patch
+
+## a couple of security backports from GNOME 2.4
+Patch18: gdm-2.4.1.3-no-show-xsession-errors.patch
+Patch19: gdm-2.4.1.3-crash.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -96,6 +100,9 @@ several different X sessions on your local machine at the same time.
 %patch11 -p1 -b .nogreek
 %patch12 -p1 -b .wordwrap
 %patch13 -p1 -b .xsessionowner
+
+%patch18 -p1 -b .no-show-xsession-errors
+%patch19 -p1 -b .crash
 
 ## put in ja translation
 cp -f %{SOURCE7} po/ja.po
@@ -228,6 +235,10 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com>
+- fix a couple security issues CAN-2003-0547
+  bugzilla #102275
+
 * Thu Sep  5 2002 Owen Taylor <otaylor@redhat.com>
 - Change zh_CN entry in language menu to zh_CN.GB18030
 
