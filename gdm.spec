@@ -15,7 +15,7 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.5.90.2
+Version: 2.6.0.0
 Release: 3
 Epoch: 1
 License: LGPL/GPL
@@ -31,6 +31,8 @@ Patch4: gdm-2.4.2.102-pam_timestamp.patch
 ## it looks awful
 Patch11: gdm-2.4.0.7-nogreek.patch
 Patch13: gdm-selinux.patch
+Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
+Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -88,6 +90,8 @@ several different X sessions on your local machine at the same time.
 %patch4 -p1 -b .pam_timestamp
 %patch11 -p1 -b .nogreek
 %patch13 -p1 -b .selinux
+%patch14 -p1 -b .session-errors
+%patch15 -p1 -b .update-switchdesk-location
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -239,6 +243,18 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Apr 22 2004 Mark McLoughlin <markmc@redhat.com> - 1:2.6.0.0-3
+- Update the "use switchdesk" message to only be display when
+  switchdesk-gui is installed and to not reference a non existant
+  menu item (bug #121460)
+
+* Fri Apr  2 2004 Colin Walters <walters@redhat.com> 1:2.6.0.0-2
+- Always put session errors in /tmp, in preparation for
+  completely preventing gdm from writing to /home/
+
+* Thu Apr  1 2004 Alex Larsson <alexl@redhat.com> 1:2.6.0.0-1
+- update to 2.6.0.0
+
 * Tue Mar 16 2004 Dan Walsh <dwalsh@redhat.com> 1:2.5.90.3-1
 - Use selinux patch again
 
