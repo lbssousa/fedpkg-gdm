@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -147,20 +147,20 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
 
 # no dumb flexiserver thing, Xnest is too broken
-# FIXME: flexiserver is NOT just Xnest
-#        dual login with standard (non-Xnest) flexiserver is a very
-#        often requested feature even though it exists but
-#        redhat removes it --George
-rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexi*.desktop
+rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
 
 # use patched gdmsetup desktop file
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
-ln -sf %{_datadir}/desktop-menu-patches/gnome-gdmsetup.desktop $RPM_BUILD_ROOT%{_datadir}/applications/gnome-gdmsetup.desktop
+ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop $RPM_BUILD_ROOT%{_datadir}/applications/
 
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
   $RPM_BUILD_ROOT%{_datadir}/gnome/capplets/gdmphotosetup.desktop
+
+desktop-file-install --vendor gnome --delete-original       \
+  --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
+  $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.desktop
 
 # broken install-data-local in gui/Makefile.am makes this necessary
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
@@ -248,6 +248,10 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Nov 10 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-7 
+- Make desktop file symlink instead of absolute (bug 104390)
+- Add flexiserver back to menus
+
 * Wed Oct 20 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-6 
 - Clean up xses if the session was successfullly completed.
   (fixes bug #136382)
