@@ -4,7 +4,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.2.3.1
-Release: 17
+Release: 18
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -12,6 +12,7 @@ Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.gz
 Source1: Gnome.session
 Source2: Default.session
 Source5: Failsafe.session
+Source6: gdm-pofiles.tar.gz
 
 Patch1: gdm-2.2.3.1-rhconfig.patch
 Patch2: gdm-2.2.3.1-formatstrings.patch
@@ -44,6 +45,10 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
+
+
+## unpack pofiles
+tar zxf %{SOURCE6}
 
 %patch1 -p1 -b .rhconfig
 %patch2 -p1 -b .formatstrings
@@ -143,6 +148,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Aug 27 2001 Havoc Pennington <hp@redhat.com>
+- Add po files from sources.redhat.com
+
 * Wed Aug 15 2001 Nalin Dahyabhai <nalin@redhat.com>
 - set SESSION to true in console.apps control file
 
