@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.7
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -34,6 +34,7 @@ Patch16: gdm-2.6.0.0-pie.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
 Patch20: gdm-2.6.0.5-sort-session-list.patch
 Patch21: gdm-2.6.0.5-use-cannonical-username.patch
+Patch22: gdm-2.6.0.7-stat-home-dir-as-user.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -96,6 +97,7 @@ several different X sessions on your local machine at the same time.
 %patch19 -p1 -b .cleanup-xses
 %patch20 -p1 -b .sort-session-list
 %patch21 -p1 -b .use-cannonical-username
+%patch22 -p1 -b .stat-home-dir-as-user
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -248,6 +250,10 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Feb 28 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.7-3
+- seteuid/egid as user before testing for presence of
+  user's home directory (fixes bug 149899)
+
 * Thu Feb 10 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.7-2
 - Turn off "switchdesk" mode by default which accidentally got 
   turned on by default in 2.6.0.5-4
