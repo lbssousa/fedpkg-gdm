@@ -252,7 +252,7 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Tue Jan 25 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-11
+* Tue Jan 25 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-11
 - Fix bug in greeter sort-session-list patch where selecting
   a session did nothing (bug 145626)
 
