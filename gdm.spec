@@ -9,55 +9,31 @@
 %define pam_version 0.75
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
+%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
+%define WITH_SELINUX 0
+%endif
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.4.1.3
-### Keep release as 5.x for the RHL 9 branch
-Release: 5.1
+Version: 2.4.4.5
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
-Source2: Default.session
-Source5: Failsafe.session
-## upstream in newer versions, can die later on
-Source6: gdm.png
+## FIXME: is this relevant?
 ## temporary ja.po hack for date format
 Source7: gdm-ja.po
 
-Patch1: gdm-2.4.0.12-rhconfig.patch
-Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
-Patch4: gdm-2.4.0.4-pam_timestamp.patch
-Patch7: gdm-2.4.0.7-dbllogin-66486.patch
+Patch1: gdm-2.4.4.3-rhconfig.patch
+## we're going to try UTF-8 CJK
+## Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
+Patch4: gdm-2.4.2.102-pam_timestamp.patch
 ## there's no greek font so don't translate greek in language picker,
 ## it looks awful
 Patch11: gdm-2.4.0.7-nogreek.patch
-Patch13: gdm-2.4.0.7-xsessionowner.patch
-Patch14: gdm-2.4.0.7-multilib-pam.patch
-# http://bugzilla.gnome.org/show_bug.cgi?id=105145
-Patch15: gdm-2.4.1.1-setlocale.patch
-
-# http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=83334
-# george applied an upstream fix, we're testing it now
-Patch16: gdm-2.4.1.1-64bit.patch
-
-# Run the error dialogs under /bin/sh --login, so we
-# get lang.sh, and thus unicode_start running. Fixes
-# the X-doesn't-start dialog showing up as random
-# blinking characters.
-#
-# http://bugzilla.gnome.org/show_bug.cgi?id=106656
-# http://bugzilla.gnome.org/show_bug.cgi?id=106657
-# http://bugzilla.gnome.org/show_bug.cgi?id=106658
-#
-Patch17: gdm-2.4.1.3-consoleencoding.patch
-
-## a couple of security backports from GNOME 2.4
-Patch18: gdm-2.4.1.3-no-show-xsession-errors.patch
-Patch19: gdm-2.4.1.3-crash.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -73,8 +49,8 @@ Requires: pam >= %{pam_version}
 Requires: /etc/pam.d/system-auth
 Requires: /etc/X11/xdm/Xsession
 Requires: usermode
-Requires: xinitrc
-Requires: xsri >= 2.0.2
+Requires: xinitrc >= 3.33-1
+Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
 Requires: redhat-artwork >= 0.9
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
@@ -91,6 +67,8 @@ BuildRequires: pam-devel >= %{pam_version}
 BuildRequires: fontconfig
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
 BuildRequires: gail-devel >= %{gail_version}
+BuildRequires: libgsf-devel
+BuildRequires: libtool automake autoconf
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -102,34 +80,34 @@ several different X sessions on your local machine at the same time.
 %setup -q
 
 %patch1 -p1 -b .rhconfig
-%patch2 -p1 -b .cjk-no-utf8
+## %patch2 -p1 -b .cjk-no-utf8
 %patch4 -p1 -b .pam_timestamp
-%patch7 -p1 -b .dbllogin
 %patch11 -p1 -b .nogreek
-%patch13 -p1 -b .xsessionowner
-%patch14 -p1 -b .multilib-pam
-%patch15 -p1 -b .setlocale
-#%patch16 -p1 -b .64bit
-%patch17 -p1 -b .consoleencoding
-
-%patch18 -p1 -b .no-show-xsession-errors
-%patch19 -p1 -b .crash
 
 ## put in ja translation
 cp -f %{SOURCE7} po/ja.po
-## put in new gdm.png instead of ugly gdm.xpm
-cp -f %{SOURCE6} pixmaps
-perl -pi -e 's/gdm.xpm/gdm.png/' pixmaps/Makefile* gui/*.desktop*
 
 %build
-%configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
+aclocal
+libtoolize --force --copy
+automake --add-missing
+autoconf
+autoheader
+%configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper \
+%if %{WITH_SELINUX}
+--with-selinux
+%else
+--without-selinux
+%endif
 make
 
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 
-make sysconfdir=$RPM_BUILD_ROOT/etc/X11 \
+make sysconfdir=$RPM_BUILD_ROOT/etc/X11 libdir=$RPM_BUILD_ROOT%{_libdir}\
+    libexecdir=$RPM_BUILD_ROOT%{_libexecdir} \
+    mandir=$RPM_BUILD_ROOT%{_mandir} \
     prefix=$RPM_BUILD_ROOT%{_prefix} bindir=$RPM_BUILD_ROOT%{_bindir} \
     datadir=$RPM_BUILD_ROOT%{_datadir} \
     localstatedir=$RPM_BUILD_ROOT%{_localstatedir} \
@@ -139,23 +117,26 @@ make sysconfdir=$RPM_BUILD_ROOT/etc/X11 \
 # docs go elsewhere
 rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 
-# install RH specific session files
-rm -f $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/*
-
-install -m 755 %{SOURCE2} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Default
-install -m 755 %{SOURCE5} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Failsafe
-ln -sf Default $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/default
-
-# put gnomerc in the right place
-install -m 644 config/gnomerc $RPM_BUILD_ROOT/etc/X11/gdm/gnomerc
-
-# change default Init script to be Red Hat default
-ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT/etc/X11/gdm/Init/Default
+# change default Init script for :0 to be Red Hat default
+ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT/etc/X11/gdm/Init/:0
 
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
 
+# remove the gdm Xsession as we're using the xdm one
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Xsession
+
+rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
+
+# remove the gnome session file, since we put that in gnome-session
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
+
 # no dumb flexiserver thing, Xnest is too broken
+# FIXME: flexiserver is NOT just Xnest
+#        dual login with standard (non-Xnest) flexiserver is a very
+#        often requested feature even though it exists but
+#        redhat removes it --George
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexi*.desktop
 
 # use patched gdmsetup desktop file
@@ -170,6 +151,8 @@ desktop-file-install --vendor gnome --delete-original       \
 
 # broken install-data-local in gui/Makefile.am makes this necessary
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
+
+rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
 %find_lang gdm-2.4
 
@@ -192,7 +175,7 @@ scrollkeeper-update
 # FIXME: this is just way too complex
 FIFOFILE=`grep '^ServAuthDir=' %{_sysconfdir}/X11/gdm/gdm.conf | sed -e 's/^ServAuthDir=//'`
 if test x$FIFOFILE = x ; then
-	FIFOFILE=%{localstatedir}/gdm/.gdmfifo
+	FIFOFILE=%{_localstatedir}/gdm/.gdmfifo
 else
 	FIFOFILE="$FIFOFILE"/.gdmfifo
 fi
@@ -213,42 +196,118 @@ scrollkeeper-update
 %files -f gdm-2.4.lang
 %defattr(-, root, root)
 
-%doc AUTHORS COPYING ChangeLog NEWS README
+%doc AUTHORS COPYING ChangeLog NEWS README TODO
 
 %dir /etc/X11/gdm
+# Not sure which package /etc/X11/dm dir should belong to,
+# this dir was agreed on among KDM and GDM maintainer to host
+# the new session setup
+%config /etc/X11/dm/Sessions/*
 %config /etc/X11/gdm/gdm.conf
 /etc/X11/gdm/factory-gdm.conf
 %config /etc/X11/gdm/XKeepsCrashing
 %config /etc/X11/gdm/locale.alias
-%config /etc/X11/gdm/Sessions/*
 %config /etc/X11/gdm/Init/*
+%config /etc/X11/gdm/PostLogin/*
 %config /etc/X11/gdm/PreSession/*
 %config /etc/X11/gdm/PostSession/*
-%config /etc/X11/gdm/gnomerc
+%config /etc/X11/gdm/modules/*
 %config /etc/pam.d/gdm
 %config /etc/pam.d/gdmsetup
 %config /etc/pam.d/gdm-autologin
 %config /etc/security/console.apps/gdmsetup
-%dir /etc/X11/gdm/Sessions
 %dir /etc/X11/gdm/Init
 %dir /etc/X11/gdm/PreSession
 %dir /etc/X11/gdm/PostSession
+%dir /etc/X11/gdm/PostLogin
+%dir /etc/X11/gdm/modules
 %{_datadir}/pixmaps
 %{_datadir}/gdm
+%{_datadir}/xsessions/*
 %{_datadir}/applications
-#%{_datadir}/gnome/help/gdm
-#%{_datadir}/gnome/help/gdmconfig
-#%{_datadir}/omf/gdm
+%{_datadir}/gnome/help/gdm
+%{_datadir}/omf/gdm
+%{_libdir}/gtk-2.0/modules/*.so
 %{_bindir}/*
+%{_libexecdir}/*
+%{_mandir}/man*/*
 %{_sbindir}/*
-%{_localstatedir}/log/gdm
+%dir %{_localstatedir}/log/gdm
 
-%attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
+%attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.3-5.1
-- fix a couple security issues CAN-2003-0547
-  bugzilla #102275
+* Fri Oct 17 2003 Jonathan Blandford <jrb@redhat.com> 1:2.4.4.5-1
+- new version
+
+* Thu Oct  9 2003 Jonathan Blandford <jrb@redhat.com> 1:2.4.4.3-6.sel
+- new patch from George to fix #106189
+- change bg color in rhdefaults patch
+- turn off SELinux
+
+* Thu Oct 8 2003 Dan Walsh <dwalsh@redhat.com> 1:2.4.4.3-6.sel
+- turn on SELinux
+
+* Tue Oct  7 2003 Alexander Larsson <alexl@redhat.com> 1:2.4.4.3-5
+- Fix greeter line-breaking crash (rest of #106189)
+
+* Tue Oct  7 2003 Alexander Larsson <alexl@redhat.com> 1:2.4.4.3-4
+- Set the BaseXSession properly in the config.
+- This fixes parts of bug #106189
+
+* Mon Oct  6 2003 Havoc Pennington <hp@redhat.com> 1:2.4.4.3-3
+- change DefaultSession=Default.desktop to DefaultSession=default.desktop
+- SELinux off again
+
+* Fri Oct 3 2003 Dan Walsh <dwalsh@redhat.com> 1:2.4.4.3-2.sel
+- turn on SELinux
+
+* Thu Oct  2 2003 Havoc Pennington <hp@redhat.com> 1:2.4.4.3-1
+- 2.4.4.3
+- --without-selinux for now, since libselinux not in the buildroot
+
+* Mon Sep 8 2003 Dan Walsh <dwalsh@redhat.com> 1:2.4.4.0-4
+- turn off SELinux
+
+* Fri Sep 5 2003 Dan Walsh <dwalsh@redhat.com> 1:2.4.4.0-3.sel
+- turn on SELinux
+
+* Thu Sep  4 2003 Alexander Larsson <alexl@redhat.com> 1:2.4.4.0-2
+- Use the right default session (#103546)
+
+* Wed Sep  3 2003 Alexander Larsson <alexl@redhat.com> 1:2.4.4.0-1
+- update to 2.4.4.0
+- update to georges new selinux patch
+
+* Fri Aug 29 2003 Elliot Lee <sopwith@redhat.com> 1:2.4.2.102-2
+- Remove scrollkeeper files
+
+* Tue Aug 26 2003 George Lebl <jirka@5z.com> 1:2.4.2.102-1
+- updated to 2.4.2.102
+- removed outdated patches
+- Use Xsetup_0 only for :0 since that's the way it works
+  for xdm
+- remove the gnome.desktop file, its going into gnome-session
+
+* Thu Aug 14 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.6-1
+- update to latest bugfix version on george's advice
+- remove setlocale patch that's upstream
+- remove console setup patches that are upstream
+
+* Thu Jun 12 2003 Dan Walsh <dwalsh@redhat.com> 2.4.1.3-9
+- Port to SELinux
+
+* Wed Jun 04 2003 Elliot Lee <sopwith@redhat.com>
+- rebuilt
+
+* Tue Jun  3 2003 Jeff Johnson <jbj@redhat.com>
+- add explicit epoch's where needed.
+
+* Sun May 04 2003 Florian La Roche <Florian.LaRoche@redhat.de>
+- fix post: localstatedir -> _localstatedir
+
+* Thu May  1 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.3-6
+- enable UTF-8 for CJK
 
 * Mon Feb 24 2003 Elliot Lee <sopwith@redhat.com>
 - debuginfo rebuild
