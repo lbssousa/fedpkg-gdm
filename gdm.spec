@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 7
+Release: 8
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -32,6 +32,11 @@ Patch7: gdm-2.4.0.7-dbllogin-66486.patch
 Patch8: gdm-2.4.0.7-basicpath-68483.patch
 Patch9: gdm-2.4.0.7-confdocs-71308.patch
 Patch10: gdm-2.4.0.7-photobrowser.patch
+## there's no greek font so don't translate greek in language picker,
+## it looks awful
+Patch11: gdm-2.4.0.7-nogreek.patch
+## http://bugzilla.gnome.org/show_bug.cgi?id=91921
+Patch12: gdm-2.4.0.7-wordwrap.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -84,6 +89,8 @@ several different X sessions on your local machine at the same time.
 %patch8 -p1 -b .basicpath
 %patch9 -p1 -b .confdocs
 %patch10 -p1 -b .photobrowser
+%patch11 -p1 -b .nogreek
+%patch12 -p1 -b .wordwrap
 
 ## put in new gdm.png instead of ugly gdm.xpm
 cp -f %{SOURCE6} pixmaps
@@ -214,6 +221,13 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
+- put /usr/X11R6/bin in path for now fixes #72781
+- use proper i18n algorithm for word wrap, #71937
+- remove greek text from language picker due to lack 
+  of greek font
+- reorder PAM config file #72657
+
 * Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
 - improve gdmsetup icon
 - remove GNOME session, we will instead put it in gnome-session
