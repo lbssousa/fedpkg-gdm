@@ -15,12 +15,14 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.6.0.7
-Release: 8
+Version: 2.6.0.8
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
+Source1: gdm-allow-login.init
+Source2: gdm-early-login.init
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
 Patch1: gdm-2.6.0.5-rhconfig.patch
@@ -33,7 +35,7 @@ Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
 Patch18: gdm-2.6.0.7-wait-for-bootup.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
 Patch20: gdm-2.6.0.5-sort-session-list.patch
-Patch21: gdm-2.6.0.5-use-cannonical-username.patch
+Patch21: gdm-2.6.0.8-use-canonical-username.patch
 Patch22: gdm-2.6.0.7-stat-home-dir-as-user.patch
 Patch23: gdm-2.6.0.7-desktop.patch
 
@@ -171,6 +173,12 @@ desktop-file-install --vendor gnome --delete-original       \
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
+mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
+install -m755 ${RPM_SOURCE_DIR}/gdm-early-login.init                          \
+              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-early-login
+install -m755 ${RPM_SOURCE_DIR}/gdm-allow-login.init                          \
+              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-allow-login
+
 %find_lang gdm
 
 %clean
@@ -237,6 +245,7 @@ fi
 %config /etc/pam.d/gdmsetup
 %config /etc/pam.d/gdm-autologin
 %config /etc/security/console.apps/gdmsetup
+%config /etc/rc.d/init.d/*
 %dir /etc/X11/gdm/Init
 %dir /etc/X11/gdm/PreSession
 %dir /etc/X11/gdm/PostSession
@@ -260,6 +269,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sat Apr  2 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-1
+- update to 2.6.0.8
+- add new init scripts to support early-login mode
+
 * Tue Mar 29 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.7-8
 - Add a --wait-for-bootup cmdline option.
 
