@@ -4,7 +4,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.0beta2
-Release: 45
+Release: 46
 Epoch: 1
 Copyright: LGPL/GPL
 Group: User Interface/X
@@ -40,6 +40,9 @@ Patch14: gdm-1.0.0-noclosedspy.patch
 Patch15: gdm-1.0.0-norwegian.patch
 # photo stuff is gone now?
 Patch16: gdm-1.0.0-photofix.patch
+
+## a couple of security backports from GNOME 2.4
+Patch19: gdm-2.0beta2-crash.patch
 
 Patch20: gdm-2.0beta2-sopfixes.patch
 Patch21: gdm-2.0beta2-daemonfixes.patch
@@ -78,8 +81,6 @@ Patch47: gdm-2.0beta2-localeh.patch
 Patch48: gdm-2.0beta2-colors.patch
 Patch49: gdm-2.0beta2-setcred.patch
 
-Patch99: gdm-2.0beta-ppchack.patch
-
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
 Prereq: /usr/sbin/useradd
@@ -112,6 +113,8 @@ several different X sessions on your local machine at the same time.
 #%patch15 -p1 -b .norwegian
 #%patch16 -p1 -b .photofix
 
+%patch19 -p1 -b .crash
+
 %patch20 -p1 -b .sopgui
 %patch21 -p1 -b .sopdaemon
 %patch22 -p1 -b .soproot
@@ -142,7 +145,6 @@ several different X sessions on your local machine at the same time.
 %patch47 -p1 -b .localeh
 %patch48 -p1 -b .colors
 %patch49 -p1 -b .setcred
-%patch99 -p1 -b .ppchack
 
 # So it doesn't get automatically rebuilt
 touch -t '199001010000' configure.in
@@ -222,6 +224,9 @@ exit 0
 %attr(750, gdm, gdm) %dir /var/gdm
 
 %changelog
+* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com>
+- fix a security issue CAN-2003-0547 bugzilla #102275
+
 * Thu Mar 22 2001 Nalin Dahyabhai <nalin@redhat.com>
 - reinitialize pam credentials after calling initgroups() -- the
   credentials may be group memberships
