@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 9
+Release: 10
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -252,6 +252,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Dec 9 2004 Dan Walsh <dwalsh@redhat.com> 1:2.6.0.5-10
+- Remove pam_selinux from gdmsetup pam file
+
 * Wed Dec  1 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-9 
 - Look up and use username instead of assuming that user entered 
   login is cannonical.  Patch from
