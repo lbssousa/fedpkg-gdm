@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.6.0.0
-Release: 6
+Version: 2.6.0.3
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -166,7 +166,7 @@ desktop-file-install --vendor gnome --delete-original       \
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
-%find_lang gdm-2.4
+%find_lang gdm-2.6
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -205,7 +205,7 @@ exit 0
 /sbin/ldconfig
 scrollkeeper-update
 
-%files -f gdm-2.4.lang
+%files -f gdm-2.6.lang
 %defattr(-, root, root)
 
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
@@ -230,6 +230,7 @@ scrollkeeper-update
 %dir /etc/X11/gdm/PostLogin
 %dir /etc/X11/gdm/modules
 %{_datadir}/pixmaps
+%{_datadir}/icons
 %{_datadir}/gdm
 %{_datadir}/xsessions/*
 %{_datadir}/applications
@@ -242,9 +243,13 @@ scrollkeeper-update
 %{_sbindir}/*
 %dir %{_localstatedir}/log/gdm
 
+
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Jun 17 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.3-1
+- update to 2.6.0.3 (fixes bug #117677)
+
 * Tue Jun 15 2004 Elliot Lee <sopwith@redhat.com>
 - rebuilt
 
