@@ -30,7 +30,7 @@ Patch4: gdm-2.4.2.102-pam_timestamp.patch
 Patch13: gdm-selinux.patch
 Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
-Patch18: gdm-2.6.0.5-wait-for-bootup.patch
+Patch18: gdm-2.6.0.7-wait-for-bootup.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
 Patch20: gdm-2.6.0.5-sort-session-list.patch
 Patch21: gdm-2.6.0.5-use-cannonical-username.patch
