@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 9
+Release: 10
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -22,7 +22,10 @@ URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
 Source2: Default.session
 Source5: Failsafe.session
+## upstream in newer versions, can die later on
 Source6: gdm.png
+## temporary ja.po hack for date format
+Source7: gdm-ja.po
 
 Patch1: gdm-2.4.0.7-rhconfig.patch
 Patch4: gdm-2.4.0.4-pam_timestamp.patch
@@ -92,6 +95,8 @@ several different X sessions on your local machine at the same time.
 %patch11 -p1 -b .nogreek
 %patch12 -p1 -b .wordwrap
 
+## put in ja translation
+cp -f %{SOURCE7} po
 ## put in new gdm.png instead of ugly gdm.xpm
 cp -f %{SOURCE6} pixmaps
 perl -pi -e 's/gdm.xpm/gdm.png/' pixmaps/Makefile* gui/*.desktop*
@@ -221,6 +226,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sat Aug 31 2002 Havoc Pennington <hp@redhat.com>
+- include ja.po with new date format
+
 * Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
 - remove noreplace on gdm.conf #71309
 - make gnome-gdmsetup absolute, #72910
