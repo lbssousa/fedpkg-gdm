@@ -1,5 +1,5 @@
 %define pango_version 1.2.0
-%define gtk2_version 2.2.0
+%define gtk2_version 2.6.0
 %define libglade2_version 2.0.0
 %define libgnomeui_version 2.2.0
 %define libgnomecanvas_version 2.0.0
@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.7
-Release: 5
+Release: 6
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -186,6 +186,10 @@ exit 0
 %post
 /sbin/ldconfig
 scrollkeeper-update
+touch --no-create %{_datadir}/icons/hicolor
+if [-x /usr/bin/gtk-update-icon-cache ]; then
+  gtk-update-icon-cache %{_datadir}/icons/hicolor
+fi
 
 # Attempt to restart GDM softly by use of the fifo.  Wont work on older
 # then 2.2.3.1 versions but should work nicely on later upgrades.
@@ -209,6 +213,10 @@ exit 0
 %postun
 /sbin/ldconfig
 scrollkeeper-update
+touch --no-create %{_datadir}/icons/hicolor
+if [-x /usr/bin/gtk-update-icon-cache ]; then
+  gtk-update-icon-cache %{_datadir}/icons/hicolor
+fi
 
 %files -f gdm.lang
 %defattr(-, root, root)
@@ -252,6 +260,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Mar 25 2005 Christopher Aillon <caillon@redhat.com> 1:2.6.0.7-6
+- Update the GTK+ theme icon cache on (un)install
+
 * Fri Mar 11 2005 Alexandre Oliva <aoliva@redhat.com> 1:2.6.0.7-5
 - fix patch for bug 149899 (fixes bug 150745)
 
