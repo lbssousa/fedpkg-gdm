@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 7
+Release: 8
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -34,6 +34,7 @@ Patch16: gdm-2.6.0.0-pie.patch
 Patch17: gdm-2.6.0.5-check-selection.patch
 Patch18: gdm-2.6.0.5-fix-norwegian.patch
 Patch19: gdm-2.6.0.5-cleanup-xses.patch
+Patch20: gdm-2.6.0.5-sort-session-list.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -96,6 +97,7 @@ several different X sessions on your local machine at the same time.
 %patch17 -p1 -b .check-selection
 %patch18 -p1 -b .fix-norwegian
 %patch19 -p1 -b .cleanup-xses
+%patch20 -p1 -b .sort-session-list
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -248,6 +250,10 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Nov 11 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-8 
+- Sort session list so that default session comes out on top
+  (fixes bug 107324)
+
 * Wed Nov 10 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-7 
 - Make desktop file symlink instead of absolute (bug 104390)
 - Add flexiserver back to menus
