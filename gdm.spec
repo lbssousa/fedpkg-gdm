@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.7
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -248,6 +248,10 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Feb 10 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.7-2
+- Turn off "switchdesk" mode by default which accidentally got 
+  turned on by default in 2.6.0.5-4
+
 * Wed Feb  2 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.7-1
 - Update to 2.6.0.7
 
