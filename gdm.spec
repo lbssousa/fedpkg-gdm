@@ -1,12 +1,10 @@
 # Note that this is NOT a relocatable package
-%define ver      2.0beta2
-%define rel 37tc1
 %define prefix   /usr
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: %ver
-Release: %rel
+Version: 2.0beta2
+Release: 45
 Epoch: 1
 Copyright: LGPL/GPL
 Group: User Interface/X
@@ -14,6 +12,7 @@ Source: ftp://ftp.socsci.auc.dk/pub/empl/mkp/gdm-%{PACKAGE_VERSION}.tar.gz
 Source1: Gnome.session
 Source2: Default.session
 Source5: Failsafe.session
+Source6: gdm-po.tar.gz
 
 # FIXME: remove dead patches once we are sure they are really dead.  :-)
 Patch0: gdm-2.0beta2-rhconf.patch
@@ -74,9 +73,14 @@ Patch42: gdm-2.0beta2-fdleak.patch
 Patch43: gdm-2.0beta2-loopofdeath.patch
 Patch44: gdm-2.0beta2-it.patch
 Patch45: gdm-2.0beta2-ja.po.patch
-Patch46: gdm-2.0beta2-zh_TW.po.patch
+Patch46: gdm-2.0beta2-rhconf3.patch
+Patch47: gdm-2.0beta2-localeh.patch
+Patch48: gdm-2.0beta2-colors.patch
+Patch49: gdm-2.0beta2-setcred.patch
 
-BuildRoot: /var/tmp/gdm-%{PACKAGE_VERSION}-root
+Patch99: gdm-2.0beta-ppchack.patch
+
+BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
 Prereq: /usr/sbin/useradd
 Requires: pam >= 0.68
@@ -134,10 +138,17 @@ several different X sessions on your local machine at the same time.
 %patch43 -p1 -b .loopofdeath
 %patch44 -p1 -b .it
 %patch45 -p1 -b .jaupdate
-%patch46 -p1 -b .zh_TW
+%patch46 -p1 -b .rhconf3
+%patch47 -p1 -b .localeh
+%patch48 -p1 -b .colors
+%patch49 -p1 -b .setcred
+%patch99 -p1 -b .ppchack
 
 # So it doesn't get automatically rebuilt
 touch -t '199001010000' configure.in
+
+# translations
+tar zxf %{SOURCE6}
 
 %build
 libtoolize --force
@@ -180,9 +191,10 @@ ln -sf ../../xdm/TakeConsole $RPM_BUILD_ROOT/etc/X11/gdm/PostSession/Default
 # move pam.d stuff to right place
 mv $RPM_BUILD_ROOT/etc/X11/pam.d $RPM_BUILD_ROOT/etc
 
-# strip binaries
 rm $RPM_BUILD_ROOT%{prefix}/bin/gdmconfig
-# strip $RPM_BUILD_ROOT%{prefix}/bin/*
+
+%find_lang %name
+
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -193,7 +205,7 @@ rm $RPM_BUILD_ROOT%{prefix}/bin/gdmconfig
 # and couldn't create account with the current adduser.
 exit 0
 
-%files
+%files -f %{name}.lang
 %defattr(-, root, root)
 
 %doc AUTHORS COPYING ChangeLog NEWS README
@@ -206,17 +218,37 @@ exit 0
 %config /etc/X11/gdm/Init/*
 %config /etc/X11/gdm/PreSession/*
 %config /etc/X11/gdm/PostSession/*
-%{prefix}/share/locale/*/*/*
 %{prefix}/share/pixmaps/*
 %attr(750, gdm, gdm) %dir /var/gdm
 
 %changelog
-* Sun Jan  7 2001 Jason Wilson <jwilson@redhat.com>
-- added Traditional Chinese translations
-- added Chinese and Korean to locale list
+* Thu Mar 22 2001 Nalin Dahyabhai <nalin@redhat.com>
+- reinitialize pam credentials after calling initgroups() -- the
+  credentials may be group memberships
 
-* Tue Sep 12 2000 Matt Wilson <msw@redhat.com>
-- updated Japanese translation from Nakai-san
+* Mon Mar 19 2001 Owen Taylor <otaylor@redhat.com>
+- Fix colors patch
+
+* Thu Mar 15 2001 Havoc Pennington <hp@redhat.com>
+- translations
+
+* Mon Mar  5 2001 Preston Brown <pbrown@redhat.com>
+- don't screw up color map on 8 bit displays
+
+* Fri Feb 23 2001 Trond Eivind Glomsrød <teg@redhat.com>
+- langify
+- Don't define and use "ver" and "nam" at the top of the spec file
+- use %%{_tmppath}
+
+* Tue Feb 13 2001 Tim Powers <timp@redhat.com>
+- don't allow gdm to show some system accounts in the browser bugzilla
+  #26898
+
+* Fri Jan 19 2001 Akira TAGOH <tagoh@redhat.com>
+- Updated Japanese translation.
+
+* Tue Jan 02 2001 Havoc Pennington <hp@redhat.com>
+- add another close() to the fdleak patch, bugzilla #22794
 
 * Sun Aug 13 2000 Owen Taylor <otaylor@redhat.com>
 - Return to toplevel main loop and start Xdcmp if enabled
