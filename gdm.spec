@@ -13,7 +13,8 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.1.3
-Release: 5
+### Keep release as 5.x for the RHL 9 branch
+Release: 5.1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -53,6 +54,10 @@ Patch16: gdm-2.4.1.1-64bit.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=106658
 #
 Patch17: gdm-2.4.1.3-consoleencoding.patch
+
+## a couple of security backports from GNOME 2.4
+Patch18: gdm-2.4.1.3-no-show-xsession-errors.patch
+Patch19: gdm-2.4.1.3-crash.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -106,6 +111,9 @@ several different X sessions on your local machine at the same time.
 %patch15 -p1 -b .setlocale
 #%patch16 -p1 -b .64bit
 %patch17 -p1 -b .consoleencoding
+
+%patch18 -p1 -b .no-show-xsession-errors
+%patch19 -p1 -b .crash
 
 ## put in ja translation
 cp -f %{SOURCE7} po/ja.po
@@ -238,6 +246,10 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com> 1:2.4.1.3-5.1
+- fix a couple security issues CAN-2003-0547
+  bugzilla #102275
+
 * Mon Feb 24 2003 Elliot Lee <sopwith@redhat.com>
 - debuginfo rebuild
 
