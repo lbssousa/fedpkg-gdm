@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -32,6 +32,7 @@ Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
 Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
 Patch16: gdm-2.6.0.0-pie.patch
 Patch17: gdm-2.6.0.5-check-selection.patch
+Patch18: gdm-2.6.0.5-fix-norwegian.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -92,6 +93,7 @@ several different X sessions on your local machine at the same time.
 %patch15 -p1 -b .update-switchdesk-location
 %patch16 -p1 -b .pie
 %patch17 -p1 -b .check-selection
+%patch18 -p1 -b .fix-norwegian
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -244,6 +246,9 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Oct 19 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-5 
+- Prefer nb_NO over no_NO for Norwegian (fixes bug #136033)
+
 * Thu Oct  7 2004 Alexander Larsson <alexl@redhat.com> - 1:2.6.0.5-4
 - Change default greeter theme to "Default", require redhat-artwork with Default symlink.
 
