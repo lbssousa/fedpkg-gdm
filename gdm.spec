@@ -13,7 +13,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.4.0.7
-Release: 10
+Release: 11
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -40,6 +40,7 @@ Patch10: gdm-2.4.0.7-photobrowser.patch
 Patch11: gdm-2.4.0.7-nogreek.patch
 ## http://bugzilla.gnome.org/show_bug.cgi?id=91921
 Patch12: gdm-2.4.0.7-wordwrap.patch
+Patch13: gdm-2.4.0.7-xsessionowner.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -94,6 +95,7 @@ several different X sessions on your local machine at the same time.
 %patch10 -p1 -b .photobrowser
 %patch11 -p1 -b .nogreek
 %patch12 -p1 -b .wordwrap
+%patch13 -p1 -b .xsessionowner
 
 ## put in ja translation
 cp -f %{SOURCE7} po
@@ -226,6 +228,9 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Sep  2 2002 Owen Taylor <otaylor@redhat.com>
+- Fix problem where gdm was opening ~/.xsession-errors itself to bad effect
+
 * Sat Aug 31 2002 Havoc Pennington <hp@redhat.com>
 - include ja.po with new date format
 
