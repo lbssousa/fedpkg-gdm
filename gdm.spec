@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.5
-Release: 10
+Release: 11
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -252,6 +252,10 @@ scrollkeeper-update
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jan 25 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-11
+- Fix bug in greeter sort-session-list patch where selecting
+  a session did nothing (bug 145626)
+
 * Thu Dec 9 2004 Dan Walsh <dwalsh@redhat.com> 1:2.6.0.5-10
 - Remove pam_selinux from gdmsetup pam file
 
