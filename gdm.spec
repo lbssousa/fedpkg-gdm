@@ -1,45 +1,56 @@
 # Note that this is NOT a relocatable package
 %define prefix   /usr
 
+%define gtk2_version 2.0.3-3
+%define libglade2_version 1.99.12
+%define libgnomeui_version 1.117.2
+%define libgnomecanvas_version 1.117.0
+%define librsvg2_version 1.1.6
+%define libxml2_version 2.4.21
+%define scrollkeeper_version 0.3.4
+%define pam_version 0.75
+
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.2.3.1
-Release: 23
+Version: 2.4.0.0
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
-Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.gz
+Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
+URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 Source1: Gnome.session
 Source2: Default.session
 Source5: Failsafe.session
-Source6: gdm-pofiles.tar.gz
-Source7: gdm-2.3.90.1-locale.alias
 
-Patch1: gdm-2.2.3.1-rhconfig.patch
-Patch2: gdm-2.2.3.1-formatstrings.patch
-Patch3: gdm-2.2.3.1-sessionsel.patch
-# Set RUNNING_UNDER_GDM when running the display init script
-Patch4: gdm-2.2.3.1-runningunder.patch
-Patch5: gdm-2.2.3.1-pamcfg.patch
-
-## a couple of security backports from GNOME 2.4
-Patch19: gdm-2.4.1.3-crash.patch
+Patch1: gdm-2.3.90.2-rhconfig.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
 Prereq: /usr/sbin/useradd
 Prereq: /usr/bin/scrollkeeper-update
-Requires: pam >= 0.68
-Requires: gnome-libs >= 1.2.13
+Requires: gtk2 >= %{gtk2_version}
+Requires: libglade2 >= %{libglade2_version}
+Requires: libgnomeui >= %{libgnomeui_version}
+Requires: libgnomecanvas >= %{libgnomecanvas_version}
+Requires: librsvg2 >= %{librsvg2_version}
+Requires: libxml2 >= %{libxml2_version}
+Requires: pam >= %{pam_version}
 Requires: /etc/pam.d/system-auth
 Requires: /etc/X11/xdm/Xsession
 Requires: usermode
 Requires: xinitrc
 Requires: xsri >= 2.0.2
 Requires: /sbin/nologin
-BuildRequires:  scrollkeeper >= 0.1.4
-BuildRequires:  usermode, pam-devel
-BuildRequires:  gnome-libs >= 1.2.13
+BuildRequires: scrollkeeper >= %{scrollkeeper_version}
+BuildRequires: gtk2-devel >= %{gtk2_version}
+BuildRequires: libglade2-devel >= %{libglade2_version}
+BuildRequires: libgnomeui-devel >= %{libgnomeui_version}
+BuildRequires: libgnomecanvas-devel >= %{libgnomecanvas_version}
+BuildRequires: librsvg2-devel >= %{librsvg2_version}
+BuildRequires: libxml2-devel >= %{libxml2_version}
+BuildRequires: usermode
+BuildRequires: pam-devel >= %{pam_version}
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -51,55 +62,42 @@ several different X sessions on your local machine at the same time.
 %setup -q
 
 
-## unpack pofiles
-tar zxf %{SOURCE6}
-
 %patch1 -p1 -b .rhconfig
-%patch2 -p1 -b .formatstrings
-%patch3 -p1 -b .sessionsel
-%patch4 -p1 -b .runningunder
-%patch5 -p1 -b .pamcfg
-
-%patch19 -p1 -b .crash
-
-rm config/locale.alias && cp %{SOURCE7} config/locale.alias
 
 %build
-%configure --prefix=%prefix --sysconfdir=%{_sysconfdir}/X11 --with-pam-prefix=$RPM_BUILD_ROOT%{_sysconfdir} --localstatedir=/var --enable-console-helper
+%configure --prefix=%prefix --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper
 make
 
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
-## can't use makeinstall due to /etc/X11
+
 make sysconfdir=$RPM_BUILD_ROOT/etc/X11 \
     prefix=$RPM_BUILD_ROOT%{_prefix} bindir=$RPM_BUILD_ROOT%{_bindir} \
     datadir=$RPM_BUILD_ROOT%{_datadir} \
     localstatedir=$RPM_BUILD_ROOT%{_localstatedir} \
-    sbindir=$RPM_BUILD_ROOT%{_sbindir} install
+    sbindir=$RPM_BUILD_ROOT%{_sbindir} \
+    PAM_PREFIX=$RPM_BUILD_ROOT/etc install
 
 # docs go elsewhere
 rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 
 # install RH specific session files
-rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Sessions/*
+rm -f $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/*
 
-install -m 755 %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Sessions/Gnome
-install -m 755 %{SOURCE2} $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Sessions/Default
-install -m 755 %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Sessions/Failsafe
-ln -sf Default $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Sessions/default
+install -m 755 %{SOURCE1} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Gnome
+install -m 755 %{SOURCE2} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Default
+install -m 755 %{SOURCE5} $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/Failsafe
+ln -sf Default $RPM_BUILD_ROOT/etc/X11/gdm/Sessions/default
 
 # put gnomerc in the right place
-install -m 644 config/gnomerc $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/gnomerc
+install -m 644 config/gnomerc $RPM_BUILD_ROOT/etc/X11/gdm/gnomerc
 
 # change default Init script to be Red Hat default
-ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Init/Default
+ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT/etc/X11/gdm/Init/Default
 
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
-
-# make symlink from gdmconfig to consolehelper relative
-(cd $RPM_BUILD_ROOT%{_bindir} && rm gdmconfig && ln -s consolehelper gdmconfig)
 
 %find_lang %name
 
@@ -126,32 +124,32 @@ scrollkeeper-update
 
 %doc AUTHORS COPYING ChangeLog NEWS README
 
-%dir %{_sysconfdir}/X11/gdm
-%config %{_sysconfdir}/X11/gdm/gdm.conf
-%{_sysconfdir}/X11/gdm/factory-gdm.conf
-%config %{_sysconfdir}/X11/gdm/XKeepsCrashing
-%config %{_sysconfdir}/X11/gdm/locale.alias
-%config %{_sysconfdir}/X11/gdm/Sessions/*
-%config %{_sysconfdir}/X11/gdm/Init/*
-%config %{_sysconfdir}/X11/gdm/PreSession/*
-%config %{_sysconfdir}/X11/gdm/PostSession/*
-%config %{_sysconfdir}/X11/gdm/gnomerc
-%config %{_sysconfdir}/pam.d/gdm
-%config %{_sysconfdir}/pam.d/gdmconfig
-%config %{_sysconfdir}/security/console.apps/gdmconfig
-%dir %{_sysconfdir}/X11/gdm/Sessions
-%dir %{_sysconfdir}/X11/gdm/Init
-%dir %{_sysconfdir}/X11/gdm/PreSession
-%dir %{_sysconfdir}/X11/gdm/PostSession
+%dir /etc/X11/gdm
+%config /etc/X11/gdm/gdm.conf
+/etc/X11/gdm/factory-gdm.conf
+%config /etc/X11/gdm/XKeepsCrashing
+%config /etc/X11/gdm/locale.alias
+%config /etc/X11/gdm/Sessions/*
+%config /etc/X11/gdm/Init/*
+%config /etc/X11/gdm/PreSession/*
+%config /etc/X11/gdm/PostSession/*
+%config /etc/X11/gdm/gnomerc
+%config /etc/pam.d/gdm
+%config /etc/pam.d/gdmsetup
+%config /etc/security/console.apps/gdmsetup
+%dir /etc/X11/gdm/Sessions
+%dir /etc/X11/gdm/Init
+%dir /etc/X11/gdm/PreSession
+%dir /etc/X11/gdm/PostSession
 %{_datadir}/pixmaps/gdm.xpm
 %{_datadir}/pixmaps/nobody.png
 %{_datadir}/pixmaps/nohost.png
 %{_datadir}/gdm
-%{_datadir}/gnome/apps/Settings/gdmphotosetup.desktop
-%{_datadir}/gnome/apps/System/gdmconfig.desktop
-%{_datadir}/gnome/help/gdm
-%{_datadir}/gnome/help/gdmconfig
-%{_datadir}/omf/gdm
+%{_datadir}/gnome/capplets/gdmphotosetup.desktop
+%{_datadir}/applications/gdmsetup.desktop
+#%{_datadir}/gnome/help/gdm
+#%{_datadir}/gnome/help/gdmconfig
+#%{_datadir}/omf/gdm
 %{_bindir}/*
 %{_sbindir}/*
 %{_localstatedir}/log/gdm
@@ -159,17 +157,27 @@ scrollkeeper-update
 %attr(750, gdm, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Wed Aug 13 2003 Havoc Pennington <hp@redhat.com>
-- fix a security issue CAN-2003-0547 bugzilla #102275
+* Mon Jun 10 2002 Havoc Pennington <hp@redhat.com>
+- 2.4.0.0
 
-* Mon Apr 15 2002 Havoc Pennington <hp@redhat.com>
-- merge translations
+* Tue May 21 2002 Havoc Pennington <hp@redhat.com>
+- rebuild in different environment
 
-* Fri Mar  1 2002 Havoc Pennington <hp@redhat.com>
-- fix upstream locale.alias, then add a copy of it as a Source, fixes
-  #57928 and #55492
-- fix some /usr/bin -> bindir sort of stuff using my handy script
-- fix rpmlint #56813
+* Tue May 21 2002 Havoc Pennington <hp@redhat.com>
+- 2.3.90.3
+
+* Tue May 14 2002 Matt Wilson <msw@redhat.com> 2.3.90.2.90-1
+- pulled from current CVS, named it 2.3.90.2.90-1
+
+* Thu Feb 14 2002 Havoc Pennington <hp@redhat.com>
+- rebuild for new libs
+- add URL tag
+
+* Mon Feb 11 2002 Alex Larsson <alexl@redhat.com> 2.3.90.1.90-1
+- Updated to a cvs snapshot that has the new greeter.
+
+* Thu Jan 24 2002 Havoc Pennington <hp@redhat.com>
+- rebuild in rawhide
 
 * Tue Sep  4 2001 Havoc Pennington <hp@redhat.com>
 - fix #52997 (ukrainian in language list)
@@ -428,7 +436,7 @@ scrollkeeper-update
 - added jrb's patch to disable stars in passwd entry field
 
 * Fri Mar 19 1999 Michael Fulbright <drmike@redhat.com>
-- made sure %{_bindir} isnt in default path twice
+- made sure /usr/bin isnt in default path twice
 - strip binaries
 
 * Wed Mar 17 1999 Michael Fulbright <drmike@redhat.com>
@@ -459,7 +467,7 @@ scrollkeeper-update
 - moved /usr/var/gdm /var/gdm
 
 * Thu Feb 25 1999 Michael Fulbright <drmike@redhat.com>
-- moved files from /usr%{_sysconfdir} to %{_sysconfdir}
+- moved files from /usr/etc to /etc
 
 * Tue Feb 16 1999 Michael Johnson <johnsonm@redhat.com>
 - removed commented-out #1 definition -- put back after testing gnome-libs
