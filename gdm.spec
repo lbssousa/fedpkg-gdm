@@ -1,6 +1,6 @@
 # Note that this is NOT a relocatable package
 %define ver      2.0beta2
-%define rel 37j1
+%define rel 37tc1
 %define prefix   /usr
 
 Summary: The GNOME Display Manager.
@@ -74,6 +74,7 @@ Patch42: gdm-2.0beta2-fdleak.patch
 Patch43: gdm-2.0beta2-loopofdeath.patch
 Patch44: gdm-2.0beta2-it.patch
 Patch45: gdm-2.0beta2-ja.po.patch
+Patch46: gdm-2.0beta2-zh_TW.po.patch
 
 BuildRoot: /var/tmp/gdm-%{PACKAGE_VERSION}-root
 
@@ -133,6 +134,7 @@ several different X sessions on your local machine at the same time.
 %patch43 -p1 -b .loopofdeath
 %patch44 -p1 -b .it
 %patch45 -p1 -b .jaupdate
+%patch46 -p1 -b .zh_TW
 
 # So it doesn't get automatically rebuilt
 touch -t '199001010000' configure.in
@@ -209,6 +211,10 @@ exit 0
 %attr(750, gdm, gdm) %dir /var/gdm
 
 %changelog
+* Sun Jan  7 2001 Jason Wilson <jwilson@redhat.com>
+- added Traditional Chinese translations
+- added Chinese and Korean to locale list
+
 * Tue Sep 12 2000 Matt Wilson <msw@redhat.com>
 - updated Japanese translation from Nakai-san
 
