@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -273,6 +273,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Apr 13 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-3
+- Don't hard code dpi setting to 96.0, but instead look at
+  Xft.dpi
+
 * Wed Apr 13 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-2
 - touch /var/lock/subsys/gdm-early-login so gdm gets killed on
   runlevel changes (bug 113107)
