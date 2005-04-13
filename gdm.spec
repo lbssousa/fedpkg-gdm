@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -38,6 +38,8 @@ Patch20: gdm-2.6.0.5-sort-session-list.patch
 Patch21: gdm-2.6.0.8-use-canonical-username.patch
 Patch22: gdm-2.6.0.7-stat-home-dir-as-user.patch
 Patch23: gdm-2.6.0.7-desktop.patch
+Patch24: gdm-2.6.0.8-compensate-for-broken-dpi.patch
+Patch25: gdm-2.6.0.8-merge-resources.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -102,6 +104,8 @@ several different X sessions on your local machine at the same time.
 %patch21 -p1 -b .use-cannonical-username
 %patch22 -p1 -b .stat-home-dir-as-user
 %patch23 -p1 -b .onlyshowin
+%patch24 -p1 -b .compensate-for-broken-dpi
+%patch25 -p1 -b .merge-resources
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -269,6 +273,12 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Apr 13 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-2
+- touch /var/lock/subsys/gdm-early-login so gdm gets killed on
+  runlevel changes (bug 113107)
+- don't try to use system dpi settings for canvas text (bug 127532)
+- merge resource database from displays other than :0
+
 * Sat Apr  2 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-1
 - update to 2.6.0.8
 - add new init scripts to support early-login mode
