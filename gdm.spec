@@ -273,6 +273,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Apr 14 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.8-4
+- Don't do early-login if firstboot is going to run
+
 * Wed Apr 13 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-3
 - Don't hard code dpi setting to 96.0, but instead look at
   Xft.dpi
