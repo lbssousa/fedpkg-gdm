@@ -279,7 +279,7 @@ fi
 
 * Wed Apr 13 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-2
 - touch /var/lock/subsys/gdm-early-login so gdm gets killed on
-  runlevel changes (bug 113107)
+  runlevel changes (bug 154414)
 - don't try to use system dpi settings for canvas text (bug 127532)
 - merge resource database from displays other than :0
 
