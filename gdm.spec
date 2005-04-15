@@ -275,6 +275,7 @@ fi
 %changelog
 * Thu Apr 14 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.8-4
 - Don't do early-login if firstboot is going to run
+- Make early-login work with timed and automatic logins
 
 * Wed Apr 13 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-3
 - Don't hard code dpi setting to 96.0, but instead look at
