@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -153,8 +153,11 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Xsession
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 
-# remove the gnome session file, since we put that in gnome-session
+# remove the gnome session file, since we don't use it anymore
 rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
+
+# remove the other gnome session file, since we put it in gnome-session
+rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
 
 # no dumb flexiserver thing, Xnest is too broken
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
@@ -258,7 +261,6 @@ fi
 %{_datadir}/pixmaps
 %{_datadir}/icons
 %{_datadir}/gdm
-%{_datadir}/xsessions/*
 %{_datadir}/applications
 %{_datadir}/gnome/help/gdm
 %{_datadir}/omf/gdm
@@ -273,6 +275,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Apr 18 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-5
+- Don't install gnome.desktop to /usr/share/xsessions (bug 145791)
+
 * Thu Apr 14 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.8-4
 - Don't do early-login if firstboot is going to run
 - Make early-login work with timed and automatic logins
