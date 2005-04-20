@@ -23,6 +23,7 @@ Group: User Interface/X
 Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
 Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
+Source3: zzz-bootup-complete.init
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
 Patch1: gdm-2.6.0.5-rhconfig.patch
