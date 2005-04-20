@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 5
+Release: 6
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -40,6 +40,7 @@ Patch22: gdm-2.6.0.7-stat-home-dir-as-user.patch
 Patch23: gdm-2.6.0.7-desktop.patch
 Patch24: gdm-2.6.0.8-compensate-for-broken-dpi.patch
 Patch25: gdm-2.6.0.8-merge-resources.patch
+Patch26: gdm-2.6.0.8-boot-throbber.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -106,6 +107,7 @@ several different X sessions on your local machine at the same time.
 %patch23 -p1 -b .onlyshowin
 %patch24 -p1 -b .compensate-for-broken-dpi
 %patch25 -p1 -b .merge-resources
+%patch26 -p1 -b .boot-throbber
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -185,6 +187,8 @@ install -m755 ${RPM_SOURCE_DIR}/gdm-early-login.init                          \
               ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-early-login
 install -m755 ${RPM_SOURCE_DIR}/gdm-allow-login.init                          \
               ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-allow-login
+install -m755 ${RPM_SOURCE_DIR}/zzz-bootup-complete.init                      \
+              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/zzz-bootup-complete
 
 %find_lang gdm
 
@@ -275,6 +279,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Apr 19 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.8-6
+- Add a throbber for early login
+
 * Mon Apr 18 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-5
 - Don't install gnome.desktop to /usr/share/xsessions (bug 145791)
 
