@@ -42,7 +42,7 @@ Patch23: gdm-2.6.0.7-desktop.patch
 Patch24: gdm-2.6.0.8-compensate-for-broken-dpi.patch
 Patch25: gdm-2.6.0.8-merge-resources.patch
 Patch26: gdm-2.6.0.8-boot-throbber.patch
-Patch27: gdm-2.6.0.8.dont-malloc-in-signal-handlers.patch
+Patch27: gdm-2.6.0.8-dont-malloc-in-signal-handlers.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
