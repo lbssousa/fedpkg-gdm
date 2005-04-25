@@ -42,6 +42,7 @@ Patch23: gdm-2.6.0.7-desktop.patch
 Patch24: gdm-2.6.0.8-compensate-for-broken-dpi.patch
 Patch25: gdm-2.6.0.8-merge-resources.patch
 Patch26: gdm-2.6.0.8-boot-throbber.patch
+Patch27: gdm-2.6.0.8.dont-malloc-in-signal-handlers.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -103,12 +104,13 @@ several different X sessions on your local machine at the same time.
 %patch18 -p1 -b .wait-for-bootup
 %patch19 -p1 -b .cleanup-xses
 %patch20 -p1 -b .sort-session-list
-%patch21 -p1 -b .use-cannonical-username
+%patch21 -p1 -b .use-canonical-username
 %patch22 -p1 -b .stat-home-dir-as-user
 %patch23 -p1 -b .onlyshowin
 %patch24 -p1 -b .compensate-for-broken-dpi
 %patch25 -p1 -b .merge-resources
 %patch26 -p1 -b .boot-throbber
+%patch27 -p1 -b .dont-malloc-in-signal-handlers
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -280,6 +282,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Apr 24 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-7
+- calling gdm_debug and g_strdup_printf from signal handlers are
+  bad news (Spotted by Mark McLoughlin <markmc@redhat.com>).
+
 * Tue Apr 19 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.8-6
 - Add a throbber for early login
 
