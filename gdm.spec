@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 8
+Release: 9
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,7 +26,7 @@ Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
-Patch1: gdm-2.6.0.5-rhconfig.patch
+Patch1: gdm-2.6.0.8-rhconfig.patch
 ## we're going to try UTF-8 CJK
 ## Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
 Patch4: gdm-2.4.2.102-pam_timestamp.patch
@@ -97,7 +97,7 @@ several different X sessions on your local machine at the same time.
 %setup -q
 
 %patch1 -p1 -b .rhconfig
-## %patch2 -p1 -b .cjk-no-utf8
+# %patch2 -p1 -b .cjk-no-utf8
 %patch4 -p1 -b .pam_timestamp
 %patch13 -p1 -b .selinux
 %patch14 -p1 -b .session-errors
@@ -212,7 +212,7 @@ exit 0
 scrollkeeper-update
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  gtk-update-icon-cache %{_datadir}/icons/hicolor
+  gtk-update-icon-cache -q %{_datadir}/icons/hicolor
 fi
 
 # Attempt to restart GDM softly by use of the fifo.  Wont work on older
@@ -284,8 +284,15 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Apr 26 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-9
+- Change default standard greeter theme to clearlooks and 
+  default graphical greeter theme to Bluecurve specifically.
+
+- Change default path values (bug 154280)
+
 * Mon Apr 25 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.8-8
 - for early-login, delay XDMCP initialization until allow-login
+
 * Sun Apr 24 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-7
 - calling gdm_debug and g_strdup_printf from signal handlers are
   bad news (Spotted by Mark McLoughlin <markmc@redhat.com>).
