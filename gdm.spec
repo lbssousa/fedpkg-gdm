@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 9
+Release: 10
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -239,7 +239,7 @@ exit 0
 scrollkeeper-update
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  gtk-update-icon-cache %{_datadir}/icons/hicolor
+  gtk-update-icon-cache -q %{_datadir}/icons/hicolor
 fi
 
 %files -f gdm.lang
@@ -284,6 +284,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Apr 27 2005 Jeremy Katz <katzj@redhat.com> - 1:2.6.0.8-10
+- silence %%postun
+
 * Tue Apr 26 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-9
 - Change default standard greeter theme to clearlooks and 
   default graphical greeter theme to Bluecurve specifically.
