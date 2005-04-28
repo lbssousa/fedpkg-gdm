@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 10
+Release: 11
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -44,6 +44,8 @@ Patch25: gdm-2.6.0.8-merge-resources.patch
 Patch26: gdm-2.6.0.8-boot-throbber.patch
 Patch27: gdm-2.6.0.8-dont-malloc-in-signal-handlers.patch
 Patch28: gdm-2.6.0.8-xdmcp.patch
+Patch29: gdm-2.6.0.8-fix-halt-command.patch
+Patch30: gdm-2.6.0.8-process-all-messages.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -113,6 +115,8 @@ several different X sessions on your local machine at the same time.
 %patch26 -p1 -b .boot-throbber
 %patch27 -p1 -b .dont-malloc-in-signal-handlers
 %patch28 -p1 -b .xdmcp
+%patch29 -p1 -b .fix-halt-command
+%patch30 -p1 -b .process-all-messages
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -284,6 +288,11 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Apr 28 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-11
+- Fix halt command (bug 156299)
+- Process all messages sent to the greeter in a read, not just
+  the first
+
 * Wed Apr 27 2005 Jeremy Katz <katzj@redhat.com> - 1:2.6.0.8-10
 - silence %%postun
 
