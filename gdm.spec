@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 11
+Release: 12
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
