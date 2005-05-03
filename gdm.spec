@@ -288,6 +288,11 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue May  3 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-12
+- Fix processing of non-ascii characters that got broken
+  in 2.6.0.8-11, found by Miloslav Trmac <mitr@redhat.com>,
+  (bug 156590).
+
 * Thu Apr 28 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-11
 - Fix halt command (bug 156299)
 - Process all messages sent to the greeter in a read, not just
