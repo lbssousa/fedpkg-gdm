@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 13
+Release: 14
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -288,7 +288,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Thu May 12 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-13
+* Thu May 12 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-14
 - Fix processing of new-line characters that got broken
   in 2.6.0.8-11 (bug 157442).
 
