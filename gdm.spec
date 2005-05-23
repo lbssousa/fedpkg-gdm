@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 15
+Release: 16
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -288,6 +288,12 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon May 23 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-16
+- Make sure username/password incorrect message gets displayed
+  (bug 158127).
+- reread system locale before starting gdm in early login mode 
+  (bug 158376).
+
 * Thu May 19 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-15
 - Take out some syslog spew (bug 157711).
 
