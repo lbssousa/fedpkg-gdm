@@ -118,7 +118,7 @@ several different X sessions on your local machine at the same time.
 %patch28 -p1 -b .xdmcp
 %patch29 -p1 -b .fix-halt-command
 %patch30 -p1 -b .process-all-messages
-%patch31 -p1 -b .prune-lang-list
+#%patch31 -p1 -b .prune-lang-list
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
