@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.6.0.8
-Release: 16
+Release: 18
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -46,6 +46,7 @@ Patch27: gdm-2.6.0.8-dont-malloc-in-signal-handlers.patch
 Patch28: gdm-2.6.0.8-xdmcp.patch
 Patch29: gdm-2.6.0.8-fix-halt-command.patch
 Patch30: gdm-2.6.0.8-process-all-messages.patch
+Patch31: gdm-2.6.0.8-prune-lang-list.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -117,6 +118,7 @@ several different X sessions on your local machine at the same time.
 %patch28 -p1 -b .xdmcp
 %patch29 -p1 -b .fix-halt-command
 %patch30 -p1 -b .process-all-messages
+%patch31 -p1 -b .prune-lang-list
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -288,6 +290,12 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Aug 18 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-18
+- rebuild
+
+* Wed Aug 10 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-17
+- Prune uninstalled languages from language list.
+
 * Mon May 23 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-16
 - Make sure username/password incorrect message gets displayed
   (bug 158127).
