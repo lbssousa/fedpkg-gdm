@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.6.0.8
-Release: 18
+Version: 2.8.0.2
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,27 +26,19 @@ Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
 
-Patch1: gdm-2.6.0.8-rhconfig.patch
-## we're going to try UTF-8 CJK
-## Patch2: gdm-2.4.1.1-cjk-no-utf8.patch
-Patch4: gdm-2.4.2.102-pam_timestamp.patch
-Patch13: gdm-selinux.patch
-Patch14: gdm-2.6.0.0-session-errors-in-tmp.patch
-Patch15: gdm-2.6.0.0-update-switchdesk-location.patch
-Patch18: gdm-2.6.0.7-wait-for-bootup.patch
-Patch19: gdm-2.6.0.5-cleanup-xses.patch
-Patch20: gdm-2.6.0.5-sort-session-list.patch
-Patch21: gdm-2.6.0.8-use-canonical-username.patch
-Patch22: gdm-2.6.0.7-stat-home-dir-as-user.patch
-Patch23: gdm-2.6.0.7-desktop.patch
-Patch24: gdm-2.6.0.8-compensate-for-broken-dpi.patch
-Patch25: gdm-2.6.0.8-merge-resources.patch
-Patch26: gdm-2.6.0.8-boot-throbber.patch
-Patch27: gdm-2.6.0.8-dont-malloc-in-signal-handlers.patch
-Patch28: gdm-2.6.0.8-xdmcp.patch
-Patch29: gdm-2.6.0.8-fix-halt-command.patch
-Patch30: gdm-2.6.0.8-process-all-messages.patch
-Patch31: gdm-2.6.0.8-prune-lang-list.patch
+Patch1: gdm-2.8.0.2-change-defaults.patch
+Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
+Patch3: gdm-2.8.0.2-fix-selinux-check.patch
+Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
+Patch5: gdm-2.8.0.2-update-switchdesk-location.patch
+Patch6: gdm-2.6.0.7-wait-for-bootup.patch
+Patch7: gdm-2.8.0.2-clean-up-xsession-errors.patch
+Patch8: gdm-2.8.0.2-merge-resources.patch
+Patch9: gdm-2.6.0.8-boot-throbber.patch
+Patch10: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
+Patch11: gdm-2.6.0.8-xdmcp.patch
+Patch12: gdm-2.8.0.2-process-all-messages.patch
+Patch13: gdm-2.6.0.8-prune-lang-list.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -99,26 +91,19 @@ several different X sessions on your local machine at the same time.
 %prep
 %setup -q
 
-%patch1 -p1 -b .rhconfig
-# %patch2 -p1 -b .cjk-no-utf8
-%patch4 -p1 -b .pam_timestamp
-%patch13 -p1 -b .selinux
-%patch14 -p1 -b .session-errors
-%patch15 -p1 -b .update-switchdesk-location
-%patch18 -p1 -b .wait-for-bootup
-%patch19 -p1 -b .cleanup-xses
-%patch20 -p1 -b .sort-session-list
-%patch21 -p1 -b .use-canonical-username
-%patch22 -p1 -b .stat-home-dir-as-user
-%patch23 -p1 -b .onlyshowin
-%patch24 -p1 -b .compensate-for-broken-dpi
-%patch25 -p1 -b .merge-resources
-%patch26 -p1 -b .boot-throbber
-%patch27 -p1 -b .dont-malloc-in-signal-handlers
-%patch28 -p1 -b .xdmcp
-%patch29 -p1 -b .fix-halt-command
-%patch30 -p1 -b .process-all-messages
-#%patch31 -p1 -b .prune-lang-list
+%patch1 -p1 -b .change-defaults
+%patch2 -p1 -b .add-pam-timestamp-module
+%patch3 -p1 -b .fix-selinux-check
+%patch4 -p1 -b .session-errors-in-tmp
+%patch5 -p1 -b .update-switchdesk-location
+##%patch6 -p1 -b .wait-for-bootup
+%patch7 -p1 -b .clean-up-xsession-errors
+%patch8 -p1 -b .merge-resources
+#%patch9 -p1 -b .boot-throbber
+%patch10 -p1 -b .dont-malloc-in-signal-handlers
+#%patch11 -p1 -b .xdmcp
+%patch12 -p1 -b .process-all-messages
+#%patch13 -p1 -b .prune-lang-list
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -130,7 +115,7 @@ libtoolize --force --copy
 automake-1.4 --add-missing
 autoconf
 autoheader
-%configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper \
+%configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper --disable-scrollkeeper \
 %if %{WITH_SELINUX}
 --with-selinux
 %else
@@ -141,21 +126,17 @@ make
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
+mkdir -p $RPM_BUILD_ROOT/etc/X11/gdm/Init
+mkdir -p $RPM_BUILD_ROOT/etc/X11/gdm/PreSession
+mkdir -p $RPM_BUILD_ROOT/etc/X11/gdm/PostSession
 
-make sysconfdir=$RPM_BUILD_ROOT/etc/X11 libdir=$RPM_BUILD_ROOT%{_libdir}\
-    libexecdir=$RPM_BUILD_ROOT%{_libexecdir} \
-    mandir=$RPM_BUILD_ROOT%{_mandir} \
-    prefix=$RPM_BUILD_ROOT%{_prefix} bindir=$RPM_BUILD_ROOT%{_bindir} \
-    datadir=$RPM_BUILD_ROOT%{_datadir} \
-    localstatedir=$RPM_BUILD_ROOT%{_localstatedir} \
-    sbindir=$RPM_BUILD_ROOT%{_sbindir} \
-    PAM_PREFIX=$RPM_BUILD_ROOT/etc install
+make install DESTDIR=$RPM_BUILD_ROOT
 
 # docs go elsewhere
 rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 
 # change default Init script for :0 to be Red Hat default
-ln -sf ../../xdm/Xsetup_0 $RPM_BUILD_ROOT/etc/X11/gdm/Init/:0
+(cd $RPM_BUILD_ROOT/etc/X11/gdm/Init; ln -sf ../../xdm/Xsetup_0 :0)
 
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
@@ -177,7 +158,7 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
 
 # use patched gdmsetup desktop file
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
-ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop $RPM_BUILD_ROOT%{_datadir}/applications/
+(cd $RPM_BUILD_ROOT%{_datadir}/applications; ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop .)
 
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
@@ -186,6 +167,7 @@ desktop-file-install --vendor gnome --delete-original       \
 
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
+  --add-only-show-in GNOME                                  \
   $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.desktop
 
 # broken install-data-local in gui/Makefile.am makes this necessary
@@ -290,6 +272,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Aug 19 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-19
+- update to 2.8.0.2
+- disable early login stuff temporarily
+
 * Thu Aug 18 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-18
 - rebuild
 
