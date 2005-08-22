@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.2
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -39,6 +39,7 @@ Patch10: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
 Patch11: gdm-2.6.0.8-xdmcp.patch
 Patch12: gdm-2.8.0.2-process-all-messages.patch
 Patch13: gdm-2.6.0.8-prune-lang-list.patch
+Patch14: gdm-2.8.0.2-hide-throbber.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -104,6 +105,7 @@ several different X sessions on your local machine at the same time.
 #%patch11 -p1 -b .xdmcp
 %patch12 -p1 -b .process-all-messages
 #%patch13 -p1 -b .prune-lang-list
+%patch14 -p1 -b .hide-throbber
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -272,7 +274,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Fri Aug 19 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-19
+* Sat Aug 20 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-2
+- hide throbber
+
+* Fri Aug 19 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-1
 - update to 2.8.0.2
 - disable early login stuff temporarily
 
