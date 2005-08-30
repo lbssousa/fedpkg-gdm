@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.2
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -38,7 +38,7 @@ Patch9: gdm-2.6.0.8-boot-throbber.patch
 Patch10: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
 Patch11: gdm-2.6.0.8-xdmcp.patch
 Patch12: gdm-2.8.0.2-process-all-messages.patch
-Patch13: gdm-2.6.0.8-prune-lang-list.patch
+Patch13: gdm-2.8.0.2-prune-lang-list.patch
 Patch14: gdm-2.8.0.2-hide-throbber.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
@@ -104,7 +104,7 @@ several different X sessions on your local machine at the same time.
 %patch10 -p1 -b .dont-malloc-in-signal-handlers
 #%patch11 -p1 -b .xdmcp
 %patch12 -p1 -b .process-all-messages
-#%patch13 -p1 -b .prune-lang-list
+%patch13 -p1 -b .prune-lang-list
 %patch14 -p1 -b .hide-throbber
 
 # fix the time format for ja
@@ -238,7 +238,7 @@ fi
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
 
 %dir /etc/X11/gdm
-%config /etc/X11/gdm/gdm.conf
+%config(noreplace) /etc/X11/gdm/gdm.conf
 /etc/X11/gdm/factory-gdm.conf
 %config /etc/X11/gdm/XKeepsCrashing
 %config /etc/X11/gdm/locale.alias
@@ -274,6 +274,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Aug 30 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-3
+- Prune language list of installed languages
+- Make config file noreplace again (bug 167087).
+
 * Sat Aug 20 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-2
 - hide throbber
 
