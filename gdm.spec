@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.2
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -40,6 +40,7 @@ Patch11: gdm-2.6.0.8-xdmcp.patch
 Patch12: gdm-2.8.0.2-process-all-messages.patch
 Patch13: gdm-2.8.0.2-prune-lang-list.patch
 Patch14: gdm-2.8.0.2-hide-throbber.patch
+Patch15: gdm-2.8.0.2-clean-up-leaks.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -106,6 +107,7 @@ several different X sessions on your local machine at the same time.
 %patch12 -p1 -b .process-all-messages
 %patch13 -p1 -b .prune-lang-list
 %patch14 -p1 -b .hide-throbber
+%patch15 -p1 -b .clean-up-leaks
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -274,6 +276,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Sep  6 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-4
+- Apply clean up patch from Steve Grubb (gnome bug 315388).
+
 * Tue Aug 30 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-3
 - Prune language list of installed languages
 - Make config file noreplace again (bug 167087).
