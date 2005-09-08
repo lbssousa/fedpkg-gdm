@@ -167,7 +167,7 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
-  $RPM_BUILD_ROOT%{_datadir}/gnome/capplets/gdmphotosetup.desktop
+  $RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop
 
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
