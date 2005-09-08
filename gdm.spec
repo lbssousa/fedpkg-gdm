@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.8.0.2
-Release: 4
+Version: 2.8.0.4
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -40,7 +40,7 @@ Patch11: gdm-2.6.0.8-xdmcp.patch
 Patch12: gdm-2.8.0.2-process-all-messages.patch
 Patch13: gdm-2.8.0.2-prune-lang-list.patch
 Patch14: gdm-2.8.0.2-hide-throbber.patch
-Patch15: gdm-2.8.0.2-clean-up-leaks.patch
+Patch15: gdm-2.8.0.4-clean-up-leaks.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -276,6 +276,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep  8 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-1
+- update to 2.8.0.4
+
 * Tue Sep  6 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.2-4
 - Apply clean up patch from Steve Grubb (gnome bug 315388).
 
