@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -169,10 +169,7 @@ desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
   $RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop
 
-desktop-file-install --vendor gnome --delete-original       \
-  --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
-  --add-only-show-in GNOME                                  \
-  $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.desktop
+rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.destkop
 
 # broken install-data-local in gui/Makefile.am makes this necessary
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
@@ -276,6 +273,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep 27 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-2
+- remove flexiserver from menus
+
 * Thu Sep  8 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-1
 - update to 2.8.0.4
 
