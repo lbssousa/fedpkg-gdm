@@ -9,14 +9,11 @@
 %define pam_version 0.75
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
-%if %{?WITH_SELINUX:0}%{!?WITH_SELINUX:1}
-%define WITH_SELINUX 1
-%endif
 
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -79,10 +76,7 @@ BuildRequires: libtool automake14 autoconf
 BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
 BuildRequires: gettext 
-
-%if %{WITH_SELINUX}
 BuildRequires: libselinux-devel
-%endif
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -120,11 +114,7 @@ automake-1.4 --add-missing
 autoconf
 autoheader
 %configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper --disable-scrollkeeper \
-%if %{WITH_SELINUX}
 --with-selinux
-%else
---without-selinux
-%endif
 make
 
 %install
@@ -273,6 +263,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep 28 2005 Dan Walsh <dwalsh@redhat.com> 1:2.8.0.4-3
+- Fix selinux not to fail when in permissive mode
+
 * Thu Sep 27 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-2
 - remove flexiserver from menus
 
