@@ -1,3 +1,4 @@
+%define libselinuxver 1.27.7
 %define pango_version 1.2.0
 %define gtk2_version 2.6.0
 %define libglade2_version 2.0.0
@@ -13,7 +14,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -76,7 +77,8 @@ BuildRequires: libtool automake14 autoconf
 BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
 BuildRequires: gettext 
-BuildRequires: libselinux-devel
+BuildRequires: libselinux-devel >= %{libselinuxver}
+Requires: libselinux >= %{libselinuxver}
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -90,6 +92,7 @@ several different X sessions on your local machine at the same time.
 %patch1 -p1 -b .change-defaults
 %patch2 -p1 -b .add-pam-timestamp-module
 %patch3 -p1 -b .fix-selinux-check
+exit
 %patch4 -p1 -b .session-errors-in-tmp
 %patch5 -p1 -b .update-switchdesk-location
 ##%patch6 -p1 -b .wait-for-bootup
@@ -263,6 +266,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Oct 13 2005 Dan Walsh <dwalsh@redhat.com> 1:2.8.0.4-4
+- Change to use getseuserbyname
+
 * Thu Sep 28 2005 Dan Walsh <dwalsh@redhat.com> 1:2.8.0.4-3
 - Fix selinux not to fail when in permissive mode
 
