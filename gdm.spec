@@ -1,4 +1,5 @@
 %define libselinuxver 1.27.7
+%define libauditver 1.0.6
 %define pango_version 1.2.0
 %define gtk2_version 2.6.0
 %define libglade2_version 2.0.0
@@ -14,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 5
+Release: 6
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -39,6 +40,7 @@ Patch12: gdm-2.8.0.2-process-all-messages.patch
 Patch13: gdm-2.8.0.2-prune-lang-list.patch
 Patch14: gdm-2.8.0.2-hide-throbber.patch
 Patch15: gdm-2.8.0.4-clean-up-leaks.patch
+Patch16: gdm-2.8.0.4-audit-login.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -78,7 +80,9 @@ BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
 BuildRequires: gettext 
 BuildRequires: libselinux-devel >= %{libselinuxver}
+BuildRequires: audit-libs-devel >= %{libauditver}
 Requires: libselinux >= %{libselinuxver}
+Requires: audit-libs >= %{libauditver}
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -92,7 +96,6 @@ several different X sessions on your local machine at the same time.
 %patch1 -p1 -b .change-defaults
 %patch2 -p1 -b .add-pam-timestamp-module
 %patch3 -p1 -b .fix-selinux-check
-exit
 %patch4 -p1 -b .session-errors-in-tmp
 %patch5 -p1 -b .update-switchdesk-location
 ##%patch6 -p1 -b .wait-for-bootup
@@ -105,6 +108,7 @@ exit
 %patch13 -p1 -b .prune-lang-list
 %patch14 -p1 -b .hide-throbber
 %patch15 -p1 -b .clean-up-leaks
+%patch16 -p1 -b .audit-login
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -266,6 +270,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Oct 17 2005 Steve Grubb <sgrubb@redhat.com> 1:2.8.0.4-6
+- add login audit patch (bug 170569)
+
 * Mon Oct 17 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-5
 - bump redhat-artwork requirement to get rid of the boot
   throbber for now, since it seems to have reappeared
