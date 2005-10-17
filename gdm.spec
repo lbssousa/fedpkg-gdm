@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -57,7 +57,7 @@ Requires: usermode
 Requires: xinitrc >= 0:3.33-1
 Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
-Requires: redhat-artwork >= 0:0.112-2
+Requires: redhat-artwork >= 0:0.129-20
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
@@ -266,6 +266,11 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Oct 17 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-5
+- bump redhat-artwork requirement to get rid of the boot
+  throbber for now, since it seems to have reappeared
+  mysteriously (bug 171025)
+
 * Thu Oct 13 2005 Dan Walsh <dwalsh@redhat.com> 1:2.8.0.4-4
 - Change to use getseuserbyname
 
