@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -59,7 +59,7 @@ Requires: usermode
 Requires: xinitrc >= 0:3.33-1
 Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
-Requires: redhat-artwork >= 0:0.129-20
+Requires: redhat-artwork >= 0:0.129-2
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
@@ -270,6 +270,11 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Oct 18 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-7
+- zero-initialize message buffer,
+  bug fixed by Josh Parson (jbparsons@usdavis.edu) (bug 160603)
+- fix typo in redhat-artwork requires line
+
 * Mon Oct 17 2005 Steve Grubb <sgrubb@redhat.com> 1:2.8.0.4-6
 - add login audit patch (bug 170569)
 
