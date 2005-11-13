@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 8
+Release: 9
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -41,6 +41,7 @@ Patch13: gdm-2.8.0.2-prune-lang-list.patch
 Patch14: gdm-2.8.0.2-hide-throbber.patch
 Patch15: gdm-2.8.0.4-clean-up-leaks.patch
 Patch16: gdm-2.8.0.4-audit-login.patch
+Patch17: gdm-2.8.0.4-modularx.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -54,9 +55,9 @@ Requires: librsvg2 >= 0:%{librsvg2_version}
 Requires: libxml2 >= 0:%{libxml2_version}
 Requires: pam >= 0:%{pam_version}
 Requires: /etc/pam.d/system-auth
-Requires: /etc/X11/xdm/Xsession
 Requires: usermode
-Requires: xinitrc >= 0:3.33-1
+Requires: xorg-x11-xinit
+Requires: xorg-x11-xdm
 Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
 Requires: redhat-artwork >= 0:0.129-3
@@ -109,6 +110,7 @@ several different X sessions on your local machine at the same time.
 %patch14 -p1 -b .hide-throbber
 %patch15 -p1 -b .clean-up-leaks
 %patch16 -p1 -b .audit-login
+%patch17 -p1 -b .modularx
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -137,7 +139,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 
 # change default Init script for :0 to be Red Hat default
-(cd $RPM_BUILD_ROOT/etc/X11/gdm/Init; ln -sf ../../xdm/Xsetup_0 :0)
+# XXX: hack, these shouldn't be in libdir -- #173081
+(cd $RPM_BUILD_ROOT/etc/X11/gdm/Init; ln -sf ../../../../%{_libdir}/X11/xdm/Xsetup_0 :0)
 
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
@@ -270,6 +273,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Nov 13 2005 Jeremy Katz <katzj@redhat.com> - 1:2.8.0.4-9
+- change requirements for modular X
+- patch to find x server with modular X
+
 * Thu Oct 20 2005 Ray Strode <rstrode@redhat.com> 1:2.8.0.4-8
 - redhat-artwork was busted, require new version
 
