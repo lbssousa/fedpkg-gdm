@@ -233,6 +233,7 @@ fi
 %dir /etc/X11/gdm
 %config(noreplace) /etc/X11/gdm/gdm.conf
 /etc/X11/gdm/factory-gdm.conf
+/etc/X11/gdm/Xsession
 %config /etc/X11/gdm/XKeepsCrashing
 %config /etc/X11/gdm/locale.alias
 %config /etc/X11/gdm/Init/*
