@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 9
+Release: 10
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -273,6 +273,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Nov 13 2005 Jeremy Katz <katzj@redhat.com> - 1:2.8.0.4-10
+- also fix default xsession for where its moved in modular X
+
 * Sun Nov 13 2005 Jeremy Katz <katzj@redhat.com> - 1:2.8.0.4-9
 - change requirements for modular X
 - patch to find x server with modular X
