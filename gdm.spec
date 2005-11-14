@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 10
+Release: 11
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -23,7 +23,7 @@ Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
 Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
-URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm/
+URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
 
 Patch1: gdm-2.8.0.2-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
@@ -37,11 +37,10 @@ Patch9: gdm-2.6.0.8-boot-throbber.patch
 Patch10: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
 Patch11: gdm-2.6.0.8-xdmcp.patch
 Patch12: gdm-2.8.0.2-process-all-messages.patch
-Patch13: gdm-2.8.0.2-prune-lang-list.patch
-Patch14: gdm-2.8.0.2-hide-throbber.patch
-Patch15: gdm-2.8.0.4-clean-up-leaks.patch
-Patch16: gdm-2.8.0.4-audit-login.patch
-Patch17: gdm-2.8.0.4-modularx.patch
+Patch13: gdm-2.8.0.2-hide-throbber.patch
+Patch14: gdm-2.8.0.4-clean-up-leaks.patch
+Patch15: gdm-2.8.0.4-audit-login.patch
+Patch16: gdm-2.8.0.4-modularx.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -56,12 +55,11 @@ Requires: libxml2 >= 0:%{libxml2_version}
 Requires: pam >= 0:%{pam_version}
 Requires: /etc/pam.d/system-auth
 Requires: usermode
-Requires: xorg-x11-xinit
-Requires: xorg-x11-xdm
-Requires: xsri >= 1:2.0.2
 Requires: /sbin/nologin
 Requires: redhat-artwork >= 0:0.129-3
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
+Requires: xorg-x11-server-utils
+Requires: xorg-x11-xkb-utils
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk2-devel >= 0:%{gtk2_version}
@@ -106,11 +104,10 @@ several different X sessions on your local machine at the same time.
 %patch10 -p1 -b .dont-malloc-in-signal-handlers
 #%patch11 -p1 -b .xdmcp
 %patch12 -p1 -b .process-all-messages
-%patch13 -p1 -b .prune-lang-list
-%patch14 -p1 -b .hide-throbber
-%patch15 -p1 -b .clean-up-leaks
-%patch16 -p1 -b .audit-login
-%patch17 -p1 -b .modularx
+%patch13 -p1 -b .hide-throbber
+%patch14 -p1 -b .clean-up-leaks
+%patch15 -p1 -b .audit-login
+%patch16 -p1 -b .modularx
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -122,8 +119,12 @@ libtoolize --force --copy
 automake-1.4 --add-missing
 autoconf
 autoheader
-%configure --prefix=%{_prefix} --sysconfdir=/etc/X11 --with-pam-prefix=/etc --localstatedir=/var --enable-console-helper --disable-scrollkeeper \
---with-selinux
+%configure --sysconfdir=/etc/X11   \
+           --with-pam-prefix=/etc  \
+	   --localstatedir=/var    \
+	   --enable-console-helper \
+	   --disable-scrollkeeper  \
+	   --with-selinux
 make
 
 %install
@@ -138,15 +139,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 # docs go elsewhere
 rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 
-# change default Init script for :0 to be Red Hat default
-# XXX: hack, these shouldn't be in libdir -- #173081
-(cd $RPM_BUILD_ROOT/etc/X11/gdm/Init; ln -sf ../../../../%{_libdir}/X11/xdm/Xsetup_0 :0)
-
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
-
-# remove the gdm Xsession as we're using the xdm one
-rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Xsession
 
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
@@ -176,13 +170,13 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.destkop
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
-mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-install -m755 ${RPM_SOURCE_DIR}/gdm-early-login.init                          \
-              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-early-login
-install -m755 ${RPM_SOURCE_DIR}/gdm-allow-login.init                          \
-              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-allow-login
-install -m755 ${RPM_SOURCE_DIR}/zzz-bootup-complete.init                      \
-              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/zzz-bootup-complete
+#mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
+#install -m755 ${RPM_SOURCE_DIR}/gdm-early-login.init                          \
+#              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-early-login
+#install -m755 ${RPM_SOURCE_DIR}/gdm-allow-login.init                          \
+#              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-allow-login
+#install -m755 ${RPM_SOURCE_DIR}/zzz-bootup-complete.init                      \
+#              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/zzz-bootup-complete
 
 %find_lang gdm
 
@@ -250,7 +244,7 @@ fi
 %config /etc/pam.d/gdmsetup
 %config /etc/pam.d/gdm-autologin
 %config /etc/security/console.apps/gdmsetup
-%config /etc/rc.d/init.d/*
+#%config /etc/rc.d/init.d/*
 %dir /etc/X11/gdm/Init
 %dir /etc/X11/gdm/PreSession
 %dir /etc/X11/gdm/PostSession
@@ -273,6 +267,12 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Nov 14 2005 Ray Strode <rstrode@redhat.com> - 1:2.8.0.4-11
+- Don't use X session / setup files anymore.
+- Don't install early login init scripts
+- remove xsri dependency
+- don't prune language lists anymore
+
 * Sun Nov 13 2005 Jeremy Katz <katzj@redhat.com> - 1:2.8.0.4-10
 - also fix default xsession for where its moved in modular X
 
