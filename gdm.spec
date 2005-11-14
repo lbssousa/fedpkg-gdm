@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 11
+Release: 12
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -41,6 +41,7 @@ Patch13: gdm-2.8.0.2-hide-throbber.patch
 Patch14: gdm-2.8.0.4-clean-up-leaks.patch
 Patch15: gdm-2.8.0.4-audit-login.patch
 Patch16: gdm-2.8.0.4-modularx.patch
+Patch17: gdm-2.8.0.4-call-dbus-launch.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -108,6 +109,7 @@ several different X sessions on your local machine at the same time.
 %patch14 -p1 -b .clean-up-leaks
 %patch15 -p1 -b .audit-login
 %patch16 -p1 -b .modularx
+%patch17 -p1 -b .call-dbus-launch
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -268,6 +270,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Nov 14 2005 Ray Strode <rstrode@redhat.com> - 1:2.8.0.4-12
+- Make sure that dbus-launch gets called if available
+
 * Mon Nov 14 2005 Ray Strode <rstrode@redhat.com> - 1:2.8.0.4-11
 - Don't use X session / setup files anymore.
 - Don't install early login init scripts
