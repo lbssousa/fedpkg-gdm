@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 12
+Release: 13
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -42,6 +42,7 @@ Patch14: gdm-2.8.0.4-clean-up-leaks.patch
 Patch15: gdm-2.8.0.4-audit-login.patch
 Patch16: gdm-2.8.0.4-modularx.patch
 Patch17: gdm-2.8.0.4-call-dbus-launch.patch
+Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -61,6 +62,7 @@ Requires: redhat-artwork >= 0:0.129-3
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
+Requires: xorg-x11-xinit
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk2-devel >= 0:%{gtk2_version}
@@ -110,6 +112,7 @@ several different X sessions on your local machine at the same time.
 %patch15 -p1 -b .audit-login
 %patch16 -p1 -b .modularx
 %patch17 -p1 -b .call-dbus-launch
+%patch18 -p1 -b .dont-call-xsm
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -270,6 +273,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Nov 16 2005 Ray Strode <rstrode@redhat.com> - 1:2.8.0.4-13
+- Don't fallback to xsm, try gnome-session instead
+- Require xorg-x11-xinit
+
 * Mon Nov 14 2005 Ray Strode <rstrode@redhat.com> - 1:2.8.0.4-12
 - Make sure that dbus-launch gets called if available
 
