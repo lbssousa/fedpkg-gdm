@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.8.0.4
-Release: 13
+Release: 13.1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -273,6 +273,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Dec 09 2005 Jesse Keating <jkeating@redhat.com>
+- rebuilt
+
 * Mon Nov 16 2005 Ray Strode <rstrode@redhat.com> - 1:2.8.0.4-13
 - Don't fallback to xsm, try gnome-session instead
 - Require xorg-x11-xinit
