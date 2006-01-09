@@ -275,7 +275,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Mon Jan 9 2005 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-1
+* Mon Jan 9 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-1
 - update to 2.13.0.4
 
 * Fri Dec 09 2005 Jesse Keating <jkeating@redhat.com>
