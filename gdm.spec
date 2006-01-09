@@ -14,22 +14,22 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.8.0.4
-Release: 13.1
+Version: 2.13.0.4
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
-Source: ftp://ftp.gnome.org/pub/GNOME/sources/gdm-%{PACKAGE_VERSION}.tar.bz2
+URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
+Source: gdm-%{PACKAGE_VERSION}.tar.bz2
 Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
-URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
 
-Patch1: gdm-2.8.0.2-change-defaults.patch
+Patch1: gdm-2.13.0.4-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
-Patch3: gdm-2.8.0.2-fix-selinux-check.patch
+Patch3: gdm-2.13.0.4-fix-selinux-check.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
-Patch5: gdm-2.8.0.2-update-switchdesk-location.patch
+Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
 Patch6: gdm-2.6.0.7-wait-for-bootup.patch
 Patch7: gdm-2.8.0.2-clean-up-xsession-errors.patch
 Patch8: gdm-2.8.0.2-merge-resources.patch
@@ -38,11 +38,13 @@ Patch10: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
 Patch11: gdm-2.6.0.8-xdmcp.patch
 Patch12: gdm-2.8.0.2-process-all-messages.patch
 Patch13: gdm-2.8.0.2-hide-throbber.patch
-Patch14: gdm-2.8.0.4-clean-up-leaks.patch
-Patch15: gdm-2.8.0.4-audit-login.patch
-Patch16: gdm-2.8.0.4-modularx.patch
+Patch15: gdm-2.13.0.4-audit-login.patch
+Patch16: gdm-2.13.0.4-modularx.patch
 Patch17: gdm-2.8.0.4-call-dbus-launch.patch
 Patch18: gdm-2.8.0.4-dont-call-xsm.patch
+Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
+Patch20: gdm-2.13.0.4-add-locale-header.patch
+Patch21: gdm-2.13.0.4-fix-gdm-safe-restart-conf-path.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -106,38 +108,42 @@ several different X sessions on your local machine at the same time.
 #%patch9 -p1 -b .boot-throbber
 %patch10 -p1 -b .dont-malloc-in-signal-handlers
 #%patch11 -p1 -b .xdmcp
-%patch12 -p1 -b .process-all-messages
+#%patch12 -p1 -b .process-all-messages
 %patch13 -p1 -b .hide-throbber
-%patch14 -p1 -b .clean-up-leaks
 %patch15 -p1 -b .audit-login
 %patch16 -p1 -b .modularx
 %patch17 -p1 -b .call-dbus-launch
 %patch18 -p1 -b .dont-call-xsm
+%patch19 -p1 -b .add-gnome-cflags
+%patch20 -p1 -b .add-locale-header
+%patch21 -p1 -b .fix-gdm-safe-restart-conf-path
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
 
 %build
 intltoolize --force --copy
-aclocal-1.4
+aclocal-1.9
 libtoolize --force --copy
-automake-1.4 --add-missing
+automake-1.9 --add-missing
 autoconf
 autoheader
-%configure --sysconfdir=/etc/X11   \
+%configure --sysconfdir=%{_sysconfdir}/X11   \
            --with-pam-prefix=/etc  \
 	   --localstatedir=/var    \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
-	   --with-selinux
+	   --with-selinux \
+	   --with-configdir=%{_datadir}/gdm/config
 make
 
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
-mkdir -p $RPM_BUILD_ROOT/etc/X11/gdm/Init
-mkdir -p $RPM_BUILD_ROOT/etc/X11/gdm/PreSession
-mkdir -p $RPM_BUILD_ROOT/etc/X11/gdm/PostSession
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Init
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/PreSession
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/PostSession
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/config
 
 make install DESTDIR=$RPM_BUILD_ROOT
 
@@ -183,6 +189,13 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 #install -m755 ${RPM_SOURCE_DIR}/zzz-bootup-complete.init                      \
 #              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/zzz-bootup-complete
 
+# gdm has two config files: gdm.conf and gdm.conf-custom.  gdm.conf-custom is
+# the editable file and gdm.conf is a distro fallbacks/defaults file. We want
+# the sysadmin editable file in /etc and the distro-defaults file in
+# /usr/share/gdm/config
+(cd $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm && \
+ ln -sf ../../..%{_datadir}/gdm/config/gdm.conf-custom custom.conf)
+
 %find_lang gdm
 
 %clean
@@ -198,29 +211,19 @@ exit 0
 %post
 /sbin/ldconfig
 scrollkeeper-update
+
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
   gtk-update-icon-cache -q %{_datadir}/icons/hicolor
 fi
 
-# Attempt to restart GDM softly by use of the fifo.  Wont work on older
-# then 2.2.3.1 versions but should work nicely on later upgrades.
-# FIXME: this is just way too complex
-FIFOFILE=`grep '^ServAuthDir=' %{_sysconfdir}/X11/gdm/gdm.conf | sed -e 's/^ServAuthDir=//'`
-if test x$FIFOFILE = x ; then
-	FIFOFILE=%{_localstatedir}/gdm/.gdmfifo
-else
-	FIFOFILE="$FIFOFILE"/.gdmfifo
+# if the user already has a config file, then 
+# migrate it to the new location 
+if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
+    mv -f %{_sysconfdir}/X11/gdm/gdm.conf %{_datadir}/gdm/config/gdm.conf-custom
 fi
-PIDFILE=`grep '^PidFile=' %{_sysconfdir}/X11/gdm/gdm.conf | sed -e 's/^PidFile=//'`
-if test x$PIDFILE = x ; then
-	PIDFILE=/var/run/gdm.pid
-fi
-if test -w $FIFOFILE && test -f $PIDFILE && kill -0 `cat $PIDFILE` 2>/dev/null ; then
-	(echo;echo SOFT_RESTART) >> $FIFOFILE
-fi
-# ignore error in the above
-exit 0
+
+%{_sbindir}/gdm-safe-restart || :
 
 %postun
 /sbin/ldconfig
@@ -235,27 +238,27 @@ fi
 
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
 
-%dir /etc/X11/gdm
-%config(noreplace) /etc/X11/gdm/gdm.conf
-/etc/X11/gdm/factory-gdm.conf
-/etc/X11/gdm/Xsession
-%config /etc/X11/gdm/XKeepsCrashing
-%config /etc/X11/gdm/locale.alias
-%config /etc/X11/gdm/Init/*
-%config /etc/X11/gdm/PostLogin/*
-%config /etc/X11/gdm/PreSession/*
-%config /etc/X11/gdm/PostSession/*
-%config /etc/X11/gdm/modules/*
-%config /etc/pam.d/gdm
-%config /etc/pam.d/gdmsetup
-%config /etc/pam.d/gdm-autologin
-%config /etc/security/console.apps/gdmsetup
-#%config /etc/rc.d/init.d/*
-%dir /etc/X11/gdm/Init
-%dir /etc/X11/gdm/PreSession
-%dir /etc/X11/gdm/PostSession
-%dir /etc/X11/gdm/PostLogin
-%dir /etc/X11/gdm/modules
+%dir %{_sysconfdir}/X11/gdm
+%{_sysconfdir}/X11/gdm/Xsession
+%config(noreplace) %{_sysconfdir}/X11/gdm/custom.conf
+%config(noreplace) %{_datadir}/gdm/config/gdm.conf-custom
+%config %{_sysconfdir}/X11/gdm/XKeepsCrashing
+%config %{_sysconfdir}/X11/gdm/locale.alias
+%config %{_sysconfdir}/X11/gdm/Init/*
+%config %{_sysconfdir}/X11/gdm/PostLogin/*
+%config %{_sysconfdir}/X11/gdm/PreSession/*
+%config %{_sysconfdir}/X11/gdm/PostSession/*
+%config %{_sysconfdir}/X11/gdm/modules/*
+%config %{_sysconfdir}/pam.d/gdm
+%config %{_sysconfdir}/pam.d/gdmsetup
+%config %{_sysconfdir}/pam.d/gdm-autologin
+%config %{_sysconfdir}/security/console.apps/gdmsetup
+#%config %{_sysconfdir}/rc.d/init.d/*
+%dir %{_sysconfdir}/X11/gdm/Init
+%dir %{_sysconfdir}/X11/gdm/PreSession
+%dir %{_sysconfdir}/X11/gdm/PostSession
+%dir %{_sysconfdir}/X11/gdm/PostLogin
+%dir %{_sysconfdir}/X11/gdm/modules
 %{_datadir}/pixmaps
 %{_datadir}/icons
 %{_datadir}/gdm
@@ -269,10 +272,12 @@ fi
 %{_sbindir}/*
 %dir %{_localstatedir}/log/gdm
 
-
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jan 9 2005 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-1
+- update to 2.13.0.4
+
 * Fri Dec 09 2005 Jesse Keating <jkeating@redhat.com>
 - rebuilt
 
