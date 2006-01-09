@@ -1,1 +1,4 @@
-gdm-2.8.0.4.tar.bz2
+gdm-2.13.0.4.tar.bz2
+gdm-allow-login.init
+gdm-early-login.init
+zzz-bootup-complete.init
