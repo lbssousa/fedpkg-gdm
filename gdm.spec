@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.4
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -153,6 +153,10 @@ rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
 
+# remove the gdm Xsession as we're using the xdm one
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Xsession
+(cd $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm; ln -sf ../xinit/Xsession .)
+
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 
@@ -275,6 +279,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jan 9 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-2
+- use xinit Xsession again.
+
 * Mon Jan 9 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-1
 - update to 2.13.0.4
 
