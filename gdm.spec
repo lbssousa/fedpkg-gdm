@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.4
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -225,6 +225,11 @@ fi
 # migrate it to the new location 
 if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
     mv -f %{_sysconfdir}/X11/gdm/gdm.conf %{_datadir}/gdm/config/gdm.conf-custom
+
+    # Also migrate the X configuration to work with modular X
+    sed -ie 's@^command=/usr/X11R6/bin/X@command=/usr/bin/Xorg@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -ie 's@^Xnest=/usr/X11R6/bin/Xnest@Xnest=/usr/X11R6/bin/Xnest@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -ie 's@^BaseXsession=/etc/X11/xdm/Xsession@BaseXsession=/etc/X11/xinit/Xsession@' %{_datadir}/gdm/config/gdm.conf-custom
 fi
 
 %{_sbindir}/gdm-safe-restart || :
@@ -279,6 +284,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Jan 13 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-3
+- migrate X server configuration for pre-modular X configurations.
+  Problems reported by Dennis Gregorovic <dgregor@redhat.com>
+
 * Mon Jan 9 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-2
 - use xinit Xsession again.
 
