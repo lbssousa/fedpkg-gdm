@@ -27,6 +27,7 @@ Source3: zzz-bootup-complete.init
 
 Patch1: gdm-2.13.0.4-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
+Patch3: gdm-2.13.0.4-fix-selinux-check.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
 Patch6: gdm-2.6.0.7-wait-for-bootup.patch
