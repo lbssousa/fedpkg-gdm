@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.4
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -27,7 +27,6 @@ Source3: zzz-bootup-complete.init
 
 Patch1: gdm-2.13.0.4-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
-Patch3: gdm-2.13.0.4-fix-selinux-check.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
 Patch6: gdm-2.6.0.7-wait-for-bootup.patch
@@ -230,6 +229,8 @@ if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
     sed -ie 's@^command=/usr/X11R6/bin/X@command=/usr/bin/Xorg@' %{_datadir}/gdm/config/gdm.conf-custom
     sed -ie 's@^Xnest=/usr/X11R6/bin/Xnest@Xnest=/usr/X11R6/bin/Xnest@' %{_datadir}/gdm/config/gdm.conf-custom
     sed -ie 's@^BaseXsession=/etc/X11/xdm/Xsession@BaseXsession=/etc/X11/xinit/Xsession@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -ie 's@^Greeter=/usr/bin/gdmgreeter@Greeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -ie 's@^RemoteGreeter=/usr/bin/gdmlogin@RemoteGreeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
 fi
 
 %{_sbindir}/gdm-safe-restart || :
@@ -284,6 +285,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jan 16 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-4
+- migrate to new greeter location (bug 177443). 
+
 * Fri Jan 13 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-3
 - migrate X server configuration for pre-modular X configurations.
   Problems reported by Dennis Gregorovic <dgregor@redhat.com>
