@@ -27,7 +27,6 @@ Source3: zzz-bootup-complete.init
 
 Patch1: gdm-2.13.0.4-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
-Patch3: gdm-2.13.0.4-fix-selinux-check.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
 Patch6: gdm-2.6.0.7-wait-for-bootup.patch
@@ -100,7 +99,6 @@ several different X sessions on your local machine at the same time.
 
 %patch1 -p1 -b .change-defaults
 %patch2 -p1 -b .add-pam-timestamp-module
-%patch3 -p1 -b .fix-selinux-check
 %patch4 -p1 -b .session-errors-in-tmp
 %patch5 -p1 -b .update-switchdesk-location
 ##%patch6 -p1 -b .wait-for-bootup
