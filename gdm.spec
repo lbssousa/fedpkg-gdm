@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.4
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -60,7 +60,8 @@ Requires: pam >= 0:%{pam_version}
 Requires: /etc/pam.d/system-auth
 Requires: usermode
 Requires: /sbin/nologin
-Requires: redhat-artwork >= 0:0.129-3
+Requires: fedora-logos >= 0:1.1.38-1
+Requires: redhat-artwork >= 0:0.234-1
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
@@ -306,6 +307,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jan 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-5
+- add new theme by Diana Fong, Máirín Duffy, and me
+
 * Mon Jan 16 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-4
 - improve migration snippet (bug 177443). 
 
