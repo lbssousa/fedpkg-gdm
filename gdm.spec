@@ -309,7 +309,7 @@ fi
 - update to 2.13.0.5 (bug 178099)
 
 * Tue Jan 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-5
-- add new theme by Diana Fong, Máirín Duffy, and me
+- add new theme by Diana Fong, MÃ¡irÃ­n Duffy, and me
 
 * Mon Jan 16 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-4
 - improve migration snippet (bug 177443). 
@@ -934,7 +934,7 @@ fi
 * Mon Mar  5 2001 Preston Brown <pbrown@redhat.com>
 - don't screw up color map on 8 bit displays
 
-* Fri Feb 23 2001 Trond Eivind Glomsrød <teg@redhat.com>
+* Fri Feb 23 2001 Trond Eivind GlomsrÃ¸d <teg@redhat.com>
 - langify
 - Don't define and use "ver" and "nam" at the top of the spec file
 - use %%{_tmppath}
