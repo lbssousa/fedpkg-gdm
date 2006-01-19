@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.5
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -229,30 +229,30 @@ if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
 
     # Comment out some entries from the custom config file that may have changed
     # locations in the update
-    sed -ie 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^GraphicalTheme=Bluecurve@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^BackgroundColor=#20305a@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^DefaultPath=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^HostImageDir=/usr/share/hosts/@#HostImageDir=/usr/share/pixmaps/faces/@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^LogDir=/var/log/gdm@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^PostLoginScriptDir=/etc/X11/gdm/PostLogin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^PreLoginScriptDir=/etc/X11/gdm/PreLogin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^PreSessionScriptDir=/etc/X11/gdm/PreSession@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^PostSessionScriptDir=/etc/X11/gdm/PostSession@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^DisplayInitDir=/var/run/gdm.pid@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff@#&@' %{_datadir}/gdm/config/gdm.conf-custom 
-    sed -ie 's@^ServAuthDir=/var/gdm@#&@' %{_datadir}/gdm/config/gdm.conf-custom 
+    sed -i -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^GraphicalTheme=Bluecurve@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^BackgroundColor=#20305a@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^DefaultPath=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^HostImageDir=/usr/share/hosts/@#HostImageDir=/usr/share/pixmaps/faces/@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^LogDir=/var/log/gdm@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^PostLoginScriptDir=/etc/X11/gdm/PostLogin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^PreLoginScriptDir=/etc/X11/gdm/PreLogin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^PreSessionScriptDir=/etc/X11/gdm/PreSession@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^PostSessionScriptDir=/etc/X11/gdm/PostSession@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^DisplayInitDir=/var/run/gdm.pid@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot@#&@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff@#&@' %{_datadir}/gdm/config/gdm.conf-custom 
+    sed -i -e 's@^ServAuthDir=/var/gdm@#&@' %{_datadir}/gdm/config/gdm.conf-custom 
 
     # Someone might be trying to use different greeters for the local/remote cases
     # so migrate them to their new locations.
-    sed -ie 's@^Greeter=/usr/bin/gdmlogin@Greeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -ie 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^Greeter=/usr/bin/gdmlogin@Greeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
 fi
 
 %{_sbindir}/gdm-safe-restart || :
@@ -307,6 +307,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jan 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.5-7
+- sed -ie isn't the same as sed -i -e (we want the latter)
+
 * Wed Jan 18 2006 Christopher Aillon <caillon@redhat.com> - 1:2.13.0.5-6
 - Add patch to fix clock to default to 24h in locales that expect it (175453)
 
