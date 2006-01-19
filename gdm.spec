@@ -307,7 +307,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Tue Jan 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.5-7
+* Thu Jan 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.5-7
 - sed -ie isn't the same as sed -i -e (we want the latter)
 
 * Wed Jan 18 2006 Christopher Aillon <caillon@redhat.com> - 1:2.13.0.5-6
