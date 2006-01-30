@@ -255,7 +255,7 @@ if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
     sed -i -e 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
 fi
 
-%{_sbindir}/gdm-safe-restart || :
+%{_sbindir}/gdm-safe-restart >/dev/null 2>&1 || :
 
 %postun
 /sbin/ldconfig
@@ -307,6 +307,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jan 30 2006 Bill Nottingham <notting@redhat.com>
+- silence gdm-safe-restart
+
 * Thu Jan 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.5-7
 - sed -ie isn't the same as sed -i -e (we want the latter)
 
