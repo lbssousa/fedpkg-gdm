@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.13.0.5
-Release: 7
+Version: 2.13.0.7
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -25,7 +25,7 @@ Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
 
-Patch1: gdm-2.13.0.4-change-defaults.patch
+Patch1: gdm-2.13.0.7-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
@@ -44,7 +44,6 @@ Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch20: gdm-2.13.0.4-add-locale-header.patch
 Patch21: gdm-2.13.0.4-fix-gdm-safe-restart-conf-path.patch
-Patch22: gdm-2.13.0.5-clock-format.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -117,7 +116,6 @@ several different X sessions on your local machine at the same time.
 %patch19 -p1 -b .add-gnome-cflags
 %patch20 -p1 -b .add-locale-header
 %patch21 -p1 -b .fix-gdm-safe-restart-conf-path
-%patch22 -p1 -b .clock-format
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -307,6 +305,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jan 31 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.7-1
+- update to 2.13.0.7
+
 * Mon Jan 30 2006 Bill Nottingham <notting@redhat.com>
 - silence gdm-safe-restart
 
