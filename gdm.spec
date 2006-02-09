@@ -175,7 +175,7 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
 (cd $RPM_BUILD_ROOT%{_datadir}/applications; ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop .)
 
 # use consolehelper for gdmsetup
-(cd $RPM_BUILD_ROOT/usr/bin; ln -s gdmsetup consolehelper)
+(cd $RPM_BUILD_ROOT/usr/bin; ln -sf consolehelper gdmsetup)
 
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
