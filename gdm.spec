@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.7
-Release: 1.1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -44,6 +44,7 @@ Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch20: gdm-2.13.0.4-add-locale-header.patch
 Patch21: gdm-2.13.0.4-fix-gdm-safe-restart-conf-path.patch
+Patch22: gdm-2.13.0.7-pam_stack.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -116,6 +117,7 @@ several different X sessions on your local machine at the same time.
 %patch19 -p1 -b .add-gnome-cflags
 %patch20 -p1 -b .add-locale-header
 %patch21 -p1 -b .fix-gdm-safe-restart-conf-path
+%patch22 -p1 -b .pam_stack
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -171,6 +173,9 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
 # use patched gdmsetup desktop file
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
 (cd $RPM_BUILD_ROOT%{_datadir}/applications; ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop .)
+
+# use consolehelper for gdmsetup
+(cd $RPM_BUILD_ROOT/usr/bin; ln -s gdmsetup consolehelper)
 
 # fix the "login photo" file
 desktop-file-install --vendor gnome --delete-original       \
@@ -305,6 +310,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Feb  9 2006 Matthias Clasen <mclasen@redhat.com> - 2.13.0.7-2
+- Make gdmsetup use consolehelper
+- Don't use deprecated pam_stack
+
 * Tue Feb 07 2006 Jesse Keating <jkeating@redhat.com> - 1:2.13.0.7-1.1
 - rebuilt for new gcc4.1 snapshot and glibc changes
 
