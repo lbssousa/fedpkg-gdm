@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.7
-Release: 2
+Release: 2.1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -310,6 +310,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Feb 10 2006 Jesse Keating <jkeating@redhat.com> - 1:2.13.0.7-2.1
+- bump again for double-long bug on ppc(64)
+
 * Thu Feb  9 2006 Matthias Clasen <mclasen@redhat.com> - 2.13.0.7-2
 - Make gdmsetup use consolehelper
 - Don't use deprecated pam_stack
