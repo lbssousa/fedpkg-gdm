@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.13.0.7
-Release: 2.1
+Version: 2.13.0.7.0.2006.02.12
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -43,8 +43,8 @@ Patch17: gdm-2.8.0.4-call-dbus-launch.patch
 Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch20: gdm-2.13.0.4-add-locale-header.patch
-Patch21: gdm-2.13.0.4-fix-gdm-safe-restart-conf-path.patch
 Patch22: gdm-2.13.0.7-pam_stack.patch
+Patch23: gdm-2.13.0.7.0.2006.02.12-move-gdm-defaults-conf.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -116,8 +116,8 @@ several different X sessions on your local machine at the same time.
 %patch18 -p1 -b .dont-call-xsm
 %patch19 -p1 -b .add-gnome-cflags
 %patch20 -p1 -b .add-locale-header
-%patch21 -p1 -b .fix-gdm-safe-restart-conf-path
 %patch22 -p1 -b .pam_stack
+%patch23 -p1 -b .move-gdm-defaults-conf
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -129,27 +129,23 @@ libtoolize --force --copy
 automake-1.9 --add-missing
 autoconf
 autoheader
-%configure --sysconfdir=%{_sysconfdir}/X11   \
-           --with-pam-prefix=/etc  \
-	   --localstatedir=/var    \
+%configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
-	   --with-selinux \
-	   --with-configdir=%{_datadir}/gdm/config
+	   --with-selinux
 make
 
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Init
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/PreSession
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/PostSession
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/config
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/Init
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/PreSession
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/PostSession
 
 make install DESTDIR=$RPM_BUILD_ROOT
 
 # docs go elsewhere
-rm -rf $RPM_BUILD_ROOT/%{prefix}/doc
+rm -rf $RPM_BUILD_ROOT/%{_prefix}/doc
 
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
@@ -197,13 +193,6 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 #install -m755 ${RPM_SOURCE_DIR}/zzz-bootup-complete.init                      \
 #              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/zzz-bootup-complete
 
-# gdm has two config files: gdm.conf and gdm.conf-custom.  gdm.conf-custom is
-# the editable file and gdm.conf is a distro fallbacks/defaults file. We want
-# the sysadmin editable file in /etc and the distro-defaults file in
-# /usr/share/gdm/config
-(cd $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm && \
- ln -sf ../../..%{_datadir}/gdm/config/gdm.conf-custom custom.conf)
-
 %find_lang gdm
 
 %clean
@@ -228,34 +217,38 @@ fi
 # if the user already has a config file, then 
 # migrate it to the new location 
 if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
-    cp -a %{_sysconfdir}/X11/gdm/gdm.conf %{_datadir}/gdm/config/gdm.conf-custom
+    cp -a %{_sysconfdir}/X11/gdm/gdm.conf %{_sysconfdir}/gdm/custom.conf
 
     # Comment out some entries from the custom config file that may have changed
     # locations in the update
-    sed -i -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^GraphicalTheme=Bluecurve@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^BackgroundColor=#20305a@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^DefaultPath=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^HostImageDir=/usr/share/hosts/@#HostImageDir=/usr/share/pixmaps/faces/@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^LogDir=/var/log/gdm@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^PostLoginScriptDir=/etc/X11/gdm/PostLogin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^PreLoginScriptDir=/etc/X11/gdm/PreLogin@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^PreSessionScriptDir=/etc/X11/gdm/PreSession@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^PostSessionScriptDir=/etc/X11/gdm/PostSession@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^DisplayInitDir=/var/run/gdm.pid@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot@#&@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff@#&@' %{_datadir}/gdm/config/gdm.conf-custom 
-    sed -i -e 's@^ServAuthDir=/var/gdm@#&@' %{_datadir}/gdm/config/gdm.conf-custom 
+    sed -i -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^GraphicalTheme=Bluecurve@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^BackgroundColor=#20305a@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^DefaultPath=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^HostImageDir=/usr/share/hosts/@#HostImageDir=/usr/share/pixmaps/faces/@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^LogDir=/var/log/gdm@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^PostLoginScriptDir=/etc/X11/gdm/PostLogin@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^PreLoginScriptDir=/etc/X11/gdm/PreLogin@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^PreSessionScriptDir=/etc/X11/gdm/PreSession@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^PostSessionScriptDir=/etc/X11/gdm/PostSession@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^DisplayInitDir=/var/run/gdm.pid@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot@#&@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff@#&@' %{_sysconfdir}/gdm/custom.conf 
+    sed -i -e 's@^ServAuthDir=/var/gdm@#&@' %{_sysconfdir}/gdm/custom.conf 
 
     # Someone might be trying to use different greeters for the local/remote cases
     # so migrate them to their new locations.
-    sed -i -e 's@^Greeter=/usr/bin/gdmlogin@Greeter=/usr/libexec/gdmlogin@' %{_datadir}/gdm/config/gdm.conf-custom
-    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' %{_datadir}/gdm/config/gdm.conf-custom
+    sed -i -e 's@^Greeter=/usr/bin/gdmlogin@Greeter=/usr/libexec/gdmlogin@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' %{_sysconfdir}/gdm/custom.conf
+fi
+
+if [ $1 -ge 2 ] && [ -f %{_datadir}/gdm/config/gdm.conf-custom ]; then
+    cp -a %{_datadir}/gdm/config/gdm.conf-custom %{_sysconfdir}/gdm/custom.conf
 fi
 
 %{_sbindir}/gdm-safe-restart >/dev/null 2>&1 || :
@@ -273,27 +266,26 @@ fi
 
 %doc AUTHORS COPYING ChangeLog NEWS README TODO
 
-%dir %{_sysconfdir}/X11/gdm
-%{_sysconfdir}/X11/gdm/Xsession
-%config(noreplace) %{_sysconfdir}/X11/gdm/custom.conf
-%config(noreplace) %{_datadir}/gdm/config/gdm.conf-custom
-%config %{_sysconfdir}/X11/gdm/XKeepsCrashing
-%config %{_sysconfdir}/X11/gdm/locale.alias
-%config %{_sysconfdir}/X11/gdm/Init/*
-%config %{_sysconfdir}/X11/gdm/PostLogin/*
-%config %{_sysconfdir}/X11/gdm/PreSession/*
-%config %{_sysconfdir}/X11/gdm/PostSession/*
-%config %{_sysconfdir}/X11/gdm/modules/*
+%dir %{_sysconfdir}/gdm
+%{_sysconfdir}/gdm/Xsession
+%config(noreplace) %{_sysconfdir}/gdm/custom.conf
+%config %{_sysconfdir}/gdm/XKeepsCrashing
+%config %{_sysconfdir}/gdm/locale.alias
+%config %{_sysconfdir}/gdm/Init/*
+%config %{_sysconfdir}/gdm/PostLogin/*
+%config %{_sysconfdir}/gdm/PreSession/*
+%config %{_sysconfdir}/gdm/PostSession/*
+%config %{_sysconfdir}/gdm/modules/*
 %config %{_sysconfdir}/pam.d/gdm
 %config %{_sysconfdir}/pam.d/gdmsetup
 %config %{_sysconfdir}/pam.d/gdm-autologin
 %config %{_sysconfdir}/security/console.apps/gdmsetup
 #%config %{_sysconfdir}/rc.d/init.d/*
-%dir %{_sysconfdir}/X11/gdm/Init
-%dir %{_sysconfdir}/X11/gdm/PreSession
-%dir %{_sysconfdir}/X11/gdm/PostSession
-%dir %{_sysconfdir}/X11/gdm/PostLogin
-%dir %{_sysconfdir}/X11/gdm/modules
+%dir %{_sysconfdir}/gdm/Init
+%dir %{_sysconfdir}/gdm/PreSession
+%dir %{_sysconfdir}/gdm/PostSession
+%dir %{_sysconfdir}/gdm/PostLogin
+%dir %{_sysconfdir}/gdm/modules
 %{_datadir}/pixmaps
 %{_datadir}/icons
 %{_datadir}/gdm
@@ -310,6 +302,12 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Feb 12 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.7.0.2006.02.12-1
+- update to cvs snapshot
+- move gdm to /etc instead of /etc/X11
+- move custom gdm.conf to sysconfdir instead of symlinking from
+  datadir (bug 180364)
+
 * Fri Feb 10 2006 Jesse Keating <jkeating@redhat.com> - 1:2.13.0.7-2.1
 - bump again for double-long bug on ppc(64)
 
