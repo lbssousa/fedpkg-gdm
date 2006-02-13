@@ -20,7 +20,7 @@ Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
-Source: gdm-%{PACKAGE_VERSION}.tar.bz2
+Source: gdm-%{PACKAGE_VERSION}.tar.gz
 Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
