@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.7.0.2006.02.12
-Release: 1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -251,6 +251,10 @@ if [ $1 -ge 2 ] && [ -f %{_datadir}/gdm/config/gdm.conf-custom ]; then
     cp -a %{_datadir}/gdm/config/gdm.conf-custom %{_sysconfdir}/gdm/custom.conf
 fi
 
+if [ $1 -ge 2 ]; then
+   sed -i -e 's@/etc/X11/gdm@/etc/gdm@g' %{_sysconfdir}/gdm/custom.conf
+fi
+
 %{_sbindir}/gdm-safe-restart >/dev/null 2>&1 || :
 
 %postun
@@ -302,6 +306,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Feb 13 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.7.0.2006.02.12-2
+- migrate custom.conf settings with /etc/X11/gdm to /etc/gdm
+
 * Sun Feb 12 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.7.0.2006.02.12-1
 - update to cvs snapshot
 - move gdm to /etc instead of /etc/X11
