@@ -151,8 +151,8 @@ rm -rf $RPM_BUILD_ROOT/%{_prefix}/doc
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
 
 # remove the gdm Xsession as we're using the xdm one
-rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm/Xsession
-(cd $RPM_BUILD_ROOT%{_sysconfdir}/X11/gdm; ln -sf ../xinit/Xsession .)
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/gdm/Xsession
+(cd $RPM_BUILD_ROOT%{_sysconfdir}/gdm; ln -sf ../xinit/Xsession .)
 
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
@@ -224,6 +224,7 @@ if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
     sed -i -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' %{_sysconfdir}/gdm/custom.conf
     sed -i -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' %{_sysconfdir}/gdm/custom.conf
     sed -i -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' %{_sysconfdir}/gdm/custom.conf
+    sed -i -e 's@^BaseXsession=/etc/gdm/Xsession@#&@' %{_sysconfdir}/gdm/custom.conf
     sed -i -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' %{_sysconfdir}/gdm/custom.conf
     sed -i -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' %{_sysconfdir}/gdm/custom.conf
     sed -i -e 's@^GraphicalTheme=Bluecurve@#&@' %{_sysconfdir}/gdm/custom.conf
@@ -306,6 +307,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Feb 24 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-4
+- change some /etc/X11 bits in the spec file to /etc
+
 * Sun Feb 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-3
 - add server entry for accel-indirect branch of xorg
 
