@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.8
-Release: 4
+Release: 5
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -307,7 +307,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Fri Feb 24 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-4
+* Fri Feb 24 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-5
 - change some /etc/X11 bits in the spec file to /etc
 
 * Sun Feb 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-3
