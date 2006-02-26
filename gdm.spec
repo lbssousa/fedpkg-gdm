@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.8
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -209,54 +209,58 @@ exit 0
 /sbin/ldconfig
 scrollkeeper-update
 
-touch --no-create %{_datadir}/icons/hicolor
+touch --no-create /usr/share/icons/hicolor
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  gtk-update-icon-cache -q %{_datadir}/icons/hicolor
+  gtk-update-icon-cache -q /usr/share/icons/hicolor
 fi
 
-# if the user already has a config file, then 
-# migrate it to the new location 
-if [ $1 -ge 2 ] && [ -f %{_sysconfdir}/X11/gdm/gdm.conf ]; then
-    cp -a %{_sysconfdir}/X11/gdm/gdm.conf %{_sysconfdir}/gdm/custom.conf
+# if the user already has a config file, then migrate it to the new
+# location; rpm will ensure that old file will be renamed
 
-    # Comment out some entries from the custom config file that may have changed
-    # locations in the update
-    sed -i -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^BaseXsession=/etc/gdm/Xsession@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^GraphicalTheme=Bluecurve@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^BackgroundColor=#20305a@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^DefaultPath=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^HostImageDir=/usr/share/hosts/@#HostImageDir=/usr/share/pixmaps/faces/@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^LogDir=/var/log/gdm@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^PostLoginScriptDir=/etc/X11/gdm/PostLogin@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^PreLoginScriptDir=/etc/X11/gdm/PreLogin@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^PreSessionScriptDir=/etc/X11/gdm/PreSession@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^PostSessionScriptDir=/etc/X11/gdm/PostSession@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^DisplayInitDir=/var/run/gdm.pid@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot@#&@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff@#&@' %{_sysconfdir}/gdm/custom.conf 
-    sed -i -e 's@^ServAuthDir=/var/gdm@#&@' %{_sysconfdir}/gdm/custom.conf 
+custom=/etc/gdm/custom.conf
 
-    # Someone might be trying to use different greeters for the local/remote cases
-    # so migrate them to their new locations.
-    sed -i -e 's@^Greeter=/usr/bin/gdmlogin@Greeter=/usr/libexec/gdmlogin@' %{_sysconfdir}/gdm/custom.conf
-    sed -i -e 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' %{_sysconfdir}/gdm/custom.conf
+if [ $1 -ge 2 ] ; then
+    if [ -f /usr/share/gdm/config/gdm.conf-custom ]; then
+	oldconffile=/usr/share/gdm/config/gdm.conf-custom
+    elif [ -f /etc/X11/gdm/gdm.conf ]; then
+	oldconffile=/etc/X11/gdm/gdm.conf
+    fi
+
+    # Comment out some entries from the custom config file that may
+    # have changed locations in the update.  Also move various
+    # elements to their new locations.
+
+    [ -n "$oldconffile" ] && sed \
+    -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' \
+    -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' \
+    -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' \
+    -e 's@^BaseXsession=/etc/gdm/Xsession@#&@' \
+    -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' \
+    -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' \
+    -e 's@^GraphicalTheme=Bluecurve@#&@' \
+    -e 's@^BackgroundColor=#20305a@#&@' \
+    -e 's@^DefaultPath=/usr/local/bin:/usr/bin:/bin:/usr/X11R6/bin@#&@' \
+    -e 's@^RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin@#&@' \
+    -e 's@^HostImageDir=/usr/share/hosts/@#HostImageDir=/usr/share/pixmaps/faces/@' \
+    -e 's@^LogDir=/var/log/gdm@#&@' \
+    -e 's@^PostLoginScriptDir=/etc/X11/gdm/PostLogin@#&@' \
+    -e 's@^PreLoginScriptDir=/etc/X11/gdm/PreLogin@#&@' \
+    -e 's@^PreSessionScriptDir=/etc/X11/gdm/PreSession@#&@' \
+    -e 's@^PostSessionScriptDir=/etc/X11/gdm/PostSession@#&@' \
+    -e 's@^DisplayInitDir=/var/run/gdm.pid@#&@' \
+    -e 's@^RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot@#&@' \
+    -e 's@^HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff@#&@' \
+    -e 's@^ServAuthDir=/var/gdm@#&@' \
+    -e 's@^Greeter=/usr/bin/gdmlogin@Greeter=/usr/libexec/gdmlogin@' \
+    -e 's@^RemoteGreeter=/usr/bin/gdmgreeter@RemoteGreeter=/usr/libexec/gdmgreeter@' \
+    $oldconffile > $custom
 fi
 
-if [ $1 -ge 2 ] && [ -f %{_datadir}/gdm/config/gdm.conf-custom ]; then
-    cp -a %{_datadir}/gdm/config/gdm.conf-custom %{_sysconfdir}/gdm/custom.conf
+if [ $1 -ge 2 -a -f $custom ] && grep -q /etc/X11/gdm $custom ; then
+   sed -i -e 's@/etc/X11/gdm@/etc/gdm@g' $custom
 fi
 
-if [ $1 -ge 2 ]; then
-   sed -i -e 's@/etc/X11/gdm@/etc/gdm@g' %{_sysconfdir}/gdm/custom.conf
-fi
-
-%{_sbindir}/gdm-safe-restart >/dev/null 2>&1 || :
+/usr/sbin/gdm-safe-restart >/dev/null 2>&1 || :
 
 %postun
 /sbin/ldconfig
@@ -307,6 +311,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Feb 26 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-7
+- Use new %%post section, written by 
+  Michal Jaegermann <michal@harddata.com> (bug 183082)
+
 * Sat Feb 25 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-6
 - fix a broken link
 
