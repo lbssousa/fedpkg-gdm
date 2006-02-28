@@ -14,13 +14,13 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.13.0.8
-Release: 7
+Version: 2.13.0.9
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
-Source: gdm-%{PACKAGE_VERSION}.tar.gz
+Source: gdm-%{PACKAGE_VERSION}.tar.bz2
 Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
@@ -42,9 +42,7 @@ Patch16: gdm-2.13.0.4-modularx.patch
 Patch17: gdm-2.8.0.4-call-dbus-launch.patch
 Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
-Patch20: gdm-2.13.0.4-add-locale-header.patch
 Patch22: gdm-2.13.0.7-pam_stack.patch
-Patch23: gdm-2.13.0.8-malloc-freed-memory.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -115,9 +113,7 @@ several different X sessions on your local machine at the same time.
 %patch17 -p1 -b .call-dbus-launch
 %patch18 -p1 -b .dont-call-xsm
 %patch19 -p1 -b .add-gnome-cflags
-%patch20 -p1 -b .add-locale-header
 %patch22 -p1 -b .pam_stack
-%patch23 -p1 -b .malloc-freed-memory
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -311,7 +307,8 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Sun Feb 26 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-7
+* Tue Feb 28 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.9-1
+- Update to 2.13.0.9
 - Use new %%post section, written by 
   Michal Jaegermann <michal@harddata.com> (bug 183082)
 
