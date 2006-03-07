@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.9
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -232,6 +232,7 @@ if [ $1 -ge 2 ] ; then
     -e 's@^command=/usr/X11R6/bin/X@#command=/usr/bin/Xorg@' \
     -e 's@^Xnest=/usr/X11R6/bin/Xnest@#Xnest=/usr/X11R6/bin/Xnest@' \
     -e 's@^BaseXsession=/etc/X11/xdm/Xsession@#BaseXsession=/etc/X11/xinit/Xsession@' \
+    -e 's@^BaseXsession=/etc/X11/gdm/Xsession@#&@' \
     -e 's@^BaseXsession=/etc/gdm/Xsession@#&@' \
     -e 's@^Greeter=/usr/bin/gdmgreeter@#Greeter=/usr/libexec/gdmgreeter@' \
     -e 's@^RemoteGreeter=/usr/bin/gdmlogin@#RemoteGreeter=/usr/libexec/gdmlogin@' \
@@ -309,6 +310,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Mar  6 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.9-3
+- migrate users with baseXsession=/etc/X11/gdm/Xsession to
+  /etc/X11/xinit/Xsession
+
 * Mon Mar  6 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.9-2
 - disable sounds completely when disabled in configuration file
  (upstream bug 333435)
