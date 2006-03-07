@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.13.0.9
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -25,7 +25,7 @@ Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
 
-Patch1: gdm-2.13.0.8-change-defaults.patch
+Patch1: gdm-2.13.0.9-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
@@ -310,6 +310,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Mar  7 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.9-4
+- Follow Solaris's lead and default to AlwaysRestartServer=True
+  (may work around bug 182957)
+
 * Mon Mar  6 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.9-3
 - migrate users with baseXsession=/etc/X11/gdm/Xsession to
   /etc/X11/xinit/Xsession
