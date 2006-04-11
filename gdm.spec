@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.14.0
-Release: 1
+Version: 2.14.1
+Release: 2
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -308,6 +308,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Apr 11 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.14.1-2
+- Update to 2.14.1
+
 * Mon Mar 13 2006 Ray Strode <rstrode@redhat.com> - 1:2.14.0-1
 - Update to 2.14.0
 
