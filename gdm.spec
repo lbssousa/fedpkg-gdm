@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.14.1
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -24,6 +24,7 @@ Source: gdm-%{PACKAGE_VERSION}.tar.bz2
 Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
+Source4: gdmthemetester.in
 
 Patch1: gdm-2.14.1-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
@@ -114,6 +115,15 @@ several different X sessions on your local machine at the same time.
 %patch18 -p1 -b .dont-call-xsm
 %patch19 -p1 -b .add-gnome-cflags
 %patch22 -p1 -b .pam_stack
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=338079
+if [ -f gui/greeter/gdmthemetester.in ]
+then
+  echo "gdmthemetester.in is back. Get rid of Source4" 1>&2
+  exit
+fi
+
+cp -f %{SOURCE4} gui/greeter
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -308,6 +318,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Apr 11 2006 Ray Strode <rstrode@redhat.com> - 1:2.14.1-3
+- Add gdmthemetester.in to the mix (upstream bug 338079)
+
 * Tue Apr 11 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.14.1-2
 - Update to 2.14.1
 
