@@ -25,7 +25,7 @@ Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
 
-Patch1: gdm-2.13.0.9-change-defaults.patch
+Patch1: gdm-2.14.1-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
 Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
@@ -103,10 +103,10 @@ several different X sessions on your local machine at the same time.
 ##%patch6 -p1 -b .wait-for-bootup
 %patch7 -p1 -b .clean-up-xsession-errors
 %patch8 -p1 -b .merge-resources
-#%patch9 -p1 -b .boot-throbber
+##%patch9 -p1 -b .boot-throbber
 %patch10 -p1 -b .dont-malloc-in-signal-handlers
-#%patch11 -p1 -b .xdmcp
-#%patch12 -p1 -b .process-all-messages
+##%patch11 -p1 -b .xdmcp
+##%patch12 -p1 -b .process-all-messages
 %patch13 -p1 -b .hide-throbber
 %patch15 -p1 -b .audit-login
 %patch16 -p1 -b .modularx
