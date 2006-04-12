@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.14.1
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -318,6 +318,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Apr 12 2006 Ray Strode <rstrode@redhat.com> - 1:2.14.1-4
+- fix libexecdir substitution problem in configuration file
+
 * Tue Apr 11 2006 Ray Strode <rstrode@redhat.com> - 1:2.14.1-3
 - Add gdmthemetester.in to the mix (upstream bug 338079)
 
