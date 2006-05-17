@@ -43,7 +43,6 @@ Patch17: gdm-2.8.0.4-call-dbus-launch.patch
 Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch22: gdm-2.13.0.7-pam_stack.patch
-Patch23: gdm-2.15.0-make-it-compile.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -115,7 +114,6 @@ several different X sessions on your local machine at the same time.
 %patch18 -p1 -b .dont-call-xsm
 %patch19 -p1 -b .add-gnome-cflags
 %patch22 -p1 -b .pam_stack
-%patch23 -p1 -b .make-it-compile
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
