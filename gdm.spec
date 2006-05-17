@@ -14,7 +14,7 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.15.0
+Version: 2.15.3
 Release: 1
 Epoch: 1
 License: LGPL/GPL
@@ -310,6 +310,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed May 17 2006 Matthias Clasen <mclasen@redhat.com>> - 1:2.15.3-1
+- Update to 2.15.3
+
 * Wed May 10 2006 Matthias Clasen <mclasen@redhat.com>> - 1:2.15.0-1
 - Update to 2.15.0
 
