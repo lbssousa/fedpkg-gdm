@@ -83,7 +83,7 @@ BuildRequires: libtool automake14 autoconf
 BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
 BuildRequires: gettext 
-BuildRequires: gtk-doc
+BuildRequires: gnome-doc-utils
 BuildRequires: libselinux-devel >= %{libselinuxver}
 BuildRequires: audit-libs-devel >= %{libauditver}
 Requires: libselinux >= %{libselinuxver}
