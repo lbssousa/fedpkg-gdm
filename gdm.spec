@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.3
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -44,6 +44,7 @@ Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch22: gdm-2.13.0.7-pam_stack.patch
 Patch23: gdm-2.15.3-chown.patch
+Patch24: gdm-2.15.3-support-xdm-nodaemon-option.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -117,6 +118,7 @@ several different X sessions on your local machine at the same time.
 %patch19 -p1 -b .add-gnome-cflags
 %patch22 -p1 -b .pam_stack
 %patch23 -p1 -b .chown
+%patch24 -p1 -b .support-xdm-nodaemon-option
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -311,6 +313,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue May 23 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.3-3
+- Support xdm -nodaemon option (bug 192461)
+
 * Mon May 22 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.15.3-2
 - Add missing BuildRequires (#192494)
 
