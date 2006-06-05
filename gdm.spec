@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.3
-Release: 3
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -60,7 +60,7 @@ Requires: pam >= 0:%{pam_version}
 Requires: /etc/pam.d/system-auth
 Requires: usermode
 Requires: /sbin/nologin
-Requires: fedora-logos >= 0:1.1.38-1
+Requires: system-logos
 Requires: redhat-artwork >= 0:0.234-1
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 Requires: xorg-x11-server-utils
@@ -313,6 +313,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jun  5 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.15.3-4
+- Require system-logos, not fedora-logos
+
 * Tue May 23 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.3-3
 - Support xdm -nodaemon option (bug 192461)
 
