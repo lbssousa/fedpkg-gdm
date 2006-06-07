@@ -88,7 +88,7 @@ BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: libselinux-devel >= %{libselinuxver}
 BuildRequires: audit-libs-devel >= %{libauditver}
-%ifnarch s390 s390x
+%ifnarch s390 s390x ppc64
 BuildRequires: xorg-x11-server-Xorg
 %endif
 Requires: libselinux >= %{libselinuxver}
