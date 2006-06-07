@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.3
-Release: 5
+Release: 6
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -88,6 +88,7 @@ BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: libselinux-devel >= %{libselinuxver}
 BuildRequires: audit-libs-devel >= %{libauditver}
+BuildRequires: xorg-x11-server-Xorg
 Requires: libselinux >= %{libselinuxver}
 Requires: audit-libs >= %{libauditver}
 
@@ -314,6 +315,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Jun  7 2006 Jeremy Katz <katzj@redhat.com> - 1:2.15.3-6
+- buildrequire the server so that we get the path right in the config file
+
 * Tue Jun 06 2006 Karsten Hopp <karsten@redhat.de> 1:2.15.3-5
 - buildrequire libdmx-devel
 
