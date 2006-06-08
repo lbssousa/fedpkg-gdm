@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.3
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -45,6 +45,7 @@ Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch22: gdm-2.13.0.7-pam_stack.patch
 Patch23: gdm-2.15.3-chown.patch
 Patch24: gdm-2.15.3-support-xdm-nodaemon-option.patch
+Patch25: gdm-2.15.3-CVE-2006-2452.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -317,6 +318,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Jun  8 2006 Ray Strode <rstrode@redhat.com> 1:2.15.3-7
+- fix CVE-2006-2452
+
 * Wed Jun  7 2006 Jeremy Katz <katzj@redhat.com> - 1:2.15.3-6
 - buildrequire the server so that we get the path right in the config file
 
