@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.15.3
-Release: 8
+Version: 2.15.5
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -318,6 +318,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jun 13 2006 Matthias Clasen <mclasen@redhat.com> 1:2.15.5-1
+- Update to 2.15.5
+
 * Mon Jun 12 2006 Bill Nottingham <notting@redhat.com> 1:2.15.3-8
 - replace automake14 buildreq with automake
 
