@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.3
-Release: 7
+Release: 8
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -81,7 +81,7 @@ BuildRequires: fontconfig
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
 BuildRequires: gail-devel >= 0:%{gail_version}
 BuildRequires: libgsf-devel
-BuildRequires: libtool automake14 autoconf
+BuildRequires: libtool automake autoconf
 BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
 BuildRequires: gettext 
@@ -318,6 +318,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jun 12 2006 Bill Nottingham <notting@redhat.com> 1:2.15.3-8
+- replace automake14 buildreq with automake
+
 * Thu Jun  8 2006 Ray Strode <rstrode@redhat.com> 1:2.15.3-7
 - fix CVE-2006-2452
 
