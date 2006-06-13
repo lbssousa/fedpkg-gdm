@@ -43,7 +43,8 @@ Patch17: gdm-2.8.0.4-call-dbus-launch.patch
 Patch18: gdm-2.8.0.4-dont-call-xsm.patch
 Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch22: gdm-2.13.0.7-pam_stack.patch
-Patch23: gdm-2.15.3-chown.patch
+# got upstreamed
+#Patch23: gdm-2.15.3-chown.patch
 Patch24: gdm-2.15.3-support-xdm-nodaemon-option.patch
 Patch25: gdm-2.15.3-CVE-2006-2452.patch
 
@@ -122,7 +123,7 @@ several different X sessions on your local machine at the same time.
 %patch18 -p1 -b .dont-call-xsm
 %patch19 -p1 -b .add-gnome-cflags
 %patch22 -p1 -b .pam_stack
-%patch23 -p1 -b .chown
+#%patch23 -p1 -b .chown
 %patch24 -p1 -b .support-xdm-nodaemon-option
 
 # fix the time format for ja
