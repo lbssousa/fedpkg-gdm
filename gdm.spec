@@ -27,26 +27,24 @@ Source3: zzz-bootup-complete.init
 
 Patch1: gdm-2.14.1-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
-Patch4: gdm-2.8.0.2-session-errors-in-tmp.patch
-Patch5: gdm-2.13.0.4-update-switchdesk-location.patch
-Patch6: gdm-2.6.0.7-wait-for-bootup.patch
-Patch7: gdm-2.8.0.2-clean-up-xsession-errors.patch
-Patch8: gdm-2.8.0.2-merge-resources.patch
-Patch9: gdm-2.6.0.8-boot-throbber.patch
-Patch10: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
-Patch11: gdm-2.6.0.8-xdmcp.patch
-Patch12: gdm-2.8.0.2-process-all-messages.patch
-Patch13: gdm-2.8.0.2-hide-throbber.patch
-Patch15: gdm-2.13.0.4-audit-login.patch
-Patch16: gdm-2.13.0.4-modularx.patch
-Patch17: gdm-2.8.0.4-call-dbus-launch.patch
-Patch18: gdm-2.8.0.4-dont-call-xsm.patch
-Patch19: gdm-2.13.0.4-add-gnome-cflags.patch
-Patch22: gdm-2.13.0.7-pam_stack.patch
-# got upstreamed
-#Patch23: gdm-2.15.3-chown.patch
-#Patch24: gdm-2.15.3-support-xdm-nodaemon-option.patch
-#Patch25: gdm-2.15.3-CVE-2006-2452.patch
+Patch3: gdm-2.8.0.2-session-errors-in-tmp.patch
+Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
+Patch5: gdm-2.6.0.7-wait-for-bootup.patch
+Patch6: gdm-2.8.0.2-clean-up-xsession-errors.patch
+Patch7: gdm-2.8.0.2-merge-resources.patch
+Patch8: gdm-2.6.0.8-boot-throbber.patch
+Patch9: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
+Patch10: gdm-2.6.0.8-xdmcp.patch
+Patch11: gdm-2.8.0.2-hide-throbber.patch
+Patch12: gdm-2.13.0.4-audit-login.patch
+Patch13: gdm-2.13.0.4-modularx.patch
+Patch14: gdm-2.8.0.4-call-dbus-launch.patch
+Patch15: gdm-2.8.0.4-dont-call-xsm.patch
+Patch16: gdm-2.13.0.4-add-gnome-cflags.patch
+Patch17: gdm-2.13.0.7-pam_stack.patch
+Patch18: gdm-2.15.5-process-all-ops.patch
+Patch19: gdm-2.15.5-move-default-message.patch
+Patch20: gdm-2.15.5-reset-pam.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -107,24 +105,24 @@ several different X sessions on your local machine at the same time.
 
 %patch1 -p1 -b .change-defaults
 %patch2 -p1 -b .add-pam-timestamp-module
-%patch4 -p1 -b .session-errors-in-tmp
-%patch5 -p1 -b .update-switchdesk-location
-##%patch6 -p1 -b .wait-for-bootup
-%patch7 -p1 -b .clean-up-xsession-errors
-%patch8 -p1 -b .merge-resources
-##%patch9 -p1 -b .boot-throbber
-%patch10 -p1 -b .dont-malloc-in-signal-handlers
-##%patch11 -p1 -b .xdmcp
-##%patch12 -p1 -b .process-all-messages
-%patch13 -p1 -b .hide-throbber
-%patch15 -p1 -b .audit-login
-%patch16 -p1 -b .modularx
-%patch17 -p1 -b .call-dbus-launch
-%patch18 -p1 -b .dont-call-xsm
-%patch19 -p1 -b .add-gnome-cflags
-%patch22 -p1 -b .pam_stack
-#%patch23 -p1 -b .chown
-#%patch24 -p1 -b .support-xdm-nodaemon-option
+%patch3 -p1 -b .session-errors-in-tmp
+%patch4 -p1 -b .update-switchdesk-location
+##%patch5 -p1 -b .wait-for-bootup
+%patch6 -p1 -b .clean-up-xsession-errors
+%patch7 -p1 -b .merge-resources
+##%patch8 -p1 -b .boot-throbber
+%patch9 -p1 -b .dont-malloc-in-signal-handlers
+##%patch10 -p1 -b .xdmcp
+%patch11 -p1 -b .hide-throbber
+%patch12 -p1 -b .audit-login
+%patch13 -p1 -b .modularx
+%patch14 -p1 -b .call-dbus-launch
+%patch15 -p1 -b .dont-call-xsm
+%patch16 -p1 -b .add-gnome-cflags
+%patch17 -p1 -b .pam_stack
+%patch18 -p1 -b .process-all-ops
+%patch19 -p1 -b .move-default-message
+%patch20 -p1 -b .reset-pam
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -319,6 +317,15 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Jul 7 2006 Ray Strode <rstrode@redhat.com> 1:2.15.5-2
+- add patch to process all operations when more than one comes
+  in really quickly
+- move default "Please enter your username" message to the
+  greeter instead of the slave so that it doesn't get stacked if
+  a pam module has a non default message
+- add new message for reseting the current login operation
+  (like the cancel button does, but accessible via the gdm fifo)
+
 * Tue Jun 13 2006 Matthias Clasen <mclasen@redhat.com> 1:2.15.5-1
 - Update to 2.15.5
 
