@@ -11,6 +11,7 @@
 %define pam_version 0.75
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
+%define nss_version 3.11.1
 
 Summary: The GNOME Display Manager.
 Name: gdm
@@ -92,6 +93,7 @@ BuildRequires: audit-libs-devel >= %{libauditver}
 %ifnarch s390 s390x ppc64
 BuildRequires: xorg-x11-server-Xorg
 %endif
+BuildRequires: nss-devel >= %{nss_version}
 Requires: libselinux >= %{libselinuxver}
 Requires: audit-libs >= %{libauditver}
 
