@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.5
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -45,6 +45,7 @@ Patch17: gdm-2.13.0.7-pam_stack.patch
 Patch18: gdm-2.15.5-process-all-ops.patch
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
+Patch21: gdm-2.15.5-security-tokens.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -119,10 +120,11 @@ several different X sessions on your local machine at the same time.
 %patch14 -p1 -b .call-dbus-launch
 %patch15 -p1 -b .dont-call-xsm
 %patch16 -p1 -b .add-gnome-cflags
-%patch17 -p1 -b .pam_stack
+#%patch17 -p1 -b .pam_stack
 %patch18 -p1 -b .process-all-ops
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
+%patch21 -p1 -b .security-tokens
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -294,6 +296,7 @@ fi
 %config %{_sysconfdir}/pam.d/gdm
 %config %{_sysconfdir}/pam.d/gdmsetup
 %config %{_sysconfdir}/pam.d/gdm-autologin
+%config %{_sysconfdir}/pam.d/gdm-securitytokens
 %config %{_sysconfdir}/security/console.apps/gdmsetup
 #%config %{_sysconfdir}/rc.d/init.d/*
 %dir %{_sysconfdir}/gdm/Init
@@ -317,6 +320,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jul 11 2006 Ray Strode <rstrode@redhat.com> 1:2.15.5-3
+- add initial support for smart card security tokens
+
 * Fri Jul 7 2006 Ray Strode <rstrode@redhat.com> 1:2.15.5-2
 - add patch to process all operations when more than one comes
   in really quickly
