@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.5
-Release: 3.1
+Release: 4
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -47,6 +47,7 @@ Patch18: gdm-2.15.5-process-all-ops.patch
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
 Patch21: gdm-2.15.5-security-tokens.patch
+Patch22: gdm-2.15.5-session-keyring.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -127,6 +128,7 @@ several different X sessions on your local machine at the same time.
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
+%patch22 -p1 -b .session-keyring
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -322,6 +324,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Jul 12 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.5-4
+- add new pam module to pam files to support kernel session keyring
+
 * Wed Jul 12 2006 Jesse Keating <jkeating@redhat.com> - 1:2.15.5-3.1
 - rebuild
 
