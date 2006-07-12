@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.5
-Release: 3
+Release: 3.1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -322,6 +322,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Jul 12 2006 Jesse Keating <jkeating@redhat.com> - 1:2.15.5-3.1
+- rebuild
+
 * Tue Jul 11 2006 Ray Strode <rstrode@redhat.com> 1:2.15.5-3
 - add initial support for smart card security tokens
 
