@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.15.5
-Release: 4
+Version: 2.15.6
+Release: 1
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -324,6 +324,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Jul 12 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-1
+- Update to 2.15.6
+
 * Wed Jul 12 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.5-4
 - add new pam module to pam files to support kernel session keyring
 
