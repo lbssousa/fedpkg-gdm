@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 2
+Release: 3
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -48,6 +48,7 @@ Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
 Patch21: gdm-2.15.5-security-tokens.patch
 Patch22: gdm-2.15.5-session-keyring.patch
+Patch23: gdm-2.15.6-fix-setup-hang.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -129,6 +130,7 @@ several different X sessions on your local machine at the same time.
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
 %patch22 -p1 -b .session-keyring
+%patch23 -p1 -b .fix-setup-hang
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -324,6 +326,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Jul 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-3
+- fix hang in gdmsetup
+
 * Fri Jul 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-2
 - put new pam module at top of stack (bug 198629)
 
