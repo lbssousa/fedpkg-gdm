@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 6
+Release: 7
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -46,7 +46,7 @@ Patch17: gdm-2.13.0.7-pam_stack.patch
 Patch18: gdm-2.15.5-process-all-ops.patch
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
-Patch21: gdm-2.15.5-security-tokens.patch
+Patch21: gdm-2.15.6-security-tokens.patch
 Patch22: gdm-2.15.5-session-keyring.patch
 Patch23: gdm-2.15.6-fix-setup-hang.patch
 Patch24: gdm-2.15.6-wtmp.patch
@@ -328,6 +328,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Jul 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-7
+- make security token support use its own config file in
+  preparation for modularizing it.
+
 * Mon Jul 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-6
 - fix off-by-one in the process-all-ops patch that was causing
   an anoying dialog to pop up on each login
