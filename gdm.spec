@@ -47,7 +47,7 @@ Patch18: gdm-2.15.5-process-all-ops.patch
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
 Patch21: gdm-2.15.6-security-tokens.patch
-Patch22: gdm-2.15.5-session-keyring.patch
+Patch22: gdm-2.15.6-session-keyring.patch
 Patch23: gdm-2.15.6-fix-setup-hang.patch
 Patch24: gdm-2.15.6-wtmp.patch
 
@@ -130,7 +130,7 @@ several different X sessions on your local machine at the same time.
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
-#%patch22 -p1 -b .session-keyring
+%patch22 -p1 -b .session-keyring
 %patch23 -p1 -b .fix-setup-hang
 %patch24 -p1 -b .wtmp
 
@@ -329,6 +329,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jul 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-8
+- reenable session keyring support in pam module (bug 198629)
+
 * Mon Jul 17 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-7
 - make security token support use its own config file in
   preparation for modularizing it.
