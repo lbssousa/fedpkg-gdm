@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 9
+Release: 10
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -50,6 +50,7 @@ Patch21: gdm-2.15.6-security-tokens.patch
 Patch22: gdm-2.15.6-session-keyring.patch
 Patch23: gdm-2.15.6-fix-setup-hang.patch
 Patch24: gdm-2.15.6-wtmp.patch
+Patch25: gdm-2.15.6-center-cursor.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -133,6 +134,7 @@ several different X sessions on your local machine at the same time.
 %patch22 -p1 -b .session-keyring
 %patch23 -p1 -b .fix-setup-hang
 %patch24 -p1 -b .wtmp
+%patch25 -p1 -b .center-cursor
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -329,6 +331,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Jul 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-10
+- center cursor on xinerama head (bug 180085)
+
 * Tue Jul 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-9
 - add "kill all sessions on token removal" feature
 
