@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 8
+Release: 9
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -329,6 +329,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jul 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-9
+- add "kill all sessions on token removal" feature
+
 * Tue Jul 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-8
 - reenable session keyring support in pam module (bug 198629)
 
