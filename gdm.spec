@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 11
+Release: 12
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,7 +26,7 @@ Source1: gdm-allow-login.init
 Source2: gdm-early-login.init
 Source3: zzz-bootup-complete.init
 
-Patch1: gdm-2.14.1-change-defaults.patch
+Patch1: gdm-2.15.6-change-defaults.patch
 Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
 Patch3: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
@@ -331,6 +331,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Jul 21 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-12
+- move authcookies out of home directories to prevent problems
+  on nfs/afs mounted home directories (bug 178233).
+
 * Fri Jul 21 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-11
 - really fix annoying dialog problem mentioned in 2.15.6-6
 
