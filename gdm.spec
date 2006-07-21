@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 10
+Release: 11
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -331,6 +331,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Jul 21 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-11
+- really fix annoying dialog problem mentioned in 2.15.6-6
+
 * Wed Jul 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-10
 - center cursor on xinerama head (bug 180085)
 
