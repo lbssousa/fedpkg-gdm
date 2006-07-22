@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 12
+Release: 13
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -307,7 +307,6 @@ fi
 %config %{_sysconfdir}/pam.d/gdm
 %config %{_sysconfdir}/pam.d/gdmsetup
 %config %{_sysconfdir}/pam.d/gdm-autologin
-%config %{_sysconfdir}/pam.d/gdm-securitytokens
 %config %{_sysconfdir}/security/console.apps/gdmsetup
 #%config %{_sysconfdir}/rc.d/init.d/*
 %dir %{_sysconfdir}/gdm/Init
@@ -331,6 +330,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Jul 21 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-13
+- simply all the security token code by only using one pam stack
+- drop lame kill on token removal feature
+
 * Fri Jul 21 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-12
 - move authcookies out of home directories to prevent problems
   on nfs/afs mounted home directories (bug 178233).
