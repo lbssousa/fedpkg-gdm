@@ -22,33 +22,40 @@ License: LGPL/GPL
 Group: User Interface/X
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
 Source: gdm-%{PACKAGE_VERSION}.tar.bz2
-Source1: gdm-allow-login.init
-Source2: gdm-early-login.init
-Source3: zzz-bootup-complete.init
+Source1: gdm-pam
+Source2: gdm-autologin-pam
+Source3: gdmsetup-pam
 
 Patch1: gdm-2.15.6-change-defaults.patch
-Patch2: gdm-2.8.0.2-add-pam-timestamp-module.patch
-Patch3: gdm-2.8.0.2-session-errors-in-tmp.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
-Patch5: gdm-2.6.0.7-wait-for-bootup.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=301817
 Patch6: gdm-2.8.0.2-clean-up-xsession-errors.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=301826
 Patch7: gdm-2.8.0.2-merge-resources.patch
-Patch8: gdm-2.6.0.8-boot-throbber.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=349829
 Patch9: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
-Patch10: gdm-2.6.0.8-xdmcp.patch
-Patch11: gdm-2.8.0.2-hide-throbber.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=349835
 Patch12: gdm-2.13.0.4-audit-login.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=349836
 Patch13: gdm-2.13.0.4-modularx.patch
-Patch14: gdm-2.8.0.4-call-dbus-launch.patch
-Patch15: gdm-2.8.0.4-dont-call-xsm.patch
-Patch16: gdm-2.13.0.4-add-gnome-cflags.patch
-Patch17: gdm-2.13.0.7-pam_stack.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
 Patch21: gdm-2.15.6-security-tokens.patch
-Patch22: gdm-2.15.6-session-keyring.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.15.6-wtmp.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=327530
 Patch25: gdm-2.15.6-center-cursor.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=349640
 Patch26: gdm-2.15.6-fix-face-browser.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
@@ -110,34 +117,24 @@ several different X sessions on your local machine at the same time.
 %setup -q
 
 %patch1 -p1 -b .change-defaults
-%patch2 -p1 -b .add-pam-timestamp-module
-%patch3 -p1 -b .session-errors-in-tmp
 %patch4 -p1 -b .update-switchdesk-location
-##%patch5 -p1 -b .wait-for-bootup
 %patch6 -p1 -b .clean-up-xsession-errors
 %patch7 -p1 -b .merge-resources
-##%patch8 -p1 -b .boot-throbber
 %patch9 -p1 -b .dont-malloc-in-signal-handlers
-##%patch10 -p1 -b .xdmcp
-%patch11 -p1 -b .hide-throbber
 %patch12 -p1 -b .audit-login
 %patch13 -p1 -b .modularx
-%patch14 -p1 -b .call-dbus-launch
-%patch15 -p1 -b .dont-call-xsm
-%patch16 -p1 -b .add-gnome-cflags
-#%patch17 -p1 -b .pam_stack
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
-%patch22 -p1 -b .session-keyring
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .center-cursor
 %patch26 -p1 -b .fix-face-browser
 
-# fix the time format for ja
-perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
-
 %build
+cp -f %{SOURCE1} config/gdm
+cp -f %{SOURCE2} config/gdm-autologin
+cp -f %{SOURCE3} gdmsetup-pam
+
 intltoolize --force --copy
 aclocal-1.9
 libtoolize --force --copy
@@ -199,14 +196,6 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.destkop
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
-
-#mkdir -p $RPM_BUILD_ROOT/etc/rc.d/init.d
-#install -m755 ${RPM_SOURCE_DIR}/gdm-early-login.init                          \
-#              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-early-login
-#install -m755 ${RPM_SOURCE_DIR}/gdm-allow-login.init                          \
-#              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/gdm-allow-login
-#install -m755 ${RPM_SOURCE_DIR}/zzz-bootup-complete.init                      \
-#              ${RPM_BUILD_ROOT}/etc/rc.d/init.d/zzz-bootup-complete
 
 %find_lang gdm
 
@@ -306,7 +295,6 @@ fi
 %config %{_sysconfdir}/pam.d/gdmsetup
 %config %{_sysconfdir}/pam.d/gdm-autologin
 %config %{_sysconfdir}/security/console.apps/gdmsetup
-#%config %{_sysconfdir}/rc.d/init.d/*
 %dir %{_sysconfdir}/gdm/Init
 %dir %{_sysconfdir}/gdm/PreSession
 %dir %{_sysconfdir}/gdm/PostSession
@@ -330,6 +318,7 @@ fi
 %changelog
 * Thu Aug 3 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.7-1
 - update to 2.15.7
+- drop selinux patch that I don't think was ever finished
 
 * Thu Aug 3 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-14
 - fix face browser
