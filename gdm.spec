@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.6
-Release: 13
+Release: 14%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -51,6 +51,7 @@ Patch22: gdm-2.15.6-session-keyring.patch
 Patch23: gdm-2.15.6-fix-setup-hang.patch
 Patch24: gdm-2.15.6-wtmp.patch
 Patch25: gdm-2.15.6-center-cursor.patch
+Patch26: gdm-2.15.6-fix-face-browser.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -135,6 +136,7 @@ several different X sessions on your local machine at the same time.
 %patch23 -p1 -b .fix-setup-hang
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .center-cursor
+%patch26 -p1 -b .fix-face-browser
 
 # fix the time format for ja
 perl -pi -e "s|^msgstr \"%a %b %d, %H:%M\"|msgstr \"%m/%d \(%a\) %H:%M\"|; s|^msgstr \"%a %b %d, %I:%M %p\"|msgstr \"%m/%d \(%a\) %p %I:%M\"|" po/ja.po
@@ -330,6 +332,12 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Aug 3 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-14
+- fix face browser
+  (http://bugzilla.gnome.org/show_bug.cgi?id=349640)
+- fix error message reporting
+  (http://bugzilla.gnome.org/show_bug.cgi?id=349758)
+
 * Fri Jul 21 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-13
 - simply all the security token code by only using one pam stack
 - drop lame kill on token removal feature
