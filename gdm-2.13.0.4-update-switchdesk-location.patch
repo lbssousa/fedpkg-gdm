@@ -1,5 +1,5 @@
---- gdm-2.13.0.4/gui/greeter/greeter_session.c.update-switchdesk-location	2005-12-24 21:30:15.000000000 -0500
-+++ gdm-2.13.0.4/gui/greeter/greeter_session.c	2006-01-08 23:25:22.000000000 -0500
+--- gdm-2.13.0.4/gui/gdmsession.c.update-switchdesk-location	2005-12-24 21:30:15.000000000 -0500
++++ gdm-2.13.0.4/gui/gdmsession.c	2006-01-08 23:25:22.000000000 -0500
 @@ -165,7 +165,7 @@ greeter_session_lookup (const char *save
  	       * irrelevant, we are in "switchdesk mode" and the relevant
  	       * thing is the saved session in .Xclients

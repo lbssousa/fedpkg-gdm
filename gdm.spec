@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.15.6
-Release: 14%{?dist}
+Version: 2.15.7
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -43,12 +43,10 @@ Patch14: gdm-2.8.0.4-call-dbus-launch.patch
 Patch15: gdm-2.8.0.4-dont-call-xsm.patch
 Patch16: gdm-2.13.0.4-add-gnome-cflags.patch
 Patch17: gdm-2.13.0.7-pam_stack.patch
-Patch18: gdm-2.15.5-process-all-ops.patch
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
 Patch21: gdm-2.15.6-security-tokens.patch
 Patch22: gdm-2.15.6-session-keyring.patch
-Patch23: gdm-2.15.6-fix-setup-hang.patch
 Patch24: gdm-2.15.6-wtmp.patch
 Patch25: gdm-2.15.6-center-cursor.patch
 Patch26: gdm-2.15.6-fix-face-browser.patch
@@ -128,12 +126,10 @@ several different X sessions on your local machine at the same time.
 %patch15 -p1 -b .dont-call-xsm
 %patch16 -p1 -b .add-gnome-cflags
 #%patch17 -p1 -b .pam_stack
-%patch18 -p1 -b .process-all-ops
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
 %patch22 -p1 -b .session-keyring
-%patch23 -p1 -b .fix-setup-hang
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .center-cursor
 %patch26 -p1 -b .fix-face-browser
@@ -332,6 +328,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Aug 3 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.7-1
+- update to 2.15.7
+
 * Thu Aug 3 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.6-14
 - fix face browser
   (http://bugzilla.gnome.org/show_bug.cgi?id=349640)
