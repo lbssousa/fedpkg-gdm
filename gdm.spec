@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.7
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -316,6 +316,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Aug 4 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.7-2
+- update gdmsetup pam file to use config-util stacks
+
 * Thu Aug 3 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.7-1
 - update to 2.15.7
 - drop selinux patch that I don't think was ever finished
