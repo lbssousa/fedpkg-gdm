@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.15.7
-Release: 2%{?dist}
+Version: 2.15.9
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -35,14 +35,8 @@ Patch6: gdm-2.8.0.2-clean-up-xsession-errors.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=301826
 Patch7: gdm-2.8.0.2-merge-resources.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=349829
-Patch9: gdm-2.8.0.2-dont-malloc-in-signal-handlers.patch
-
 # http://bugzilla.gnome.org/show_bug.cgi?id=349835
 Patch12: gdm-2.13.0.4-audit-login.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=349836
-Patch13: gdm-2.13.0.4-modularx.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.15.5-move-default-message.patch
@@ -54,9 +48,6 @@ Patch24: gdm-2.15.6-wtmp.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=327530
 Patch25: gdm-2.15.6-center-cursor.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=349640
-Patch26: gdm-2.15.6-fix-face-browser.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -120,15 +111,12 @@ several different X sessions on your local machine at the same time.
 %patch4 -p1 -b .update-switchdesk-location
 %patch6 -p1 -b .clean-up-xsession-errors
 %patch7 -p1 -b .merge-resources
-%patch9 -p1 -b .dont-malloc-in-signal-handlers
 %patch12 -p1 -b .audit-login
-%patch13 -p1 -b .modularx
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .center-cursor
-%patch26 -p1 -b .fix-face-browser
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -316,6 +304,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Aug 4 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.9-1
+- update to 2.15.9
+
 * Fri Aug 4 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.7-2
 - update gdmsetup pam file to use config-util stacks
 
