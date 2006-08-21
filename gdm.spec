@@ -46,9 +46,6 @@ Patch21: gdm-2.15.6-security-tokens.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.15.6-wtmp.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=327530
-Patch25: gdm-2.15.6-center-cursor.patch
-
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
 Prereq: /usr/sbin/useradd
@@ -116,7 +113,6 @@ several different X sessions on your local machine at the same time.
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
 %patch24 -p1 -b .wtmp
-%patch25 -p1 -b .center-cursor
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -306,6 +302,7 @@ fi
 %changelog
 * Mon Aug 21 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.15.10-1.fc6
 - Update to 2.15.10
+- Drop upstreamed patch
 
 * Fri Aug 4 2006 Ray Strode <rstrode@redhat.com> - 1:2.15.9-1
 - update to 2.15.9
