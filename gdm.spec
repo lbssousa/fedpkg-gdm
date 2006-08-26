@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.15.10
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -88,6 +88,7 @@ BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: libselinux-devel >= %{libselinuxver}
 BuildRequires: audit-libs-devel >= %{libauditver}
+BuildRequires: intltool
 %ifnarch s390 s390x ppc64
 BuildRequires: xorg-x11-server-Xorg
 %endif
@@ -300,6 +301,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sat Aug 26 2006 Karsten Hopp <karsten@redhat.com> - 1:2.15.10-2.fc6
+- buildrequire inttools as this isn't a requirement of scrollkeeper anymore
+  and thus missing from the buildroot
+
 * Mon Aug 21 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.15.10-1.fc6
 - Update to 2.15.10
 - Drop upstreamed patch
