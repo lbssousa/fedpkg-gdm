@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -61,7 +61,7 @@ Requires: /etc/pam.d/system-auth
 Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
-Requires: redhat-artwork >= 0:0.234-1
+Requires: redhat-artwork >= 5.0.4-1
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
@@ -301,6 +301,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep  7 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-2.fc6
+- Change the default theme to FedoraDNA
+- Bump redhat-artwork requirement
+
 * Tue Sep  5 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-1.fc6
 - Update to 2.16.0
 
