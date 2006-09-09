@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,7 +26,7 @@ Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
 
-Patch1: gdm-2.15.6-change-defaults.patch
+Patch1: gdm-2.16.0-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=301817
@@ -301,6 +301,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Sep  8 2006 Jesse Keating <jkeating@redhat.com> - 1:2.16.0-3.fc6
+- Apply correct defaults patch
+
 * Thu Sep  7 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-2.fc6
 - Change the default theme to FedoraDNA
 - Bump redhat-artwork requirement
