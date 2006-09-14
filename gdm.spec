@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -41,7 +41,7 @@ Patch12: gdm-2.13.0.4-audit-login.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.15.5-move-default-message.patch
 Patch20: gdm-2.15.5-reset-pam.patch
-Patch21: gdm-2.15.6-security-tokens.patch
+Patch21: gdm-2.16.0-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.15.6-wtmp.patch
@@ -301,6 +301,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-4.fc6
+- update security token patch to not poll
+
 * Fri Sep  8 2006 Jesse Keating <jkeating@redhat.com> - 1:2.16.0-3.fc6
 - Apply correct defaults patch
 
