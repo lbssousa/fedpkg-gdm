@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -301,6 +301,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Sep 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-5.fc6
+- don't leak pipe fds (bug 206709)
+
 * Thu Sep 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-4.fc6
 - update security token patch to not poll
 
