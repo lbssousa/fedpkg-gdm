@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -301,6 +301,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Sep 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-7.fc6
+- fix a problem recently introduced in the smart card forking
+  code
+
 * Mon Sep 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-6.fc6
 - fix a problem recently introduced in the smart card driver
   loading code (bug 206882)
