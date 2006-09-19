@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -45,6 +45,9 @@ Patch21: gdm-2.16.0-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.15.6-wtmp.patch
+
+# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
+Patch25: gdm-2.16.0-indic-langs.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -114,6 +117,7 @@ several different X sessions on your local machine at the same time.
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
 %patch24 -p1 -b .wtmp
+%patch25 -p1 -b .indic-langs
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -301,6 +305,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Sep 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-8.fc6
+- Add as_IN, si_LK to language list (bug 203917) 
+
 * Mon Sep 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-7.fc6
 - fix a problem recently introduced in the smart card forking
   code
