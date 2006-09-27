@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -51,6 +51,8 @@ Patch25: gdm-2.16.0-indic-langs.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=357998
 Patch26: gdm-2.16.0-markup.patch
+
+Patch27: gdm-2.16.0-close.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -122,6 +124,7 @@ several different X sessions on your local machine at the same time.
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch26 -p1 -b .markup
+%patch27 -p1 -b .close
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -309,6 +312,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Sep 27 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-10.fc6
+- Fix small issues in gdmsetup (#208225)
+
 * Wed Sep 27 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-9.fc6
 - Fix a problem with the display of the FedoraDNA theme
   in gdmsetup
