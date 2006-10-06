@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -312,6 +312,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Oct 5 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-11.fc6
+- make monitoring code more reliable (bug 208018)
+
 * Wed Sep 27 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-10.fc6
 - Fix small issues in gdmsetup (#208225)
 
