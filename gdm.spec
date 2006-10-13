@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 12%{?dist}
+Release: 13%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -53,6 +53,8 @@ Patch25: gdm-2.16.0-indic-langs.patch
 Patch26: gdm-2.16.0-markup.patch
 
 Patch27: gdm-2.16.0-close.patch
+
+Patch28: gdm-2.16.0-desensitize-entry.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -125,6 +127,7 @@ several different X sessions on your local machine at the same time.
 %patch25 -p1 -b .indic-langs
 %patch26 -p1 -b .markup
 %patch27 -p1 -b .close
+%patch28 -p1 -b .desensitize-entry
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -312,6 +315,11 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Oct 10 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-13.fc6
+- desensitize entry fields until pam asks for input, so if pam
+  doesn't initially ask for input (like in smart card required mode)
+  the user can't type something and confuse gdm (bug 201344)
+
 * Fri Oct 6 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-12.fc6
 - invoke standard X server with -br option to ensure we get a
   black root on startup
