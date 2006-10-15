@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 14%{?dist}
+Release: 15%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -315,7 +315,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Sat Oct 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-14.fc6
+* Sun Oct 15 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-15.fc7
+- Prefer modules in secmod db over hardcoded coolkey path
+
+* Sat Oct 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-14.fc7
 - have security token monitor helper process kill itself when
   the communication pipe to the main process goes away (bug 210677).
 
