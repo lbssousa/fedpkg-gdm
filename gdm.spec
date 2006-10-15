@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 13%{?dist}
+Release: 14%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -315,6 +315,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sat Oct 14 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-14.fc6
+- have security token monitor helper process kill itself when
+  the communication pipe to the main process goes away (bug 210677).
+
 * Wed Oct 10 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-13.fc6
 - desensitize entry fields until pam asks for input, so if pam
   doesn't initially ask for input (like in smart card required mode)
