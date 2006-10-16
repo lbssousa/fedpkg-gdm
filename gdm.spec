@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 15%{?dist}
+Release: 16%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -44,7 +44,7 @@ Patch20: gdm-2.15.5-reset-pam.patch
 Patch21: gdm-2.16.0-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
-Patch24: gdm-2.15.6-wtmp.patch
+Patch24: gdm-2.16.0-wtmp.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
 Patch25: gdm-2.16.0-indic-langs.patch
@@ -315,6 +315,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Oct 15 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-16.fc7
+- don't log canceled pam conversations as failed login attempts
+
 * Sun Oct 15 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-15.fc7
 - Prefer modules in secmod db over hardcoded coolkey path
 
