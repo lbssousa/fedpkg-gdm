@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.16.0
-Release: 16%{?dist}
+Release: 17%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -55,6 +55,9 @@ Patch26: gdm-2.16.0-markup.patch
 Patch27: gdm-2.16.0-close.patch
 
 Patch28: gdm-2.16.0-desensitize-entry.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=362853
+Patch29: gdm-2.16.0-photo-setup-help.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -128,6 +131,7 @@ several different X sessions on your local machine at the same time.
 %patch26 -p1 -b .markup
 %patch27 -p1 -b .close
 %patch28 -p1 -b .desensitize-entry
+%patch29 -p1 -b .photo-setup-help
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -315,6 +319,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Oct 17 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.16.0-17
+- Make photosetup help button work (#198138)
+
 * Sun Oct 15 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-16.fc7
 - don't log canceled pam conversations as failed login attempts
 
