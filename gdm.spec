@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager.
 Name: gdm
 Version: 2.17.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -53,6 +53,9 @@ Patch28: gdm-2.16.0-desensitize-entry.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=362853
 Patch29: gdm-2.16.0-photo-setup-help.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=345434
+Patch30: gdm-2.17.0-a11y-launch.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -125,6 +128,7 @@ several different X sessions on your local machine at the same time.
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p1 -b .photo-setup-help
+%patch30 -p0 -b .a11y-launch
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -182,9 +186,10 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
 (cd $RPM_BUILD_ROOT/usr/bin; ln -sf consolehelper gdmsetup)
 
 # fix the "login photo" file
+# FIXME: work around invalid categories for now
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
-  $RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop
+  $RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop || :
 
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.destkop
 
@@ -312,6 +317,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Oct 26 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.0-2
+- Fix a crash with launching a11y support
+
 * Sun Oct 22 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.0-1
 - Update to 2.17.0
 
