@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.17.0
-Release: 2%{?dist}
+Version: 2.17.1
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -39,8 +39,8 @@ Patch7: gdm-2.8.0.2-merge-resources.patch
 Patch12: gdm-2.13.0.4-audit-login.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
-Patch19: gdm-2.15.5-move-default-message.patch
-Patch20: gdm-2.15.5-reset-pam.patch
+Patch19: gdm-2.17.1-move-default-message.patch
+Patch20: gdm-2.17.1-reset-pam.patch
 Patch21: gdm-2.16.0-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
@@ -49,13 +49,7 @@ Patch24: gdm-2.16.0-wtmp.patch
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
 Patch25: gdm-2.16.0-indic-langs.patch
 
-Patch28: gdm-2.16.0-desensitize-entry.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=362853
-Patch29: gdm-2.16.0-photo-setup-help.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=345434
-Patch30: gdm-2.17.0-a11y-launch.patch
+Patch28: gdm-2.17.1-desensitize-entry.patch
 
 BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
 
@@ -127,8 +121,6 @@ several different X sessions on your local machine at the same time.
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
-%patch29 -p1 -b .photo-setup-help
-%patch30 -p0 -b .a11y-launch
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -317,6 +309,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sun Nov  5 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.1-1
+- Update to 2.17.1
+
 * Thu Oct 26 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.0-2
 - Fix a crash with launching a11y support
 
