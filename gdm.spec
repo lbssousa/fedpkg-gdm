@@ -15,7 +15,7 @@
 
 Summary: The GNOME Display Manager.
 Name: gdm
-Version: 2.17.2
+Version: 2.17.3
 Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
@@ -40,8 +40,8 @@ Patch12: gdm-2.13.0.4-audit-login.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.17.1-move-default-message.patch
-Patch20: gdm-2.17.1-reset-pam.patch
-Patch21: gdm-2.16.0-security-tokens.patch
+Patch20: gdm-2.17.3-reset-pam.patch
+Patch21: gdm-2.17.3-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.16.0-wtmp.patch
@@ -309,6 +309,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Dec  5 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.3-1
+- Update to 2.17.3
+- Update some patches
+
 * Tue Nov  7 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.2-1
 - Update to 2.17.2
 
