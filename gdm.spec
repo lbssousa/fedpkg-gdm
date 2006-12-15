@@ -128,9 +128,9 @@ cp -f %{SOURCE2} config/gdm-autologin
 cp -f %{SOURCE3} gdmsetup-pam
 
 intltoolize --force --copy
-aclocal-1.9
+aclocal
 libtoolize --force --copy
-automake-1.9 --add-missing
+automake --add-missing
 autoconf
 autoheader
 %configure --with-pam-prefix=%{_sysconfdir} \
