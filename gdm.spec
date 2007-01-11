@@ -13,9 +13,9 @@
 %define gail_version 1.2.0
 %define nss_version 3.11.1
 
-Summary: The GNOME Display Manager.
+Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.17.4
+Version: 2.17.5
 Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
@@ -51,7 +51,7 @@ Patch25: gdm-2.16.0-indic-langs.patch
 
 Patch28: gdm-2.17.1-desensitize-entry.patch
 
-BuildRoot: %{_tmppath}/gdm-%{PACKAGE_VERSION}-root
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
 Prereq: /usr/sbin/useradd
 Prereq: /usr/bin/scrollkeeper-update
@@ -309,6 +309,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Thu Jan 11 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.5-1
+- Update to 2.17.5
+
 * Fri Dec 15 2006 Matthias Clasen <mclasen@redhat.com> - 1:2.17.4-1
 - Update to 2.17.4, which fixes CVE-2006-6105
 
