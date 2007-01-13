@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -98,6 +98,7 @@ BuildRequires: intltool
 BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
+BuildRequires: ConsoleKit
 Requires: libselinux >= %{libselinuxver}
 Requires: audit-libs >= %{libauditver}
 
@@ -136,7 +137,8 @@ autoheader
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
-	   --with-selinux
+	   --with-selinux \
+	   --with-console-kit
 make
 
 %install
@@ -309,6 +311,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sat Jan 13 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.5-2
+- Enable ConsoleKit support
+
 * Thu Jan 11 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.5-1
 - Update to 2.17.5
 
