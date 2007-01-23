@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.17.5
-Release: 2%{?dist}
+Version: 2.17.6
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -311,6 +311,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Jan 23 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.6-1
+- Update to 2.17.6
+
 * Sat Jan 13 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.5-2
 - Enable ConsoleKit support
 
