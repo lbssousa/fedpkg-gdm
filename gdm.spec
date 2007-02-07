@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -50,6 +50,9 @@ Patch24: gdm-2.16.0-wtmp.patch
 Patch25: gdm-2.16.0-indic-langs.patch
 
 Patch28: gdm-2.17.1-desensitize-entry.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=335786 
+Patch30: gdm-2.17.6-username.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -122,6 +125,7 @@ several different X sessions on your local machine at the same time.
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
+%patch30 -p1 -b .username
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -311,6 +315,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Feb  6 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.6-2
+- Apply a patch to improve fast user switching experience
+
 * Tue Jan 23 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.6-1
 - Update to 2.17.6
 
