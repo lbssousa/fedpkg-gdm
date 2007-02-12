@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.6
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,7 +26,7 @@ Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
 
-Patch1: gdm-2.16.0-change-defaults.patch
+Patch1: gdm-2.17.6-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=301817
@@ -177,6 +177,9 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
 # remove the other gnome session file, since we put it in gnome-session
 rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
 
+# we don't want this either
+rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/BuiltInSessions/default.desktop
+
 # no dumb flexiserver thing, Xnest is too broken
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
 
@@ -319,6 +322,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Feb 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.6-4
+- Reuse existing sessions without asking
+- Don't show failsafe sessions
+
 * Sat Feb 10 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.6-3
 - Fix a problem with the ConsoleKit support
 
