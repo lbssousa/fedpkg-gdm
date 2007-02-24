@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.7
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -50,6 +50,9 @@ Patch24: gdm-2.16.0-wtmp.patch
 Patch25: gdm-2.16.0-indic-langs.patch
 
 Patch28: gdm-2.17.1-desensitize-entry.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=411427
+Patch29: gdm-2.17.7-greeter.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -122,6 +125,7 @@ several different X sessions on your local machine at the same time.
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
+%patch29 -p0 -b .greeter
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -323,6 +327,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Feb 23 2007 David Zeuthen <davidz@redhat.com> - 1:2.17.7-4
+- Add some enhancements to the greeter (bgo #411427)
+
 * Fri Feb 23 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.7-3
 - Update to 2.17.7
 
