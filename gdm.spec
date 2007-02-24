@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.7
-Release: 2%{?dist}
+Release: 3.%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -36,11 +36,11 @@ Patch6: gdm-2.8.0.2-clean-up-xsession-errors.patch
 Patch7: gdm-2.8.0.2-merge-resources.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=349835
-Patch12: gdm-2.13.0.4-audit-login.patch
+Patch12: gdm-2.17.6-audit-login.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
-Patch19: gdm-2.17.1-move-default-message.patch
-Patch20: gdm-2.17.3-reset-pam.patch
+Patch19: gdm-2.17.7-move-default-message.patch
+Patch20: gdm-2.17.7-reset-pam.patch
 Patch21: gdm-2.17.3-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
@@ -323,12 +323,15 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Feb 23 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.7-3
+- Update to 2.17.7
+
 * Fri Feb 23 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.7-2
 - Don't own /usr/share/icons/hicolor
 - Install all desktop files
 
 * Mon Feb 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.7-1
-- Update to 2.17.7
+- try to update to 2.17.7
 - Drop upstreamed patches
 
 * Mon Feb 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.6-4

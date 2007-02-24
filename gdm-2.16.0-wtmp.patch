@@ -259,7 +259,7 @@
  	gdm_slave_action_pending ()) {
 +
 +	    gdm_verify_write_record (d, GDM_VERIFY_RECORD_TYPE_FAILED_ATTEMPT,
-+				     login == NULL? tmp_PAM_USER : login, display, 
++				     login, display, 
 +				     d->attached? NULL : d->hostname,
 +				     getpid ());
 +

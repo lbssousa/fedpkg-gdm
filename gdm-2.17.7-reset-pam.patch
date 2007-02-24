@@ -1,0 +1,176 @@
+--- gdm-2.17.7/gui/greeter/greeter.c.reset-pam	2007-02-12 00:40:12.000000000 -0500
++++ gdm-2.17.7/gui/greeter/greeter.c	2007-02-23 22:54:28.000000000 -0500
+@@ -171,7 +171,6 @@
+     GtkWidget *dlg;
+     char *tmp;
+     char *session;
+-    GreeterItemInfo *conversation_info;
+     static GnomeCanvasItem *disabled_cover = NULL;
+     gchar *language;
+     gchar *selected_user = NULL;
+@@ -380,17 +379,10 @@
+ 
+ 	first_prompt = TRUE;
+ 
+-	conversation_info = greeter_lookup_id ("pam-conversation");
+-	
+-	if (conversation_info)
+-	  {
+-	    tmp = ve_locale_to_utf8 (args);
+-	    g_object_set (G_OBJECT (conversation_info->item),
+-			  "text", tmp,
+-			  NULL);
+-	    g_free (tmp);
+-	  }
+-
++        greeter_item_ulist_unset_selected_user ();
++        greeter_item_pam_prompt ("", PW_ENTRY_SIZE, TRUE);
++        greeter_item_pam_message ("");
++ 
+ 	printf ("%c\n", STX);
+ 	fflush (stdout);
+ 	greeter_ignore_buttons (FALSE);
+--- gdm-2.17.7/daemon/slave.c.reset-pam	2007-02-23 22:54:28.000000000 -0500
++++ gdm-2.17.7/daemon/slave.c	2007-02-23 22:54:28.000000000 -0500
+@@ -133,6 +133,12 @@
+ static int greeter_fd_out = -1;
+ static int greeter_fd_in = -1;
+ 
++/* a dup of the other side of greeter_fd_in so that
++ * the slave can talk to itself from its sig handler
++ * using the greeter ipc mechanism
++ */
++static int slave_fd_out = -1;
++
+ #ifdef HAVE_TSOL
+ static gboolean have_suntsol_extension = FALSE;
+ #endif
+@@ -626,7 +632,7 @@
+ }
+ 
+ static void
+-whack_greeter_fds (void)
++whack_greeter_and_slave_fds (void)
+ {
+ 	if (greeter_fd_out > 0)
+ 		VE_IGNORE_EINTR (close (greeter_fd_out));
+@@ -634,6 +640,9 @@
+ 	if (greeter_fd_in > 0)
+ 		VE_IGNORE_EINTR (close (greeter_fd_in));
+ 	greeter_fd_in = -1;
++	if (slave_fd_out > 0)
++		VE_IGNORE_EINTR (close (slave_fd_out));
++	slave_fd_out = -1;
+ }
+ 
+ static void
+@@ -1084,7 +1093,7 @@
+ 
+ 	d->greetpid = 0;
+ 
+-	whack_greeter_fds ();
++	whack_greeter_and_slave_fds ();
+ 
+ 	gdm_slave_send_num (GDM_SOP_GREETPID, 0);
+ 
+@@ -1887,7 +1896,7 @@
+ 
+ 		d->greetpid = 0;
+ 
+-		whack_greeter_fds ();
++		whack_greeter_and_slave_fds ();
+ 
+ 		gdm_slave_send_num (GDM_SOP_GREETPID, 0);
+ 	}
+@@ -2124,6 +2133,12 @@
+ 			break;
+ 		}
+ 
++		if (do_cancel) {
++			gdm_debug ("canceling...");
++			gdm_slave_greeter_ctl_no_ret (GDM_RESETOK, "");
++			continue;
++		}
++
+ 		if (login == NULL) {
+ 			char *failuresound = gdm_get_value_string (GDM_KEY_SOUND_ON_LOGIN_FAILURE_FILE);
+ 
+@@ -2723,9 +2738,9 @@
+ 	
+     default:
+ 	VE_IGNORE_EINTR (close (pipe1[0]));
+-	VE_IGNORE_EINTR (close (pipe2[1]));
++	whack_greeter_and_slave_fds ();
+ 
+-	whack_greeter_fds ();
++	slave_fd_out = pipe2[1];
+ 
+ 	greeter_fd_out = pipe1[1];
+ 	greeter_fd_in = pipe2[0];
+@@ -4784,7 +4799,7 @@
+ 
+ 			greet = FALSE;
+ 			d->greetpid = 0;
+-			whack_greeter_fds ();
++			whack_greeter_and_slave_fds ();
+ 			gdm_slave_send_num (GDM_SOP_GREETPID, 0);
+ 
+ 			do_restart_greeter = TRUE;
+@@ -4796,7 +4811,7 @@
+ 			continue;
+ 		}
+ 
+-		whack_greeter_fds ();
++		whack_greeter_and_slave_fds ();
+ 
+ 		/* if greet is TRUE, then the greeter died outside of our
+ 		 * control really, so clean up and die, something is wrong
+@@ -4939,6 +4954,11 @@
+ 				gdm_wait_for_go = FALSE;
+ 			} else if (strcmp (&s[1], GDM_NOTIFY_TWIDDLE_POINTER) == 0) {
+ 				gdm_twiddle_pointer (d);
++			} else if (strcmp (&s[1], GDM_NOTIFY_RESET) == 0) {
++				if (!d->logged_in) {
++					gdm_fdprintf (slave_fd_out, "%c%c%c\n", 
++						      STX, BEL, GDM_INTERRUPT_CANCEL);
++				}
+ 			}
+ 		} else if (s[0] == GDM_SLAVE_NOTIFY_RESPONSE) {
+ 			gdm_got_ack = TRUE;
+--- gdm-2.17.7/daemon/gdm.h.reset-pam	2007-02-12 00:40:19.000000000 -0500
++++ gdm-2.17.7/daemon/gdm.h	2007-02-23 22:54:28.000000000 -0500
+@@ -749,6 +749,9 @@
+ #define GDM_SOP_SHOW_QUESTION_DIALOG "SHOW_QUESTION_DIALOG"  /* show the question dialog from daemon */
+ #define GDM_SOP_SHOW_ASKBUTTONS_DIALOG "SHOW_ASKBUTTON_DIALOG"  /* show the askbutton dialog from daemon */
+ 
++/* Reset any in progress authentication conversations */
++#define GDM_SOP_CANCEL_LOGIN_REQUESTS "CANCEL_LOGIN_REQUESTS" /* no arguments */
++
+ /* Notification protocol */
+ /* keys */
+ #define GDM_NOTIFY_ALLOW_REMOTE_ROOT "AllowRemoteRoot" /* <true/false as int> */
+@@ -776,6 +779,7 @@
+ #define GDM_NOTIFY_SOFT_RESTART_SERVERS "SOFT_RESTART_SERVERS"
+ #define GDM_NOTIFY_GO "GO"
+ #define GDM_NOTIFY_TWIDDLE_POINTER "TWIDDLE_POINTER"
++#define GDM_NOTIFY_RESET "RESET"
+ 
+ /* Ack for a slave message */
+ /* Note that an extra response can follow an 'ack' */
+--- gdm-2.17.7/daemon/gdm.c.reset-pam	2007-02-12 00:40:19.000000000 -0500
++++ gdm-2.17.7/daemon/gdm.c	2007-02-23 22:55:35.000000000 -0500
+@@ -2557,6 +2557,14 @@
+ 				     TRUE /* handled */,
+ 				     FALSE /* chooser */,
+ 				     NULL, 0, NULL, NULL, NULL);
++       } else if (strcmp (msg, GDM_SOP_CANCEL_LOGIN_REQUESTS) == 0) {
++               GSList *li;
++               for (li = displays; li != NULL; li = li->next) {
++                       GdmDisplay *d = li->data;
++                       if (!d->logged_in) {
++                               send_slave_command (d, GDM_NOTIFY_RESET);
++                       }
++               }
+        } else if (strncmp (msg, "opcode="GDM_SOP_SHOW_ERROR_DIALOG,
+ 			   strlen ("opcode="GDM_SOP_SHOW_ERROR_DIALOG)) == 0) {
+ 		GdmDisplay *d;
