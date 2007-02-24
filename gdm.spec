@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.7
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -53,6 +53,8 @@ Patch28: gdm-2.17.1-desensitize-entry.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=411427
 Patch29: gdm-2.17.7-greeter.patch
+
+Patch30: gdm-2.17.7-user-list-keynav.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -126,6 +128,7 @@ several different X sessions on your local machine at the same time.
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p0 -b .greeter
+%patch30 -p1 -b .keynav
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -327,6 +330,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Sat Feb 24 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.7-5
+- Fix keynav in the face browser
+
 * Fri Feb 23 2007 David Zeuthen <davidz@redhat.com> - 1:2.17.7-4
 - Add some enhancements to the greeter (bgo #411427)
 
