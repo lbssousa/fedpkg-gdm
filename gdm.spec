@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.17.7
-Release: 5%{?dist}
+Version: 2.17.8
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -330,6 +330,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Wed Feb 28 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.8-1
+- Update to 2.17.8
+
 * Sat Feb 24 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.7-5
 - Fix keynav in the face browser
 
