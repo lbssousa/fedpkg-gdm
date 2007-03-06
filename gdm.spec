@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.8
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -330,6 +330,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Mar  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.8-2
+- turn off pam sanity check because it conflicts with audit
+
 * Wed Feb 28 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.17.8-1
 - Update to 2.17.8
 
