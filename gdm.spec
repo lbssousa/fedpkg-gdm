@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.17.8
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -55,6 +55,9 @@ Patch28: gdm-2.17.1-desensitize-entry.patch
 Patch29: gdm-2.17.7-greeter.patch
 
 Patch30: gdm-2.17.7-user-list-keynav.patch
+
+Patch31: gdm-2.17.8-hide-uninstalled-languages.patch
+
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -129,6 +132,7 @@ several different X sessions on your local machine at the same time.
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p0 -b .greeter
 %patch30 -p1 -b .keynav
+%patch31 -p1 -b .hide-uninstalled-languages
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -330,6 +334,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Mar  9 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.8-3
+- hide langauges that aren't displayable from the list (bug 206048)
+
 * Tue Mar  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.8-2
 - turn off pam sanity check because it conflicts with audit
 
