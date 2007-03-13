@@ -15,13 +15,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.17.8
-Release: 3%{?dist}
+Version: 2.18.0
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
 URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
-Source: http://ftp.gnome.org/pub/gnome/sources/gdm/2.17/gdm-%{version}.tar.bz2
+Source: http://ftp.gnome.org/pub/gnome/sources/gdm/2.18/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -334,6 +334,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Tue Mar 13 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.18.0-1
+- Update to 2.18.0
+
 * Fri Mar  9 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.8-3
 - hide langauges that aren't displayable from the list (bug 206048)
 
