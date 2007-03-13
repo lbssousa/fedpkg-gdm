@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -345,7 +345,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Tue Mar 13 2007 David Zeuthen <davidz@redhat.com> - 1:2.18.0-1
+* Tue Mar 13 2007 David Zeuthen <davidz@redhat.com> - 1:2.18.0-2
 - Update to upstream release 2.18.0
 - Switch default theme to FedoraFlyingHigh and show /etc/passwd users
 - Fix accessibility in the themed greeter (GNOME #412576)
