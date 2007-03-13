@@ -25,8 +25,9 @@ Source: http://ftp.gnome.org/pub/gnome/sources/gdm/2.18/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
+Source4: 90-grant-audio-devices-to-gdm.fdi
 
-Patch1: gdm-2.17.6-change-defaults.patch
+Patch1: gdm-2.18.0-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=301817
@@ -41,7 +42,7 @@ Patch12: gdm-2.17.6-audit-login.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.17.7-move-default-message.patch
 Patch20: gdm-2.17.7-reset-pam.patch
-Patch21: gdm-2.17.3-security-tokens.patch
+#Patch21: gdm-2.17.3-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.16.0-wtmp.patch
@@ -54,10 +55,13 @@ Patch28: gdm-2.17.1-desensitize-entry.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=411427
 Patch29: gdm-2.17.7-greeter.patch
 
-Patch30: gdm-2.17.7-user-list-keynav.patch
-
 Patch31: gdm-2.17.8-hide-uninstalled-languages.patch
 
+# http://bugzilla.gnome.org/show_bug.cgi?id=412576
+Patch32: gdm-2.17.8-a11y-fixes-for-themed-greeter.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=411501
+Patch33: gdm-2.17.7-pass-at-to-session-3.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -74,11 +78,12 @@ Requires: /etc/pam.d/system-auth
 Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
-Requires: redhat-artwork >= 5.0.4-1
+Requires: redhat-artwork >= 5.0.11-1
 Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
+Requires: hal >= 0.5.9
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk2-devel >= 0:%{gtk2_version}
@@ -126,13 +131,14 @@ several different X sessions on your local machine at the same time.
 %patch12 -p1 -b .audit-login
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
-%patch21 -p1 -b .security-tokens
+#%patch21 -p1 -b .security-tokens
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p0 -b .greeter
-%patch30 -p1 -b .keynav
 %patch31 -p1 -b .hide-uninstalled-languages
+%patch32 -p0 -b .a11y-fixes
+%patch33 -p0 -b .pass-ats-to-session
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -214,6 +220,10 @@ desktop-file-install --delete-original       			\
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
+
+# grant access to alsa and oss devices for the gdm user
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/hal/fdi/policy/20thirdparty
+cp %{SOURCE4} $RPM_BUILD_ROOT%{_datadir}/hal/fdi/policy/20thirdparty
 
 %find_lang gdm
 
@@ -301,7 +311,7 @@ fi
 %dir %{_sysconfdir}/gdm
 %{_sysconfdir}/gdm/Xsession
 %config(noreplace) %{_sysconfdir}/gdm/custom.conf
-%config %{_sysconfdir}/gdm/securitytokens.conf
+#%config %{_sysconfdir}/gdm/securitytokens.conf
 %config %{_sysconfdir}/gdm/XKeepsCrashing
 %config %{_sysconfdir}/gdm/locale.alias
 %config %{_sysconfdir}/gdm/Init/*
@@ -324,6 +334,7 @@ fi
 %{_datadir}/applications
 %{_datadir}/gnome/help/gdm
 %{_datadir}/omf/gdm
+%{_datadir}/hal/fdi/policy/20thirdparty/90-grant-audio-devices-to-gdm.fdi
 %{_libdir}/gtk-2.0/modules/*.so
 %{_bindir}/*
 %{_libexecdir}/*
@@ -334,8 +345,13 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Tue Mar 13 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.18.0-1
-- Update to 2.18.0
+* Tue Mar 13 2007 David Zeuthen <davidz@redhat.com> - 1:2.18.0-1
+- Update to upstream release 2.18.0
+- Switch default theme to FedoraFlyingHigh and show /etc/passwd users
+- Fix accessibility in the themed greeter (GNOME #412576)
+- Enable accessible login, make sure gdm can access devices and
+  pass activated AT's to the login session (#229912)
+- Disable smart card login for now as patch doesn't apply anymore
 
 * Fri Mar  9 2007 Ray Strode <rstrode@redhat.com> - 1:2.17.8-3
 - hide langauges that aren't displayable from the list (bug 206048)

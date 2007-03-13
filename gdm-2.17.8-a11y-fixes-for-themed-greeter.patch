@@ -1,0 +1,205 @@
+Index: gui/greeter/greeter_item_ulist.c
+===================================================================
+--- gui/greeter/greeter_item_ulist.c	(revision 4626)
++++ gui/greeter/greeter_item_ulist.c	(working copy)
+@@ -217,18 +217,41 @@
+ void 
+ greeter_item_ulist_select_user (gchar *login)
+ {
+-	printf ("%c%c%c%s\n", STX, BEL,
+-		GDM_INTERRUPT_SELECT_USER, login);
++	/*printf ("%c%c%c%s\n", STX, BEL,
++	  GDM_INTERRUPT_SELECT_USER, login);*/
++	printf ("%c%s\n", STX, login);
+ 
+ 	fflush (stdout);
+ }
+ 
++
++static GTimeVal last_key_press = {0, 0};
++static GTimeVal last_button_press = {0, 0};
++
+ static void
+ user_selected (GtkTreeSelection *selection, gpointer data)
+ {
+ 	GtkTreeModel *tm = NULL;
+ 	GtkTreeIter iter = {0};
++	gboolean is_button_press;
++	guint64 button_msec;
++	guint64 key_msec;
+ 
++	/* HACK: determine whether selection changed because of key or
++	 * button press
++	 *
++	 * The rationale is this: if a face is pressed with the mouse
++	 * we should start authenticating that user right away. But if
++	 * the user uses keynav in the user list (think accessibility
++	 * and blind users) we shouldn't.
++	 */
++	button_msec = last_button_press.tv_sec * 1000 + last_button_press.tv_usec / 1000;
++	key_msec = last_key_press.tv_sec * 1000 + last_key_press.tv_usec / 1000;
++	is_button_press = FALSE;
++	if (button_msec > key_msec) {
++		is_button_press = TRUE;
++	}
++
+ 	if (gtk_tree_selection_get_selected (selection, &tm, &iter)) {
+ 		char *login;
+ 
+@@ -236,14 +259,19 @@
+ 				    &login, -1);
+ 		if (login != NULL) {
+ 			if (selecting_user && greeter_probably_login_prompt) {
+-				gtk_entry_set_text (GTK_ENTRY (pam_entry), login);
++				if (is_button_press) {
++					gtk_entry_set_text (GTK_ENTRY (pam_entry), login);
++				} else {
++					gtk_entry_set_text (GTK_ENTRY (pam_entry), "");
++				}
+ 			}
+ 			if (selecting_user) {
+ 				GreeterItemInfo *pamlabel = greeter_lookup_id ("pam-message");
+ 				if (pamlabel == NULL) {
+ 					gdm_common_warning ("Theme broken: must have pam-message label!");
+ 				}
+-				greeter_item_ulist_select_user (login);
++				if (is_button_press)
++					greeter_item_ulist_select_user (login);
+ 				if (selected_user != NULL)
+ 					g_free (selected_user);
+ 				selected_user = g_strdup (login);
+@@ -253,11 +281,28 @@
+ }
+ 
+ static void
+-browser_change_focus (GtkWidget *widget, GdkEventButton *event, gpointer data)
++row_activated (GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer data)
+ {
+-	gtk_widget_grab_focus (pam_entry);
++	if (selecting_user && greeter_probably_login_prompt) {
++		greeter_item_ulist_select_user (selected_user);
++	}
+ }
+ 
++static gboolean
++tv_key_press (GtkWidget *entry, GdkEventKey *event, gpointer data)
++{
++	g_get_current_time (&last_key_press);
++	return FALSE;
++}
++
++
++static gboolean
++tv_button_press (GtkWidget *entry, GdkEventKey *event, gpointer data)
++{
++	g_get_current_time (&last_button_press);
++	return FALSE;
++}
++
+ static void
+ greeter_generate_userlist (GtkWidget *tv)
+ {
+@@ -267,6 +312,12 @@
+ 	GreeterItemInfo *info;
+ 	GList *list, *li;
+ 
++	AtkObject *atk_widget;
++	atk_widget = gtk_widget_get_accessible (tv);
++	if (atk_widget != NULL) {
++		atk_object_set_name (atk_widget, _("Select user to log in"));
++	}
++
+ 	gdm_greeter_users_init ();
+ 
+ 	check_for_displays ();
+@@ -279,11 +330,14 @@
+ 		g_signal_connect (selection, "changed",
+ 				  G_CALLBACK (user_selected),
+ 				  NULL);
+-
+-		g_signal_connect (GTK_TREE_VIEW (tv), "button_release_event",
+-				  G_CALLBACK (browser_change_focus),
++		g_signal_connect (G_OBJECT (tv), "row-activated",
++				  G_CALLBACK (row_activated),
+ 				  NULL);
++		g_signal_connect (G_OBJECT (tv), "key-press-event",
++				  G_CALLBACK (tv_key_press), user_list);
++		g_signal_connect (G_OBJECT (tv), "button-press-event",
++				  G_CALLBACK (tv_button_press), user_list);
+ 
+ 		tm = (GtkTreeModel *)gtk_list_store_new (4,
+ 							 GDK_TYPE_PIXBUF,
+ 
+Index: gui/greeter/greeter_item_pam.c
+===================================================================
+--- gui/greeter/greeter_item_pam.c	(revision 4626)
++++ gui/greeter/greeter_item_pam.c	(working copy)
+@@ -184,14 +184,6 @@
+        const char *login_string;
+ 	GtkWidget *entry = GNOME_CANVAS_WIDGET (entry_info->item)->widget;
+ 
+-       if ((event->keyval == GDK_Tab ||
+-            event->keyval == GDK_KP_Tab) &&
+-           (event->state & (GDK_CONTROL_MASK|GDK_MOD1_MASK|GDK_SHIFT_MASK)) == 0)
+-          {
+-		greeter_item_pam_login (GTK_ENTRY (entry), entry_info);
+-		return TRUE;
+-           }
+-
+        if (gtk_ok_button != NULL)
+           {
+              /*
+@@ -208,6 +200,19 @@
+   return FALSE;
+ }
+ 
++/* We *never* want to lose focus when we are in the process of
++ * authenticating the user */
++static gboolean 
++pam_focus_out_event (GtkWidget     *widget,
++		     GdkEventFocus *event,
++		     gpointer       user_data)
++{
++	if (!greeter_probably_login_prompt) {
++		gtk_widget_grab_focus (widget);
++	}
++	return FALSE;
++}
++
+ gboolean
+ greeter_item_pam_setup (void)
+ {
+@@ -238,7 +243,9 @@
+       g_signal_connect (entry, "activate",
+ 			G_CALLBACK (greeter_item_pam_login), entry_info);
+       g_signal_connect (G_OBJECT (entry), "key_release_event",
+-		        G_CALLBACK (pam_key_release_event), NULL);
++			G_CALLBACK (pam_key_release_event), NULL);
++      g_signal_connect (G_OBJECT (entry), "focus-out-event",
++			G_CALLBACK (pam_focus_out_event), NULL);
+     }
+ 
+   return TRUE;
+@@ -260,6 +267,21 @@
+   if (conversation_info)
+     {
+       set_text (conversation_info, message);
++
++      if (entry_info != NULL) {
++	      GnomeCanvasWidget *item = GNOME_CANVAS_WIDGET (entry_info->item);
++	      if (item != NULL) {
++		      GtkWidget *widget = item->widget;
++		      if (widget != NULL) {
++			      AtkObject *atk_widget;
++			      atk_widget = gtk_widget_get_accessible (widget);
++			      if (atk_widget != NULL) {
++				      atk_object_set_name (atk_widget, message);
++			      }
++		      }
++	      }
++      }
++
+     }
+   
+   if (entry_info && entry_info->item &&
+
