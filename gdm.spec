@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -63,6 +63,8 @@ Patch32: gdm-2.17.8-a11y-fixes-for-themed-greeter.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
 Patch33: gdm-2.17.7-pass-at-to-session-4.patch
+
+Patch34: gdm-2.18.0-add-lowres-fix.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -148,6 +150,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch31 -p1 -b .hide-uninstalled-languages
 %patch32 -p0 -b .a11y-fixes
 %patch33 -p0 -b .pass-ats-to-session
+%patch34 -p1 -b .add-lowres-fix
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -365,6 +368,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Mar 20 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-5
+- add fix to allow themes to cope with low resolution modes
+  better (bug 232672)
+
 * Mon Mar 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-4
 - update and reenable security token patch
 
