@@ -64,6 +64,7 @@ Patch32: gdm-2.17.8-a11y-fixes-for-themed-greeter.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
 Patch33: gdm-2.17.7-pass-at-to-session-4.patch
 
+# http://bugzilla.gnome.org/show_bug.cgi?id=420610
 Patch34: gdm-2.18.0-add-lowres-fix.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
