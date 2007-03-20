@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -26,6 +26,7 @@ Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
 Source4: 90-grant-audio-devices-to-gdm.fdi
+Source5: fedora-faces-20070319.tar.bz2
 
 Patch1: gdm-2.18.0-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
@@ -61,7 +62,7 @@ Patch31: gdm-2.17.8-hide-uninstalled-languages.patch
 Patch32: gdm-2.17.8-a11y-fixes-for-themed-greeter.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
-Patch33: gdm-2.17.7-pass-at-to-session-3.patch
+Patch33: gdm-2.17.7-pass-at-to-session-4.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -121,8 +122,16 @@ reimplementation of xdm, the X Display Manager. Gdm allows you to log
 into your system with the X Window System running and supports running
 several different X sessions on your local machine at the same time.
 
+%package extra-faces
+Summary: Extra faces for GDM
+Group: User Interface/X
+Requires: %name
+
+%description extra-faces
+Extra icons / faces for the GNOME Display Manager.
+
 %prep
-%setup -q
+%setup -q -a 5
 
 %patch1 -p1 -b .change-defaults
 %patch4 -p1 -b .update-switchdesk-location
@@ -224,6 +233,11 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 # grant access to alsa and oss devices for the gdm user
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/hal/fdi/policy/20thirdparty
 cp %{SOURCE4} $RPM_BUILD_ROOT%{_datadir}/hal/fdi/policy/20thirdparty
+
+# replace faces with the ones from fedora-faces
+rm -rf $RPM_BUILD_ROOT%{_datadir}/pixmaps/faces
+mkdir $RPM_BUILD_ROOT%{_datadir}/pixmaps/faces
+cp -Rpr faces $RPM_BUILD_ROOT%{_datadir}/pixmaps
 
 %find_lang gdm
 
@@ -328,7 +342,9 @@ fi
 %dir %{_sysconfdir}/gdm/PostSession
 %dir %{_sysconfdir}/gdm/PostLogin
 %dir %{_sysconfdir}/gdm/modules
-%{_datadir}/pixmaps
+%{_datadir}/pixmaps/*.png
+%{_datadir}/pixmaps/faces/*.png
+%{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/gdm
 %{_datadir}/applications
@@ -344,7 +360,15 @@ fi
 
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
+%files extra-faces
+%{_datadir}/pixmaps/faces/extras/*.png
+%{_datadir}/pixmaps/faces/extras/*.jpg
+
 %changelog
+* Mon Mar 19 2007 David Zeuthen <davidz@redhat.com> - 1:2.18.0-3
+- Also pass AT's to the session from the plain greeter (#232518)
+- New faces including new subpackage gdm-extra-faces
+
 * Tue Mar 13 2007 David Zeuthen <davidz@redhat.com> - 1:2.18.0-2
 - Update to upstream release 2.18.0
 - Switch default theme to FedoraFlyingHigh and show /etc/passwd users
