@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -43,7 +43,7 @@ Patch12: gdm-2.17.6-audit-login.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.17.7-move-default-message.patch
 Patch20: gdm-2.17.7-reset-pam.patch
-#Patch21: gdm-2.17.3-security-tokens.patch
+Patch21: gdm-2.18.0-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
 Patch24: gdm-2.16.0-wtmp.patch
@@ -140,7 +140,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch12 -p1 -b .audit-login
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
-#%patch21 -p1 -b .security-tokens
+%patch21 -p1 -b .security-tokens
 %patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
@@ -365,6 +365,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Mar 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-4
+- update and reenable security token patch
+
 * Mon Mar 19 2007 David Zeuthen <davidz@redhat.com> - 1:2.18.0-3
 - Also pass AT's to the session from the plain greeter (#232518)
 - New faces including new subpackage gdm-extra-faces
