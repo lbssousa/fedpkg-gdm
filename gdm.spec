@@ -325,7 +325,7 @@ fi
 %dir %{_sysconfdir}/gdm
 %{_sysconfdir}/gdm/Xsession
 %config(noreplace) %{_sysconfdir}/gdm/custom.conf
-#%config %{_sysconfdir}/gdm/securitytokens.conf
+%config %{_sysconfdir}/gdm/securitytokens.conf
 %config %{_sysconfdir}/gdm/XKeepsCrashing
 %config %{_sysconfdir}/gdm/locale.alias
 %config %{_sysconfdir}/gdm/Init/*
