@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -213,7 +213,10 @@ rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
 (cd $RPM_BUILD_ROOT/usr/bin; ln -sf consolehelper gdmsetup)
 
 # fix the "login photo" file
-# FIXME: work around invalid categories for now
+cat >>$RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop <<EOF
+NoDisplay=true
+EOF
+ 
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
   --remove-category Application				    \
@@ -369,6 +372,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Mar 27 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.18.0-6
+- Hide gdmphotosetup by default, since About Me does the same
+
 * Tue Mar 20 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-5
 - add fix to allow themes to cope with low resolution modes
   better (bug 232672)
