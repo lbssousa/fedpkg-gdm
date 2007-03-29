@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -66,6 +66,9 @@ Patch33: gdm-2.17.7-pass-at-to-session-4.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=420610
 Patch34: gdm-2.18.0-add-lowres-fix.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=424229
+Patch35: gdm-2.18.0-dont-strcpy-overlapping-strings.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -152,6 +155,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch32 -p0 -b .a11y-fixes
 %patch33 -p0 -b .pass-ats-to-session
 %patch34 -p1 -b .add-lowres-fix
+%patch35 -p1 -b .dont-strcpy-overlapping-strings
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -372,6 +376,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Mar 29 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-7
+- don't strcpy overlapping strings (bug 208181).
+
 * Tue Mar 27 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.18.0-6
 - Hide gdmphotosetup by default, since About Me does the same
 
