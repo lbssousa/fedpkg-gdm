@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -69,6 +69,8 @@ Patch34: gdm-2.18.0-add-lowres-fix.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=424229
 Patch35: gdm-2.18.0-dont-strcpy-overlapping-strings.patch
+
+Patch36: gdm-2.18.0-dont-expect-utf8.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -156,6 +158,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch33 -p0 -b .pass-ats-to-session
 %patch34 -p1 -b .add-lowres-fix
 %patch35 -p1 -b .dont-strcpy-overlapping-strings
+%patch36 -p1 -b .dont-expect-utf8
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -376,6 +379,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Apr  5 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-8
+- don't expect utf-8 usernames for face browser (bug 235351).
+
 * Thu Mar 29 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-7
 - don't strcpy overlapping strings (bug 208181).
 

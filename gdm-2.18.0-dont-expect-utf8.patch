@@ -1,0 +1,44 @@
+--- gdm-2.18.0/gui/greeter/greeter_item_ulist.c.dont-expect-utf8	2007-04-05 11:19:40.000000000 -0400
++++ gdm-2.18.0/gui/greeter/greeter_item_ulist.c	2007-04-05 11:39:06.000000000 -0400
+@@ -168,6 +168,29 @@
+ 			&size_of_users, GDM_IS_LOCAL, !DOING_GDM_DEVELOPMENT);
+ }
+ 
++static gchar *
++greeter_string_to_escaped_utf8 (const gchar *raw_string)
++{
++	gchar *utf8_string, *escaped_string, *p;
++        const gchar *q;
++
++	utf8_string = g_strdup (raw_string);
++        p = utf8_string;
++	while ((*p != '\0') && 
++               !g_utf8_validate (p, -1, &q)) {
++                p = (gchar *) q;
++		*p = '?';
++		p++;
++	}
++
++	g_assert (g_utf8_validate (utf8_string, -1, NULL));
++
++	escaped_string = g_markup_escape_text (utf8_string, -1);
++        g_free (utf8_string);
++
++	return escaped_string;
++}
++
+ static void
+ greeter_populate_user_list (GtkTreeModel *tm)
+ {
+@@ -181,9 +204,9 @@
+ 		gboolean    active;
+ 
+ 		if (usr->gecos && strcmp (usr->gecos, "") != 0) {
+-			name = g_markup_escape_text (usr->gecos, -1);
++			name = greeter_string_to_escaped_utf8 (usr->gecos);
+ 		} else {
+-			name = g_markup_escape_text (usr->login, -1);
++			name = greeter_string_to_escaped_utf8 (usr->login);
+ 		}
+ 
+ 		if (g_hash_table_lookup (displays_hash, usr->login))
