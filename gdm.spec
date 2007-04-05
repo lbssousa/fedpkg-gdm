@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -70,6 +70,7 @@ Patch34: gdm-2.18.0-add-lowres-fix.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=424229
 Patch35: gdm-2.18.0-dont-strcpy-overlapping-strings.patch
 
+# http://bugzilla.gnome.org/show_bug.cgi?id=426647
 Patch36: gdm-2.18.0-dont-expect-utf8.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
@@ -379,6 +380,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Apr  5 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-9
+- don't expect utf-8 usernames for plain greeter face browser
+  either.
+
 * Thu Apr  5 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-8
 - don't expect utf-8 usernames for face browser (bug 235351).
 
