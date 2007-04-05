@@ -56,6 +56,7 @@ Patch28: gdm-2.17.1-desensitize-entry.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=411427
 Patch29: gdm-2.17.7-greeter.patch
 
+# http://bugzilla.gnome.org/show_bug.cgi?id=426653
 Patch31: gdm-2.17.8-hide-uninstalled-languages.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=412576
