@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -27,6 +27,7 @@ Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
 Source4: 90-grant-audio-devices-to-gdm.fdi
 Source5: fedora-faces-20070319.tar.bz2
+Source6: default.desktop
 
 Patch1: gdm-2.18.0-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
@@ -208,8 +209,10 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
 # remove the other gnome session file, since we put it in gnome-session
 rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
 
-# we don't want this either
-rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/BuiltInSessions/default.desktop
+# This got given an unfortunate name, so revert the name for now.
+# See https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234218
+# and http://bugzilla.gnome.org/show_bug.cgi?id=403690
+cp %{SOURCE6} $RPM_BUILD_ROOT%{_datadir}/gdm/BuiltInSessions/default.desktop
 
 # no dumb flexiserver thing, Xnest is too broken
 rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
@@ -381,6 +384,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Apr 12 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-10
+- add "Default" session back to the sessions menu (bug 234218)
+
 * Thu Apr  5 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-9
 - don't expect utf-8 usernames for plain greeter face browser
   either.
