@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -74,6 +74,9 @@ Patch35: gdm-2.18.0-dont-strcpy-overlapping-strings.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=426647
 Patch36: gdm-2.18.0-dont-expect-utf8.patch
+
+# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
+Patch99: gdm-2.18.0-be-more-verbose.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -162,6 +165,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch34 -p1 -b .add-lowres-fix
 %patch35 -p1 -b .dont-strcpy-overlapping-strings
 %patch36 -p1 -b .dont-expect-utf8
+%patch99 -p1 -b .be-more-verbose
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -384,6 +388,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Apr 17 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-11
+- Be more verbose to help isolate the problem in bug 234567
+
 * Thu Apr 12 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-10
 - add "Default" session back to the sessions menu (bug 234218)
 
