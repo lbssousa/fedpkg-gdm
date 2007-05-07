@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 11%{?dist}
+Release: 12%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -389,6 +389,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon May  7 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-12
+- reenable utmp logging (bug 209537)
+
 * Tue Apr 17 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-11
 - Be more verbose to help isolate the problem in bug 234567
 
