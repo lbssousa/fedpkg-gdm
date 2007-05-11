@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 12%{?dist}
+Release: 13%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -79,10 +79,12 @@ Patch36: gdm-2.18.0-dont-expect-utf8.patch
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
 Patch99: gdm-2.18.0-be-more-verbose.patch
 
+Patch100: keyboard.patch
+
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
 Prereq: /usr/sbin/useradd
-Prereq: /usr/bin/scrollkeeper-update
+
 Requires: gtk2 >= 0:%{gtk2_version}
 Requires: libglade2 >= 0:%{libglade2_version}
 Requires: libgnomeui >= 0:%{libgnomeui_version}
@@ -100,6 +102,8 @@ Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
 Requires: hal >= 0.5.9
+Requires(post): scrollkeeper
+Requires(postun): scrollkeeper
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk2-devel >= 0:%{gtk2_version}
@@ -167,6 +171,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch35 -p1 -b .dont-strcpy-overlapping-strings
 %patch36 -p1 -b .dont-expect-utf8
 %patch99 -p1 -b .be-more-verbose
+%patch100 -p1 -b .keyboard
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -389,6 +394,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu May 10 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.18.0-13
+- Follow packaging guidelines for scrollkeeper dependencies
+
 * Mon May  7 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-12
 - reenable utmp logging (bug 209537)
 
