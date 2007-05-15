@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.18.0
-Release: 13%{?dist}
+Release: 14%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -75,6 +75,8 @@ Patch35: gdm-2.18.0-dont-strcpy-overlapping-strings.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=426647
 Patch36: gdm-2.18.0-dont-expect-utf8.patch
+
+Patch37: gdm-2.18.0-hide-disabled-users.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
 Patch99: gdm-2.18.0-be-more-verbose.patch
@@ -170,6 +172,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch34 -p1 -b .add-lowres-fix
 %patch35 -p1 -b .dont-strcpy-overlapping-strings
 %patch36 -p1 -b .dont-expect-utf8
+%patch37 -p1 -b hide-disabled-users
 %patch99 -p1 -b .be-more-verbose
 %patch100 -p1 -b .keyboard
 
@@ -394,6 +397,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue May 15 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-14
+- hide users from userlist that have disabled shells
+  (bug 240148)
+
 * Thu May 10 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.18.0-13
 - Follow packaging guidelines for scrollkeeper dependencies
 
