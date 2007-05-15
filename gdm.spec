@@ -81,8 +81,6 @@ Patch37: gdm-2.18.0-hide-disabled-users.patch
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
 Patch99: gdm-2.18.0-be-more-verbose.patch
 
-Patch100: keyboard.patch
-
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
 Prereq: /usr/sbin/useradd
@@ -174,7 +172,6 @@ Extra icons / faces for the GNOME Display Manager.
 %patch36 -p1 -b .dont-expect-utf8
 %patch37 -p1 -b hide-disabled-users
 %patch99 -p1 -b .be-more-verbose
-%patch100 -p1 -b .keyboard
 
 %build
 cp -f %{SOURCE1} config/gdm
