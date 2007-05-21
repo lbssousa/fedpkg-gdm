@@ -1,9 +1,7 @@
-Index: gui/greeter/greeter_item_ulist.c
-===================================================================
---- gui/greeter/greeter_item_ulist.c	(revision 4626)
-+++ gui/greeter/greeter_item_ulist.c	(working copy)
-@@ -217,18 +217,41 @@
- void 
+--- gdm-2.19.1/gui/greeter/greeter_item_ulist.c.a11y-fixes	2007-05-21 13:32:04.000000000 -0400
++++ gdm-2.19.1/gui/greeter/greeter_item_ulist.c	2007-05-21 13:32:04.000000000 -0400
+@@ -236,17 +236,40 @@ greeter_populate_user_list (GtkTreeModel
+ void
  greeter_item_ulist_select_user (gchar *login)
  {
 -	printf ("%c%c%c%s\n", STX, BEL,
@@ -27,7 +25,7 @@ Index: gui/greeter/greeter_item_ulist.c
 +	gboolean is_button_press;
 +	guint64 button_msec;
 +	guint64 key_msec;
- 
++
 +	/* HACK: determine whether selection changed because of key or
 +	 * button press
 +	 *
@@ -42,11 +40,10 @@ Index: gui/greeter/greeter_item_ulist.c
 +	if (button_msec > key_msec) {
 +		is_button_press = TRUE;
 +	}
-+
+ 
  	if (gtk_tree_selection_get_selected (selection, &tm, &iter)) {
  		char *login;
- 
-@@ -236,14 +259,19 @@
+@@ -255,14 +278,19 @@ user_selected (GtkTreeSelection *selecti
  				    &login, -1);
  		if (login != NULL) {
  			if (selecting_user && greeter_probably_login_prompt) {
@@ -68,22 +65,22 @@ Index: gui/greeter/greeter_item_ulist.c
  				if (selected_user != NULL)
  					g_free (selected_user);
  				selected_user = g_strdup (login);
-@@ -253,11 +281,28 @@
+@@ -272,9 +300,26 @@ user_selected (GtkTreeSelection *selecti
  }
  
  static void
 -browser_change_focus (GtkWidget *widget, GdkEventButton *event, gpointer data)
 +row_activated (GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer data)
- {
--	gtk_widget_grab_focus (pam_entry);
++{
 +	if (selecting_user && greeter_probably_login_prompt) {
 +		greeter_item_ulist_select_user (selected_user);
 +	}
- }
- 
++}
++
 +static gboolean
 +tv_key_press (GtkWidget *entry, GdkEventKey *event, gpointer data)
-+{
+ {
+-	gtk_widget_grab_focus (pam_entry);
 +	g_get_current_time (&last_key_press);
 +	return FALSE;
 +}
@@ -94,13 +91,11 @@ Index: gui/greeter/greeter_item_ulist.c
 +{
 +	g_get_current_time (&last_button_press);
 +	return FALSE;
-+}
-+
+ }
+ 
  static void
- greeter_generate_userlist (GtkWidget *tv)
- {
-@@ -267,6 +312,12 @@
- 	GreeterItemInfo *info;
+@@ -285,6 +330,12 @@ greeter_generate_userlist (GtkWidget *tv
+ 	GtkTreeSelection *selection;
  	GList *list, *li;
  
 +	AtkObject *atk_widget;
@@ -112,7 +107,7 @@ Index: gui/greeter/greeter_item_ulist.c
  	gdm_greeter_users_init ();
  
  	check_for_displays ();
-@@ -279,11 +330,14 @@
+@@ -297,10 +348,13 @@ greeter_generate_userlist (GtkWidget *tv
  		g_signal_connect (selection, "changed",
  				  G_CALLBACK (user_selected),
  				  NULL);
@@ -129,77 +124,3 @@ Index: gui/greeter/greeter_item_ulist.c
  
  		tm = (GtkTreeModel *)gtk_list_store_new (4,
  							 GDK_TYPE_PIXBUF,
- 
-Index: gui/greeter/greeter_item_pam.c
-===================================================================
---- gui/greeter/greeter_item_pam.c	(revision 4626)
-+++ gui/greeter/greeter_item_pam.c	(working copy)
-@@ -184,14 +184,6 @@
-        const char *login_string;
- 	GtkWidget *entry = GNOME_CANVAS_WIDGET (entry_info->item)->widget;
- 
--       if ((event->keyval == GDK_Tab ||
--            event->keyval == GDK_KP_Tab) &&
--           (event->state & (GDK_CONTROL_MASK|GDK_MOD1_MASK|GDK_SHIFT_MASK)) == 0)
--          {
--		greeter_item_pam_login (GTK_ENTRY (entry), entry_info);
--		return TRUE;
--           }
--
-        if (gtk_ok_button != NULL)
-           {
-              /*
-@@ -208,6 +200,19 @@
-   return FALSE;
- }
- 
-+/* We *never* want to lose focus when we are in the process of
-+ * authenticating the user */
-+static gboolean 
-+pam_focus_out_event (GtkWidget     *widget,
-+		     GdkEventFocus *event,
-+		     gpointer       user_data)
-+{
-+	if (!greeter_probably_login_prompt) {
-+		gtk_widget_grab_focus (widget);
-+	}
-+	return FALSE;
-+}
-+
- gboolean
- greeter_item_pam_setup (void)
- {
-@@ -238,7 +243,9 @@
-       g_signal_connect (entry, "activate",
- 			G_CALLBACK (greeter_item_pam_login), entry_info);
-       g_signal_connect (G_OBJECT (entry), "key_release_event",
--		        G_CALLBACK (pam_key_release_event), NULL);
-+			G_CALLBACK (pam_key_release_event), NULL);
-+      g_signal_connect (G_OBJECT (entry), "focus-out-event",
-+			G_CALLBACK (pam_focus_out_event), NULL);
-     }
- 
-   return TRUE;
-@@ -260,6 +267,21 @@
-   if (conversation_info)
-     {
-       set_text (conversation_info, message);
-+
-+      if (entry_info != NULL) {
-+	      GnomeCanvasWidget *item = GNOME_CANVAS_WIDGET (entry_info->item);
-+	      if (item != NULL) {
-+		      GtkWidget *widget = item->widget;
-+		      if (widget != NULL) {
-+			      AtkObject *atk_widget;
-+			      atk_widget = gtk_widget_get_accessible (widget);
-+			      if (atk_widget != NULL) {
-+				      atk_object_set_name (atk_widget, message);
-+			      }
-+		      }
-+	      }
-+      }
-+
-     }
-   
-   if (entry_info && entry_info->item &&
-

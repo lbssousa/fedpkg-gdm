@@ -1,6 +1,6 @@
---- gdm-2.18.0/config/gdm.conf.in.orig	2007-03-11 17:46:16.000000000 -0400
-+++ gdm-2.18.0/config/gdm.conf.in	2007-03-13 18:25:12.000000000 -0400
-@@ -66,9 +66,9 @@
+--- gdm-2.19.1/config/gdm.conf.in.change-defaults	2007-05-13 22:08:25.000000000 -0400
++++ gdm-2.19.1/config/gdm.conf.in	2007-05-21 11:16:43.000000000 -0400
+@@ -66,9 +66,9 @@ TimedLoginDelay=30
  # should leave this alone.
  #Chooser=@libexecdir@/gdmchooser
  
@@ -13,7 +13,7 @@
  
  # The greeter for xdmcp logins, usually you want a less graphically intensive
  # greeter here so it's better to leave this with gdmlogin
-@@ -78,23 +78,21 @@
+@@ -78,23 +78,23 @@ TimedLoginDelay=30
  # This is useful for enabling additional feature support e.g. GNOME
  # accessibility framework. Only "trusted" modules should be allowed to minimize
  # security holes
@@ -34,26 +34,28 @@
 -#RootPath=/sbin:/usr/sbin:@GDM_USER_PATH@
 +RootPath=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin
  
--# If you are having trouble with using a single server for a long time and want
--# GDM to kill/restart the server, turn this on.  On Solaris, this value is
--# always true and this configuration setting is ignored.
--#AlwaysRestartServer=false
-+# Whether to restart X server after the user logs out or not.
+ # If you are having trouble with using a single server for a long time and want
+ # GDM to kill/restart the server, turn this on.  On Solaris, this value is
+ # always true and this configuration setting is ignored.
+-#AlwaysRestartServer=@ALWAYS_RESTART_SERVER@
 +AlwaysRestartServer=true
  
- # User and group used for running GDM GUI applicaitons.  By default this is set
+ # User and group used for running GDM GUI applications.  By default this is set
  # to user "gdm" and group "gdm".  This user/group should have very limited
-@@ -125,22 +123,21 @@
- XKeepsCrashing=@gdmconfdir@/XKeepsCrashing
+@@ -126,9 +126,9 @@ XKeepsCrashing=@gdmconfdir@/XKeepsCrashi
+ #
  # Reboot, Halt and suspend commands, you can add different commands separated
  # by a semicolon.  GDM will use the first one it can find.
--#RebootCommand=@REBOOT_COMMAND@
--#HaltCommand=@HALT_COMMAND@
--#SuspendCommand=@SUSPEND_COMMAND@
+-RebootCommand=@REBOOT_COMMAND@
+-HaltCommand=@HALT_COMMAND@
+-SuspendCommand=@SUSPEND_COMMAND@
++#
 +RebootCommand=/sbin/reboot;/sbin/shutdown -r now;/usr/sbin/shutdown -r now;/usr/bin/reboot
 +HaltCommand=/sbin/poweroff;/sbin/shutdown -h now;/usr/sbin/shutdown -h now;/usr/bin/poweroff
- # Probably should not touch the below this is the standard setup.
- ServAuthDir=@authdir@
+ 
+ # The following options specify how GDM system commands are supported.
+ #
+@@ -158,14 +158,14 @@ ServAuthDir=@authdir@
  # This is our standard startup script.  A bit different from a normal X
  # session, but it shares a lot of stuff with that.  See the provided default
  # for more information.
@@ -70,7 +72,7 @@
  # Better leave this blank and HOME will be used.  You can use syntax ~/ below
  # to indicate home directory of the user.  You can also set this to something
  # like /tmp if you don't want the authorizations to be in home directories.
-@@ -148,11 +145,11 @@
+@@ -173,11 +173,11 @@ BaseXsession=@gdmconfdir@/Xsession
  # is the home directory the UserAuthFBDir will still be used in case the home
  # directory is NFS, see security/NeverPlaceCookiesOnNFS to override this
  # behavior.
@@ -84,7 +86,7 @@
  # The X server to use if we can't figure out what else to run.
  StandardXServer=@X_SERVER@
  # The maximum number of flexible X servers to run.
-@@ -173,7 +170,7 @@
+@@ -209,7 +209,7 @@ XnestUnscaledFontPath=@X_XNEST_UNSCALED_
  #DoubleLoginWarning=true
  # Should a second login always resume the current session and switch VT's on
  # Linux and FreeBSD systems for console logins
@@ -93,7 +95,7 @@
  
  # If true then the last login information is printed to the user before being
  # prompted for password.  While this gives away some info on what users are on
-@@ -297,7 +294,7 @@
+@@ -333,7 +333,7 @@ Enable=false
  #GtkRC=@datadir@/themes/Default/gtk-2.0/gtkrc
  
  # The GTK+ theme to use for the GUI.
@@ -102,7 +104,7 @@
  # If to allow changing the GTK+ (widget) theme from the greeter.  Currently
  # this only affects the standard greeter as the graphical greeter does not yet
  # have this ability.
-@@ -318,7 +315,7 @@
+@@ -354,7 +354,7 @@ Enable=false
  # themed login (gdmgreeter).
  #
  # The standard login has a title bar that the user can move.
@@ -111,7 +113,7 @@
  # Don't allow user to move the standard login window.  Only makes sense if
  # TitleBar is on.
  #LockPosition=false
-@@ -342,7 +339,7 @@
+@@ -378,7 +378,7 @@ Browser=false
  # User ID's less than the MinimalUID value will not be included in the face
  # browser or in the gdmselection list for Automatic/Timed login.  They will not
  # be displayed regardless of the settings for Include and Exclude.
@@ -120,7 +122,7 @@
  # Users listed in Include will be included in the face browser and in the
  # gdmsetup selection list for Automatic/Timed login.  Users should be separated
  # by commas.
-@@ -359,7 +356,7 @@
+@@ -395,7 +395,7 @@ Browser=false
  # large numbers of users and this feature should not be used in such
  # environments.  The setting of IncludeAll does nothing if Include is set to a
  # non-empty value.
@@ -129,7 +131,7 @@
  # If user or user.png exists in this dir it will be used as his picture.
  #GlobalFaceDir=@datadir@/pixmaps/faces/
  
-@@ -368,7 +365,7 @@
+@@ -404,7 +404,7 @@ Browser=false
  # file, although GDM will be able to read a standard locale.alias file as well.
  #LocaleFile=@gdmlocaledir@/locale.alias
  # Logo shown in the standard greeter.
@@ -138,7 +140,7 @@
  # Logo shown on file chooser button in gdmsetup (do not modify this value).
  #ChooserButtonLogo=@pixmapdir@/gdm-foot-logo.png
  # The standard greeter should shake if a user entered the wrong username or
-@@ -415,8 +412,9 @@
+@@ -451,8 +451,9 @@ DefaultRemoteWelcome=true
  # The Standard greeter (gdmlogin) uses BackgroundColor as the background
  # color, while the themed greeter (gdmgreeter) uses GraphicalThemedColor
  # as the background color.
@@ -150,7 +152,7 @@
  # XDMCP session should only get a color, this is the sanest setting since you
  # don't want to take up too much bandwidth
  #BackgroundRemoteOnlyColor=true
-@@ -437,8 +435,8 @@
+@@ -473,8 +474,8 @@ GraphicalThemedColor=#76848F
  # Show the Failsafe sessions.  These are much MUCH nicer (focus for xterm for
  # example) and more failsafe then those supplied by scripts so distros should
  # use this rather then just running an xterm from a script.
@@ -161,7 +163,7 @@
  # Normally there is a session type called 'Last' that is shown which refers to
  # the last session the user used.  If off, we will be in 'switchdesk' mode
  # where the session saving stuff is disabled in GDM
-@@ -457,7 +455,7 @@
+@@ -493,7 +494,7 @@ GraphicalThemedColor=#76848F
  # list then provide a list that is delimited by /: to the GraphicalThemes
  # key and set GraphicalThemeRand to true.  Otherwise use GraphicalTheme
  # and specify just one theme.
@@ -170,7 +172,7 @@
  #GraphicalThemes=circles/:happygnome
  GraphicalThemeDir=@datadir@/gdm/themes/
  GraphicalThemeRand=false
-@@ -561,7 +559,7 @@
+@@ -597,7 +598,7 @@ Gestures=false
  # Definition of the standard X server.
  [server-Standard]
  name=Standard server

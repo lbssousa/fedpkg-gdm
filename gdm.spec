@@ -16,13 +16,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.18.0
-Release: 14%{?dist}
+Version: 2.19.1
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
-URL: ftp://ftp.gnome.org/pub/GNOME/sources/gdm
-Source: http://ftp.gnome.org/pub/gnome/sources/gdm/2.18/gdm-%{version}.tar.bz2
+URL: ftp://download.gnome.org/sources/gdm
+Source: http://download.gnome.org/sources/gdm/2.19/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -30,25 +30,19 @@ Source4: 90-grant-audio-devices-to-gdm.fdi
 Source5: fedora-faces-20070319.tar.bz2
 Source6: default.desktop
 
-Patch1: gdm-2.18.0-change-defaults.patch
+Patch1: gdm-2.19.1-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=301817
-Patch6: gdm-2.8.0.2-clean-up-xsession-errors.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=301826
-Patch7: gdm-2.8.0.2-merge-resources.patch
-
 # http://bugzilla.gnome.org/show_bug.cgi?id=349835
-Patch12: gdm-2.17.6-audit-login.patch
+Patch12: gdm-2.19.1-audit-login.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347798
-Patch19: gdm-2.17.7-move-default-message.patch
-Patch20: gdm-2.17.7-reset-pam.patch
-Patch21: gdm-2.18.0-security-tokens.patch
+Patch19: gdm-2.19.1-move-default-message.patch
+Patch20: gdm-2.19.1-reset-pam.patch
+Patch21: gdm-2.19.1-security-tokens.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=347871
-Patch24: gdm-2.16.0-wtmp.patch
+Patch24: gdm-2.19.1-wtmp.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
 Patch25: gdm-2.16.0-indic-langs.patch
@@ -59,27 +53,18 @@ Patch28: gdm-2.17.1-desensitize-entry.patch
 Patch29: gdm-2.17.7-greeter.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=426653
-Patch31: gdm-2.17.8-hide-uninstalled-languages.patch
+Patch31: gdm-2.19.1-hide-uninstalled-languages.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=412576
-Patch32: gdm-2.17.8-a11y-fixes-for-themed-greeter.patch
+Patch32: gdm-2.19.1-a11y-fixes-for-themed-greeter.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
-Patch33: gdm-2.17.7-pass-at-to-session-4.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=420610
-Patch34: gdm-2.18.0-add-lowres-fix.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=424229
-Patch35: gdm-2.18.0-dont-strcpy-overlapping-strings.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=426647
-Patch36: gdm-2.18.0-dont-expect-utf8.patch
+Patch33: gdm-2.19.1-pass-ats-to-session.patch
 
 Patch37: gdm-2.18.0-hide-disabled-users.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
-Patch99: gdm-2.18.0-be-more-verbose.patch
+#Patch99: gdm-2.18.0-be-more-verbose.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -154,8 +139,6 @@ Extra icons / faces for the GNOME Display Manager.
 
 %patch1 -p1 -b .change-defaults
 %patch4 -p1 -b .update-switchdesk-location
-%patch6 -p1 -b .clean-up-xsession-errors
-%patch7 -p1 -b .merge-resources
 %patch12 -p1 -b .audit-login
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
@@ -165,13 +148,10 @@ Extra icons / faces for the GNOME Display Manager.
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p0 -b .greeter
 %patch31 -p1 -b .hide-uninstalled-languages
-%patch32 -p0 -b .a11y-fixes
-%patch33 -p0 -b .pass-ats-to-session
-%patch34 -p1 -b .add-lowres-fix
-%patch35 -p1 -b .dont-strcpy-overlapping-strings
-%patch36 -p1 -b .dont-expect-utf8
+%patch32 -p1 -b .a11y-fixes
+%patch33 -p1 -b .pass-ats-to-session
 %patch37 -p1 -b hide-disabled-users
-%patch99 -p1 -b .be-more-verbose
+#%patch99 -p1 -b .be-more-verbose
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -394,6 +374,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon May 21 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.1-1
+- Update to 2.19.1
+
 * Tue May 15 2007 Ray Strode <rstrode@redhat.com> - 1:2.18.0-14
 - hide users from userlist that have disabled shells
   (bug 240148)
