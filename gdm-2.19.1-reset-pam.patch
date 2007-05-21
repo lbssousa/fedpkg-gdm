@@ -1,5 +1,5 @@
 --- gdm-2.19.1/gui/greeter/greeter.c.reset-pam	2007-05-13 22:08:14.000000000 -0400
-+++ gdm-2.19.1/gui/greeter/greeter.c	2007-05-21 12:37:13.000000000 -0400
++++ gdm-2.19.1/gui/greeter/greeter.c	2007-05-21 19:03:19.000000000 -0400
 @@ -224,7 +224,6 @@ process_operation (guchar       op_code,
      GtkWidget *dlg;
      char *tmp;
@@ -31,7 +31,7 @@
  	fflush (stdout);
  	greeter_ignore_buttons (FALSE);
 --- gdm-2.19.1/daemon/slave.c.reset-pam	2007-05-13 22:08:25.000000000 -0400
-+++ gdm-2.19.1/daemon/slave.c	2007-05-21 12:39:57.000000000 -0400
++++ gdm-2.19.1/daemon/slave.c	2007-05-21 19:08:16.000000000 -0400
 @@ -146,6 +146,12 @@ static int gdm_normal_runlevel         =
  static pid_t extra_process             = 0;
  static int extra_status                = 0;
@@ -117,6 +117,15 @@
  				gdm_slave_send_num (GDM_SOP_GREETPID, 0);
  
  				do_restart_greeter = TRUE;
+@@ -4752,7 +4767,7 @@ gdm_slave_child_handler (int sig)
+ 				continue;
+ 			}
+ 
+-			whack_greeter_fds ();
++			whack_greeter_and_slave_fds ();
+ 
+ 			/* if greet is TRUE, then the greeter died outside of our
+ 			 * control really, so clean up and die, something is wrong
 @@ -4895,6 +4910,11 @@ gdm_slave_handle_usr2_message (void)
  				gdm_wait_for_go = FALSE;
  			} else if (strcmp (&s[1], GDM_NOTIFY_TWIDDLE_POINTER) == 0) {
@@ -129,8 +138,8 @@
  			}
  		} else if (s[0] == GDM_SLAVE_NOTIFY_RESPONSE) {
  			gdm_got_ack = TRUE;
---- gdm-2.19.1/daemon/gdm-daemon-config-keys.h.reset-pam	2007-05-21 12:43:21.000000000 -0400
-+++ gdm-2.19.1/daemon/gdm-daemon-config-keys.h	2007-05-21 12:43:42.000000000 -0400
+--- gdm-2.19.1/daemon/gdm-daemon-config-keys.h.reset-pam	2007-05-13 22:08:24.000000000 -0400
++++ gdm-2.19.1/daemon/gdm-daemon-config-keys.h	2007-05-21 19:03:19.000000000 -0400
 @@ -226,6 +226,7 @@ G_BEGIN_DECLS
  #define GDM_NOTIFY_SOFT_RESTART_SERVERS "SOFT_RESTART_SERVERS"
  #define GDM_NOTIFY_GO "GO"
@@ -140,7 +149,7 @@
  G_END_DECLS
  
 --- gdm-2.19.1/daemon/gdm.c.reset-pam	2007-05-13 22:08:24.000000000 -0400
-+++ gdm-2.19.1/daemon/gdm.c	2007-05-21 12:45:14.000000000 -0400
++++ gdm-2.19.1/daemon/gdm.c	2007-05-21 19:03:19.000000000 -0400
 @@ -2585,6 +2585,14 @@ gdm_handle_message (GdmConnection *conn,
  				     TRUE /* handled */,
  				     FALSE /* chooser */,
@@ -156,8 +165,8 @@
  	} else if (strncmp (msg, "opcode="GDM_SOP_SHOW_ERROR_DIALOG,
  			    strlen ("opcode="GDM_SOP_SHOW_ERROR_DIALOG)) == 0) {
  		GdmDisplay *d;
---- gdm-2.19.1/daemon/gdm-socket-protocol.h.reset-pam	2007-05-21 12:42:32.000000000 -0400
-+++ gdm-2.19.1/daemon/gdm-socket-protocol.h	2007-05-21 12:42:58.000000000 -0400
+--- gdm-2.19.1/daemon/gdm-socket-protocol.h.reset-pam	2007-05-13 22:08:24.000000000 -0400
++++ gdm-2.19.1/daemon/gdm-socket-protocol.h	2007-05-21 19:03:19.000000000 -0400
 @@ -155,6 +155,9 @@
  #define GDM_SOP_SHOW_QUESTION_DIALOG "SHOW_QUESTION_DIALOG"  /* show the question dialog from daemon */
  #define GDM_SOP_SHOW_ASKBUTTONS_DIALOG "SHOW_ASKBUTTON_DIALOG"  /* show the askbutton dialog from daemon */

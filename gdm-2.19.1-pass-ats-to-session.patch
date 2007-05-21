@@ -257,9 +257,3 @@
  					   gnome_session,
  					   usrcfgok,
  					   savesess,
-@@ -5893,4 +5914,4 @@ gboolean
- gdm_is_user_valid (const char *username)
- {
- 	return (NULL != getpwnam (username));
--}
-+
