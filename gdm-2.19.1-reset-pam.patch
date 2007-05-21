@@ -146,7 +146,7 @@
  				     FALSE /* chooser */,
  				     NULL, 0, NULL, NULL, NULL);
 +} else if (strcmp (msg, GDM_SOP_CANCEL_LOGIN_REQUESTS) == 0) {
-+		GSList *li;
++		GSList *li, *displays = gdm_daemon_config_get_display_list ();
 +		for (li = displays; li != NULL; li = li->next) {
 +			GdmDisplay *d = li->data;
 +			if (!d->logged_in) {
