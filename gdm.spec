@@ -36,7 +36,6 @@ Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=349835
 Patch12: gdm-2.19.1-audit-login.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=347798
 Patch19: gdm-2.19.1-move-default-message.patch
 Patch20: gdm-2.19.1-reset-pam.patch
 Patch21: gdm-2.19.1-security-tokens.patch
