@@ -193,34 +193,30 @@ rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
 cp %{SOURCE6} $RPM_BUILD_ROOT%{_datadir}/gdm/BuiltInSessions/default.desktop
 
 # no dumb flexiserver thing, Xnest is too broken
-rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop
-
-# use patched gdmsetup desktop file
-rm -f $RPM_BUILD_ROOT%{_datadir}/applications/gdmsetup.desktop
-(cd $RPM_BUILD_ROOT%{_datadir}/applications; ln -sf ../desktop-menu-patches/gnome-gdmsetup.desktop .)
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop
 
 # use consolehelper for gdmsetup
 (cd $RPM_BUILD_ROOT/usr/bin; ln -sf consolehelper gdmsetup)
 
 # fix the "login photo" file
-cat >>$RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop <<EOF
+cat >>$RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmphotosetup.desktop <<EOF
 NoDisplay=true
 EOF
  
 desktop-file-install --vendor gnome --delete-original       \
-  --dir $RPM_BUILD_ROOT%{_datadir}/applications             \
+  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications         \
   --remove-category Application				    \
-  $RPM_BUILD_ROOT%{_datadir}/applications/gdmphotosetup.desktop || :
+  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmphotosetup.desktop || :
 
 desktop-file-install --delete-original       			\
-  --dir $RPM_BUILD_ROOT%{_datadir}/applications             	\
+  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications          	\
   --remove-category Application				    	\
-  $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver.desktop || :
+  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver.desktop || :
 
 desktop-file-install --delete-original       			\
-  --dir $RPM_BUILD_ROOT%{_datadir}/applications             	\
+  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications            	\
   --remove-category Application				    	\
-  $RPM_BUILD_ROOT%{_datadir}/applications/gdmflexiserver-xnest.desktop || :
+  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop || :
 
 # broken install-data-local in gui/Makefile.am makes this necessary
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
