@@ -16,7 +16,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.19.1
+Version: 2.19.2
 Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
@@ -33,9 +33,6 @@ Source6: default.desktop
 Patch1: gdm-2.19.1-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=349835
-Patch12: gdm-2.19.1-audit-login.patch
-
 Patch19: gdm-2.19.1-move-default-message.patch
 Patch20: gdm-2.19.1-reset-pam.patch
 Patch21: gdm-2.19.1-security-tokens.patch
@@ -51,16 +48,11 @@ Patch28: gdm-2.17.1-desensitize-entry.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=411427
 Patch29: gdm-2.17.7-greeter.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=426653
-Patch31: gdm-2.19.1-hide-uninstalled-languages.patch
-
 # http://bugzilla.gnome.org/show_bug.cgi?id=412576
 Patch32: gdm-2.19.1-a11y-fixes-for-themed-greeter.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
 Patch33: gdm-2.19.1-pass-ats-to-session.patch
-
-Patch37: gdm-2.18.0-hide-disabled-users.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
 #Patch99: gdm-2.18.0-be-more-verbose.patch
@@ -138,7 +130,6 @@ Extra icons / faces for the GNOME Display Manager.
 
 %patch1 -p1 -b .change-defaults
 %patch4 -p1 -b .update-switchdesk-location
-%patch12 -p1 -b .audit-login
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
@@ -146,10 +137,8 @@ Extra icons / faces for the GNOME Display Manager.
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p0 -b .greeter
-%patch31 -p1 -b .hide-uninstalled-languages
 %patch32 -p1 -b .a11y-fixes
 %patch33 -p1 -b .pass-ats-to-session
-%patch37 -p1 -b hide-disabled-users
 #%patch99 -p1 -b .be-more-verbose
 
 %build
@@ -373,6 +362,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Jun  5 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.2-1
+- Update to 2.19.2
+
 * Mon May 21 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.1-1
 - Update to 2.19.1
 
