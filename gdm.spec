@@ -340,7 +340,6 @@ fi
 %{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/gdm
-%{_datadir}/applications
 %{_datadir}/gnome/help/gdm
 %{_datadir}/omf/gdm
 %{_datadir}/hal/fdi/policy/20thirdparty/90-grant-audio-devices-to-gdm.fdi
