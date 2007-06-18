@@ -16,7 +16,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.19.2
+Version: 2.19.3
 Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
@@ -33,7 +33,7 @@ Source6: default.desktop
 Patch1: gdm-2.19.1-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
-Patch19: gdm-2.19.1-move-default-message.patch
+Patch19: gdm-2.19.3-move-default-message.patch
 Patch20: gdm-2.19.1-reset-pam.patch
 Patch21: gdm-2.19.1-security-tokens.patch
 
@@ -357,6 +357,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Jun 18 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.3-1
+- Update to 2.19.3
+
 * Tue Jun  5 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.2-1
 - Update to 2.19.2
 
