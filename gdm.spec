@@ -17,11 +17,11 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
-URL: ftp://download.gnome.org/sources/gdm
+URL: http://download.gnome.org/sources/gdm
 Source: http://download.gnome.org/sources/gdm/2.19/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
@@ -73,7 +73,6 @@ Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
 Requires: redhat-artwork >= 5.0.11-1
-Requires: /usr/share/desktop-menu-patches/gnome-gdmsetup.desktop
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
@@ -357,6 +356,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Wed Jun 27 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.3-2
+- Drop an unnecessary file dependency
+
 * Mon Jun 18 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.3-1
 - Update to 2.19.3
 
