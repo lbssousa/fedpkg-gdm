@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -30,7 +30,6 @@ Source4: 90-grant-audio-devices-to-gdm.fdi
 Source5: fedora-faces-20070319.tar.bz2
 Source6: default.desktop
 
-Patch1: gdm-2.19.1-change-defaults.patch
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
 Patch19: gdm-2.19.3-move-default-message.patch
@@ -54,8 +53,7 @@ Patch32: gdm-2.19.1-a11y-fixes-for-themed-greeter.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
 Patch33: gdm-2.19.1-pass-ats-to-session.patch
 
-# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234567
-#Patch99: gdm-2.18.0-be-more-verbose.patch
+Patch100: gdm-2.19.3-change-defaults.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -127,7 +125,6 @@ Extra icons / faces for the GNOME Display Manager.
 %prep
 %setup -q -a 5
 
-%patch1 -p1 -b .change-defaults
 %patch4 -p1 -b .update-switchdesk-location
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
@@ -138,7 +135,8 @@ Extra icons / faces for the GNOME Display Manager.
 %patch29 -p0 -b .greeter
 %patch32 -p1 -b .a11y-fixes
 %patch33 -p1 -b .pass-ats-to-session
-#%patch99 -p1 -b .be-more-verbose
+
+%patch100 -p1 -b .change-defaults
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -356,6 +354,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Wed Jun 27 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.3-3
+- set Browser=true by default
+
 * Wed Jun 27 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.3-2
 - Drop an unnecessary file dependency
 
