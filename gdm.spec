@@ -16,8 +16,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.19.3
-Release: 3%{?dist}
+Version: 2.19.4
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -36,9 +36,6 @@ Patch19: gdm-2.19.3-move-default-message.patch
 Patch20: gdm-2.19.1-reset-pam.patch
 Patch21: gdm-2.19.1-security-tokens.patch
 
-# http://bugzilla.gnome.org/show_bug.cgi?id=347871
-Patch24: gdm-2.19.1-wtmp.patch
-
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
 Patch25: gdm-2.16.0-indic-langs.patch
 
@@ -53,7 +50,7 @@ Patch32: gdm-2.19.1-a11y-fixes-for-themed-greeter.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
 Patch33: gdm-2.19.1-pass-ats-to-session.patch
 
-Patch100: gdm-2.19.3-change-defaults.patch
+Patch100: gdm-2.19.4-change-defaults.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -129,7 +126,6 @@ Extra icons / faces for the GNOME Display Manager.
 %patch19 -p1 -b .move-default-message
 %patch20 -p1 -b .reset-pam
 %patch21 -p1 -b .security-tokens
-%patch24 -p1 -b .wtmp
 %patch25 -p1 -b .indic-langs
 %patch28 -p1 -b .desensitize-entry
 %patch29 -p0 -b .greeter
@@ -354,6 +350,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Jul 10 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.4-1
+- Update to 2.19.4
+
 * Wed Jun 27 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.3-3
 - set Browser=true by default
 
