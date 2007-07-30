@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -350,6 +350,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Jul 30 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.4-2
+- Add optional gnome-keyring support to the gdm pam stack
+
 * Tue Jul 10 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.4-1
 - Update to 2.19.4
 
