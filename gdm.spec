@@ -16,8 +16,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.19.4
-Release: 2%{?dist}
+Version: 2.19.5
+Release: 1%{?dist}
 Epoch: 1
 License: LGPL/GPL
 Group: User Interface/X
@@ -33,7 +33,7 @@ Source6: default.desktop
 Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
 
 Patch19: gdm-2.19.3-move-default-message.patch
-Patch20: gdm-2.19.1-reset-pam.patch
+Patch20: gdm-2.19.5-reset-pam.patch
 Patch21: gdm-2.19.1-security-tokens.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
@@ -350,6 +350,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Jul 31 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-1
+- Update to 2.19.5
+
 * Mon Jul 30 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.4-2
 - Add optional gnome-keyring support to the gdm pam stack
 
