@@ -22,7 +22,7 @@ diff -up gdm-2.19.4/config/gdm.conf.in.change-defaults gdm-2.19.4/config/gdm.con
 +AddGtkModules=true
  # By default, these are the accessibility modules.
 -#GtkModulesList=gail:atk-bridge:@libdir@/gtk-2.0/modules/libdwellmouselistener:@libdir@/gtk-2.0/modules/libkeymouselistener
-+GtkModulesList=gail:atk-bridge:@libdir@/gtk-2.0/modules/libdwellmouselistener:@libdir@/gtk-2.0/modules/libkeymouselistener
++GtkModulesList=gail:atk-bridge:@libdir@/gtk-2.0/modules/libkeymouselistener
  
  # Default path to set.  The profile scripts will likely override this value.
  # This value will be overridden with the value from /etc/default/login if it
