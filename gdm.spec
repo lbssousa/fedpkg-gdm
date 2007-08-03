@@ -17,9 +17,9 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
-License: LGPL/GPL
+License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 Source: http://download.gnome.org/sources/gdm/2.19/gdm-%{version}.tar.bz2
@@ -305,9 +305,7 @@ fi
 
 %files -f gdm.lang
 %defattr(-, root, root)
-
-%doc AUTHORS COPYING ChangeLog NEWS README TODO
-
+%doc AUTHORS COPYING NEWS README TODO
 %dir %{_sysconfdir}/gdm
 %{_sysconfdir}/gdm/Xsession
 %config(noreplace) %{_sysconfdir}/gdm/custom.conf
@@ -339,8 +337,8 @@ fi
 %{_libdir}/gtk-2.0/modules/*.so
 %{_bindir}/*
 %{_libexecdir}/*
-%{_mandir}/man*/*
 %{_sbindir}/*
+%doc %{_mandir}/man*/*
 %dir %{_localstatedir}/log/gdm
 
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
@@ -350,6 +348,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Aug  3 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-2
+- Update license field
+
 * Tue Jul 31 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-1
 - Update to 2.19.5
 
