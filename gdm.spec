@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -75,6 +75,8 @@ Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
 Requires: hal >= 0.5.9
+# since we use it, and pam spams the log if the module is missing
+Requires: gnome-keyring-pam
 Requires(post): scrollkeeper
 Requires(postun): scrollkeeper
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
@@ -352,6 +354,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Aug  6 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-6
+- Require gnome-keyring-pam
+
 * Mon Aug  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-5
 - change previous patch to drop even more code 
 
@@ -363,6 +368,7 @@ fi
 - remove dwellmouselistener module from default configuration.
   It's pretty broken (bug 248752)
 
+>>>>>>> 1.266
 * Fri Aug  3 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-2
 - Update license field
 
