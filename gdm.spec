@@ -368,7 +368,6 @@ fi
 - remove dwellmouselistener module from default configuration.
   It's pretty broken (bug 248752)
 
->>>>>>> 1.266
 * Fri Aug  3 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-2
 - Update license field
 
