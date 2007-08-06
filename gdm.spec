@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -352,6 +352,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Aug  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-5
+- change previous patch to drop even more code 
+
 * Mon Aug  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-4
 - turn off dwellmouselistener if devices don't send core events.
   don't warp pointer to stylus ever (upstream bug 457998)
