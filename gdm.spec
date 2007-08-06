@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -49,6 +49,9 @@ Patch32: gdm-2.19.1-a11y-fixes-for-themed-greeter.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=411501
 Patch33: gdm-2.19.1-pass-ats-to-session.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=457998
+Patch34: gdm-2.19.5-dont-warp-pointer-to-stylus.patch
 
 Patch100: gdm-2.19.4-change-defaults.patch
 
@@ -131,6 +134,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch29 -p0 -b .greeter
 %patch32 -p1 -b .a11y-fixes
 %patch33 -p1 -b .pass-ats-to-session
+%patch34 -p1 -b .dont-warp-pointer-to-stylus
 
 %patch100 -p1 -b .change-defaults
 
@@ -348,6 +352,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Aug  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-4
+- turn off dwellmouselistener if devices don't send core events.
+  don't warp pointer to stylus ever (upstream bug 457998)
+
 * Fri Aug  3 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-3
 - remove dwellmouselistener module from default configuration.
   It's pretty broken (bug 248752)
