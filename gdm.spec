@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -52,6 +52,9 @@ Patch33: gdm-2.19.1-pass-ats-to-session.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=457998
 Patch34: gdm-2.19.5-dont-warp-pointer-to-stylus.patch
+
+# make gdmsetup work with consolehelper
+Patch35: gdmsetup-path.patch
 
 Patch100: gdm-2.19.4-change-defaults.patch
 
@@ -137,13 +140,14 @@ Extra icons / faces for the GNOME Display Manager.
 %patch32 -p1 -b .a11y-fixes
 %patch33 -p1 -b .pass-ats-to-session
 %patch34 -p1 -b .dont-warp-pointer-to-stylus
+%patch35 -p1 -b .gdmsetup-path
 
 %patch100 -p1 -b .change-defaults
 
 %build
 cp -f %{SOURCE1} config/gdm
 cp -f %{SOURCE2} config/gdm-autologin
-cp -f %{SOURCE3} gdmsetup-pam
+cp -f %{SOURCE3} utils/gdmsetup-pam
 
 intltoolize --force --copy
 aclocal
@@ -354,6 +358,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Sun Aug 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-7
+- Make gdmsetup work with consolehelper and pam again
+
 * Mon Aug  6 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-6
 - Require gnome-keyring-pam
 
