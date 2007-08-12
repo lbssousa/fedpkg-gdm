@@ -7,8 +7,8 @@ diff -up gdm-2.19.5/gui/gdmsetup.desktop.in.in.gdmsetup-path gdm-2.19.5/gui/gdms
  _Comment=Configure GDM login window appearance and behavior
 -TryExec=@sbindir@/gdmsetup
 -Exec=@sbindir@/gdmsetup
-+TryExec=@bindir@/gdmsetup
-+Exec=@bindir@/gdmsetup
++TryExec=/usr/bin/gdmsetup
++Exec=/usr/bin/gdmsetup
  Icon=gdm-setup
  StartupNotify=true
  Terminal=false

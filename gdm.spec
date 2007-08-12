@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -358,6 +358,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Sun Aug 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-8
+- Make the previous fix actually work
+
 * Sun Aug 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-7
 - Make gdmsetup work with consolehelper and pam again
 
