@@ -9,7 +9,7 @@
 %define librsvg2_version 2.0.1
 %define libxml2_version 2.4.21
 %define scrollkeeper_version 0.3.4
-%define pam_version 0.75
+%define pam_version 0.99
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
 %define nss_version 3.11.1
@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.5
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -69,7 +69,6 @@ Requires: libgnomecanvas >= 0:%{libgnomecanvas_version}
 Requires: librsvg2 >= 0:%{librsvg2_version}
 Requires: libxml2 >= 0:%{libxml2_version}
 Requires: pam >= 0:%{pam_version}
-Requires: /etc/pam.d/system-auth
 Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
@@ -358,6 +357,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Sun Aug 12 2007 Adam Jackson <ajax@redhat.com> 1:2.19.5-9
+- Remove the filereq on /etc/pam.d/system-auth, pam alone is sufficient.
+- Bump the pam requirement to 0.99, 0.75 is ancient.
+
 * Sun Aug 12 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.5-8
 - Make the previous fix actually work
 
