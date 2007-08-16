@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -52,6 +52,9 @@ Patch33: gdm-2.19.6-pass-ats-to-session.patch
 
 # make gdmsetup work with consolehelper
 Patch35: gdmsetup-path.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=467335
+Patch36: gdm-2.19.5-disable-typeahead.patch
 
 Patch100: gdm-2.19.4-change-defaults.patch
 
@@ -136,6 +139,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch32 -p1 -b .a11y-fixes
 %patch33 -p1 -b .pass-ats-to-session
 %patch35 -p1 -b .gdmsetup-path
+%patch36 -p1 -b .disable-typeahead
 
 %patch100 -p1 -b .change-defaults
 
@@ -351,6 +355,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Aug 16 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-2
+- disable type ahead in user list (bug 252991)
+
 * Wed Aug 15 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.6-1
 - Update to 2.19.6
 - Use %%find_lang for help files
