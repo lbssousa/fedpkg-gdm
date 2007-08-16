@@ -230,7 +230,7 @@ rm -rf $RPM_BUILD_ROOT%{_datadir}/pixmaps/faces
 mkdir $RPM_BUILD_ROOT%{_datadir}/pixmaps/faces
 cp -Rpr faces $RPM_BUILD_ROOT%{_datadir}/pixmaps
 
-%find_lang gdm
+%find_lang gdm --with-gnome
 
 %clean
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -336,8 +336,6 @@ fi
 %{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/gdm
-%{_datadir}/gnome/help/gdm
-%{_datadir}/omf/gdm
 %{_datadir}/hal/fdi/policy/20thirdparty/90-grant-audio-devices-to-gdm.fdi
 %{_libdir}/gtk-2.0/modules/*.so
 %{_bindir}/*
@@ -355,6 +353,7 @@ fi
 %changelog
 * Wed Aug 15 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.6-1
 - Update to 2.19.6
+- Use %%find_lang for help files
 
 * Sun Aug 12 2007 Adam Jackson <ajax@redhat.com> 1:2.19.5-9
 - Remove the filereq on /etc/pam.d/system-auth, pam alone is sufficient.
