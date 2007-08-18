@@ -356,7 +356,7 @@ fi
 
 %changelog
 * Sat Aug 18 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-3
-- disable root password (see "low-hanging fruit" discussion on
+- disable root login (see "low-hanging fruit" discussion on
   fedora-desktop-list)
 
 * Thu Aug 16 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-2
