@@ -1,6 +1,6 @@
 diff -up gdm-2.19.6/config/gdm.conf.in.change-defaults gdm-2.19.6/config/gdm.conf.in
---- gdm-2.19.6/config/gdm.conf.in.change-defaults	2007-08-18 11:36:12.000000000 -0400
-+++ gdm-2.19.6/config/gdm.conf.in	2007-08-18 11:35:46.000000000 -0400
+--- gdm-2.19.6/config/gdm.conf.in.change-defaults	2007-08-18 12:33:57.000000000 -0400
++++ gdm-2.19.6/config/gdm.conf.in	2007-08-18 12:34:21.000000000 -0400
 @@ -66,9 +66,9 @@ TimedLoginDelay=30
  # should leave this alone.
  #Chooser=@libexecdir@/gdmchooser
@@ -100,8 +100,8 @@ diff -up gdm-2.19.6/config/gdm.conf.in.change-defaults gdm-2.19.6/config/gdm.con
  [security]
  # Allow root to login.  It makes sense to turn this off for kiosk use, when
  # you want to minimize the possibility of break in.
--AllowRoot=false
-+AllowRoot=true
+-AllowRoot=true
++AllowRoot=false
  # Allow login as root via XDMCP.  This value will be overridden and set to
  # false if the /etc/default/login file exists and contains
  # "CONSOLE=/dev/login", and set to true if the /etc/default/login file exists
