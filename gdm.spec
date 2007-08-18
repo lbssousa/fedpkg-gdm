@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.6
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -56,7 +56,7 @@ Patch35: gdmsetup-path.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=467335
 Patch36: gdm-2.19.5-disable-typeahead.patch
 
-Patch100: gdm-2.19.4-change-defaults.patch
+Patch100: gdm-2.19.6-change-defaults.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -355,6 +355,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Sat Aug 18 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-3
+- disable root password (see "low-hanging fruit" discussion on
+  fedora-desktop-list)
+
 * Thu Aug 16 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-2
 - disable type ahead in user list (bug 252991)
 
