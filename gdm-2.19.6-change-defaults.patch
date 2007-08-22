@@ -1,6 +1,6 @@
 diff -up gdm-2.19.6/config/gdm.conf.in.change-defaults gdm-2.19.6/config/gdm.conf.in
---- gdm-2.19.6/config/gdm.conf.in.change-defaults	2007-08-18 12:33:57.000000000 -0400
-+++ gdm-2.19.6/config/gdm.conf.in	2007-08-18 12:34:21.000000000 -0400
+--- gdm-2.19.6/config/gdm.conf.in.change-defaults	2007-08-22 16:42:55.000000000 -0400
++++ gdm-2.19.6/config/gdm.conf.in	2007-08-22 16:43:10.000000000 -0400
 @@ -66,9 +66,9 @@ TimedLoginDelay=30
  # should leave this alone.
  #Chooser=@libexecdir@/gdmchooser
@@ -73,7 +73,7 @@ diff -up gdm-2.19.6/config/gdm.conf.in.change-defaults gdm-2.19.6/config/gdm.con
  # Better leave this blank and HOME will be used.  You can use syntax ~/ below
  # to indicate home directory of the user.  You can also set this to something
  # like /tmp if you don't want the authorizations to be in home directories.
-@@ -173,11 +173,11 @@ BaseXsession=@gdmconfdir@/Xsession
+@@ -173,13 +173,13 @@ BaseXsession=@gdmconfdir@/Xsession
  # is the home directory the UserAuthFBDir will still be used in case the home
  # directory is NFS, see security/NeverPlaceCookiesOnNFS to override this
  # behavior.
@@ -85,8 +85,11 @@ diff -up gdm-2.19.6/config/gdm.conf.in.change-defaults gdm-2.19.6/config/gdm.con
 -UserAuthFile=.Xauthority
 +#UserAuthFile=.Xauthority
  # The X server to use if we can't figure out what else to run.
- StandardXServer=@X_SERVER@
+-StandardXServer=@X_SERVER@
++StandardXServer=@X_SERVER@ -br
  # The maximum number of flexible X servers to run.
+ #FlexibleXServers=5
+ # And after how many minutes should we reap the flexible server if there is no
 @@ -209,7 +209,7 @@ XnestUnscaledFontPath=@X_XNEST_UNSCALED_
  #DoubleLoginWarning=true
  # Should a second login always resume the current session and switch VT's on

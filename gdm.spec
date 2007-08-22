@@ -17,7 +17,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.6
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -355,6 +355,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Wed Aug 22 2007 Kristian Høgsberg <krh@redhat.com> - 1:2.19.6-4
+- Pass -br to the default X server too.
+
 * Sat Aug 18 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-3
 - disable root login (see "low-hanging fruit" discussion on
   fedora-desktop-list)
