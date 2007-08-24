@@ -1,5 +1,4 @@
 
-%define libselinuxver 1.27.7
 %define libauditver 1.0.6
 %define pango_version 1.2.0
 %define gtk2_version 2.6.0
@@ -17,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.6
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -55,6 +54,9 @@ Patch35: gdmsetup-path.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=467335
 Patch36: gdm-2.19.5-disable-typeahead.patch
+
+# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=254164
+Patch37: gdm-2.19.6-selinux.patch
 
 Patch100: gdm-2.19.6-change-defaults.patch
 
@@ -101,7 +103,6 @@ BuildRequires: libattr-devel
 BuildRequires: gettext 
 BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
-BuildRequires: libselinux-devel >= %{libselinuxver}
 BuildRequires: audit-libs-devel >= %{libauditver}
 BuildRequires: intltool
 %ifnarch s390 s390x ppc64
@@ -109,7 +110,6 @@ BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
 BuildRequires: ConsoleKit
-Requires: libselinux >= %{libselinuxver}
 Requires: audit-libs >= %{libauditver}
 
 %description
@@ -140,6 +140,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch33 -p1 -b .pass-ats-to-session
 %patch35 -p1 -b .gdmsetup-path
 %patch36 -p1 -b .disable-typeahead
+%patch37 -p1 -b .selinux
 
 %patch100 -p1 -b .change-defaults
 
@@ -157,7 +158,6 @@ autoheader
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
-	   --with-selinux \
 	   --with-console-kit
 make
 
@@ -355,6 +355,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Aug 24 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-5
+- use pam_selinux instead of home grown selinux code (bug 254164)
+
 * Wed Aug 22 2007 Kristian Høgsberg <krh@redhat.com> - 1:2.19.6-4
 - Pass -br to the default X server too.
 
