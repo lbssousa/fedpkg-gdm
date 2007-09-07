@@ -53,7 +53,7 @@ Patch33: gdm-2.19.6-pass-ats-to-session.patch
 Patch35: gdmsetup-path.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=254164
-Patch37: gdm-2.19.6-selinux.patch
+Patch37: gdm-2.19.8-selinux.patch
 
 Patch100: gdm-2.19.6-change-defaults.patch
 
@@ -348,6 +348,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Sep  7 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.8-2
+- make things work better for xguest users (bug 254164)
+
 * Fri Sep  7 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.8-1
 - Update to 2.19.8
 
