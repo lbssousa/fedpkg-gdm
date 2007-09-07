@@ -15,7 +15,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.19.7
+Version: 2.19.8
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
@@ -203,18 +203,15 @@ EOF
  
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications         \
-  --remove-category Application				    \
+  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmsetup.desktop || :
+
+desktop-file-install --vendor gnome --delete-original       \
+  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications         \
   $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmphotosetup.desktop || :
 
 desktop-file-install --delete-original       			\
   --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications          	\
-  --remove-category Application				    	\
   $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver.desktop || :
-
-desktop-file-install --delete-original       			\
-  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications            	\
-  --remove-category Application				    	\
-  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop || :
 
 # broken install-data-local in gui/Makefile.am makes this necessary
 (cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
@@ -351,7 +348,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
-* Tue Sep  4 2007 Matthias  Clasen <mclasen@redhat.com> - 1:2.19.7-1
+* Fri Sep  7 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.8-1
+- Update to 2.19.8
+
+* Tue Sep  4 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.19.7-1
 - Update to 2.19.7
 
 * Fri Aug 24 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.6-5
