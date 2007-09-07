@@ -107,6 +107,8 @@ BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
 BuildRequires: ConsoleKit
+BuildRequires: libselinux-devel
+
 Requires: audit-libs >= %{libauditver}
 
 %description
