@@ -154,7 +154,8 @@ autoheader
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
-	   --with-console-kit
+	   --with-console-kit      \
+	   --with-selinux
 make
 
 %install
@@ -348,6 +349,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Sep  7 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.8-3
+- rebuild --with-selinux
+
 * Fri Sep  7 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.8-2
 - make things work better for xguest users (bug 254164)
 
