@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.19.8
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -55,7 +55,7 @@ Patch35: gdmsetup-path.patch
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=254164
 Patch37: gdm-2.19.8-selinux.patch
 
-Patch100: gdm-2.19.6-change-defaults.patch
+Patch100: gdm-2.19.8-change-defaults.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -351,6 +351,10 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Wed Sep 12 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.8-4
+- Change default password character back to circle instead of
+  asterisk (bug 287951)
+
 * Fri Sep  7 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.8-3
 - rebuild --with-selinux
 
