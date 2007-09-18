@@ -15,13 +15,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.19.8
-Release: 4%{?dist}
+Version: 2.20.0
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.19/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.20/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -351,6 +351,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Sep 18 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-1
+- Update to 2.20.0
+
 * Wed Sep 12 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.8-4
 - Change default password character back to circle instead of
   asterisk (bug 287951)
