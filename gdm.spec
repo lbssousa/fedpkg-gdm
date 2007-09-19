@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -54,6 +54,9 @@ Patch35: gdmsetup-path.patch
 
 # https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=254164
 Patch37: gdm-2.19.8-selinux.patch
+
+# fixed in upstream svn
+Patch38: hang.patch
 
 Patch100: gdm-2.19.8-change-defaults.patch
 
@@ -139,6 +142,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch33 -p1 -b .pass-ats-to-session
 %patch35 -p1 -b .gdmsetup-path
 %patch37 -p1 -b .selinux
+%patch38 -p1 -b .hang
 
 %patch100 -p1 -b .change-defaults
 
@@ -351,6 +355,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Wed Sep 19 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-2
+- Fix a hang on restart (#240853)
+
 * Tue Sep 18 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-1
 - Update to 2.20.0
 
