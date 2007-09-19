@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -58,7 +58,7 @@ Patch37: gdm-2.19.8-selinux.patch
 # fixed in upstream svn
 Patch38: hang.patch
 
-Patch100: gdm-2.19.8-change-defaults.patch
+Patch100: gdm-2.20.0-change-defaults.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -355,6 +355,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Wed Sep 19 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-3
+- Change default theme to FedoraInfinity
+
 * Wed Sep 19 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-2
 - Fix a hang on restart (#240853)
 
