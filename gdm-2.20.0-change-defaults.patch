@@ -99,15 +99,6 @@ diff -up gdm-2.19.8/config/gdm.conf.in.change-defaults gdm-2.19.8/config/gdm.con
  
  # If true then the last login information is printed to the user before being
  # prompted for password.  While this gives away some info on what users are on
-@@ -246,7 +246,7 @@ SecurityTokensDriver=
- [security]
- # Allow root to login.  It makes sense to turn this off for kiosk use, when
- # you want to minimize the possibility of break in.
--AllowRoot=true
-+AllowRoot=false
- # Allow login as root via XDMCP.  This value will be overridden and set to
- # false if the /etc/default/login file exists and contains
- # "CONSOLE=/dev/login", and set to true if the /etc/default/login file exists
 @@ -356,7 +356,7 @@ Enable=false
  #GtkRC=@datadir@/themes/Default/gtk-2.0/gtkrc
  

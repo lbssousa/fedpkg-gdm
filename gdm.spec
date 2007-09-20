@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -355,6 +355,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Sep 20 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-4
+- Reenable root login due to popular demand
+
 * Wed Sep 19 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-3
 - Change default theme to FedoraInfinity
 
