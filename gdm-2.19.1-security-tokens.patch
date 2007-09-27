@@ -189,7 +189,7 @@
 +        goto out;
 +    }
 +
-+    if (!g_key_file_get_boolean (cfg, GDM_SECURITY_TOKENS_GROUP, GDM_SECURITY_TOKENS_KEY_ENABLED, NULL)) {
++    if (g_key_file_has_key (cfg, GDM_SECURITY_TOKENS_GROUP, GDM_SECURITY_TOKENS_KEY_ENABLED, NULL) && !g_key_file_get_boolean (cfg, GDM_SECURITY_TOKENS_GROUP, GDM_SECURITY_TOKENS_KEY_ENABLED, NULL)) {
 +
 +          gdm_debug ("security token support is not enabled");
 +          goto out;

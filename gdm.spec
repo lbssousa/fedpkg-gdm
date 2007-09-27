@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -355,6 +355,11 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Thu Sep 27 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-6
+- The previously mentioned typo didn't matter before because the
+  compiled in default matched what the config file was supposed to
+  say.  This commit restores matched default behavior (bug 301031)
+
 * Thu Sep 27 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-5
 - Fix an apparent typo in the securitytokens.conf config file
   (bug 301031)
