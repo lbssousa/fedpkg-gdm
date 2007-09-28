@@ -58,7 +58,7 @@ Patch37: gdm-2.19.8-selinux.patch
 # fixed in upstream svn
 Patch38: hang.patch
 
-# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=240853 
+# http://bugzilla.gnome.org/show_bug.cgi?id=473480
 Patch39: gdm-2.20.0-fix-savedie.patch
 
 Patch100: gdm-2.20.0-change-defaults.patch
