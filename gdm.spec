@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -78,7 +78,7 @@ Requires: pam >= 0:%{pam_version}
 Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
-Requires: redhat-artwork >= 5.0.11-1
+Requires: fedorainfinity-gdm-theme 
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
@@ -361,6 +361,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Sep 28 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-9
+- drop redhat-artwork dep, add fedorainfinity-gdm-theme dep
+
 * Fri Sep 28 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-8
 - Another crack at 240853
 
