@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -59,6 +59,7 @@ Patch37: gdm-2.19.8-selinux.patch
 Patch38: hang.patch
 
 Patch100: gdm-2.20.0-change-defaults.patch
+Patch101: stupid-bullets.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -145,6 +146,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch38 -p1 -b .hang
 
 %patch100 -p1 -b .change-defaults
+%patch101 -p1 -b .stupid-bullets
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -355,6 +357,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Sep 28 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-7
+- Fix the stupid bullets again
+
 * Thu Sep 27 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-6
 - The previously mentioned typo didn't matter before because the
   compiled in default matched what the config file was supposed to

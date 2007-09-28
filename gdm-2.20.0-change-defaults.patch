@@ -174,15 +174,6 @@ diff -up gdm-2.19.8/config/gdm.conf.in.change-defaults gdm-2.19.8/config/gdm.con
  # Normally there is a session type called 'Last' that is shown which refers to
  # the last session the user used.  If off, we will be in 'switchdesk' mode
  # where the session saving stuff is disabled in GDM
-@@ -506,7 +507,7 @@ GraphicalThemedColor=#76848F
- #Use24Clock=auto
- # Use circles in the password field.  Looks kind of cool actually, but only
- # works with certain fonts.
--#UseCirclesInEntry=false
-+UseCirclesInEntry=true
- # Do not show any visible feedback in the password field. This is standard for
- # instance in console, xdm and ssh.
- #UseInvisibleInEntry=false
 @@ -516,7 +517,7 @@ GraphicalThemedColor=#76848F
  # list then provide a list that is delimited by /: to the GraphicalThemes
  # key and set GraphicalThemeRand to true.  Otherwise use GraphicalTheme
