@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -63,6 +63,9 @@ Patch39: gdm-2.20.0-fix-savedie.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=453916
 Patch40: gdm-2.20.0-fix-default-language.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=482348
+Patch41: pixbuf-ref.patch
 
 Patch100: gdm-2.20.0-change-defaults.patch
 Patch101: stupid-bullets.patch
@@ -152,6 +155,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch38 -p1 -b .hang
 %patch39 -p1 -b .fix-savedie
 %patch40 -p1 -b .fix-default-language
+%patch41 -p1 -b .pixbuf-ref
 
 %patch100 -p1 -b .change-defaults
 %patch101 -p1 -b .stupid-bullets
@@ -365,6 +369,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Oct  1 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-11
+- Fix a refcounting problem with user faces
+
 * Mon Oct  1 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-10
 - apply upstream patch from Brady Anderson <brady.anderson@gmail.com>
   to fix writing out .dmrc file when setting default language 
