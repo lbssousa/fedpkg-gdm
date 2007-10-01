@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -60,6 +60,9 @@ Patch38: hang.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=473480
 Patch39: gdm-2.20.0-fix-savedie.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=453916
+Patch40: gdm-2.20.0-fix-default-language.patch
 
 Patch100: gdm-2.20.0-change-defaults.patch
 Patch101: stupid-bullets.patch
@@ -148,6 +151,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch37 -p1 -b .selinux
 %patch38 -p1 -b .hang
 %patch39 -p1 -b .fix-savedie
+%patch40 -p1 -b .fix-default-language
 
 %patch100 -p1 -b .change-defaults
 %patch101 -p1 -b .stupid-bullets
@@ -361,6 +365,11 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Mon Oct  1 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-10
+- apply upstream patch from Brady Anderson <brady.anderson@gmail.com>
+  to fix writing out .dmrc file when setting default language 
+  (upstream bug 453916)
+
 * Fri Sep 28 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-9
 - drop redhat-artwork dep, add fedorainfinity-gdm-theme dep
 
