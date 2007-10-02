@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 11%{?dist}
+Release: 12%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -66,6 +66,9 @@ Patch40: gdm-2.20.0-fix-default-language.patch
 
 # http://bugzilla.gnome.org/show_bug.cgi?id=482348
 Patch41: pixbuf-ref.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=135965
+Patch42: gdm-2.20.0-allow-escape.patch
 
 Patch100: gdm-2.20.0-change-defaults.patch
 Patch101: stupid-bullets.patch
@@ -369,6 +372,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Oct  2 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-12
+- Add escape == cancel behavior back
+
 * Mon Oct  1 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.20.0-11
 - Fix a refcounting problem with user faces
 
