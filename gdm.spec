@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 12%{?dist}
+Release: 13%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -159,6 +159,7 @@ Extra icons / faces for the GNOME Display Manager.
 %patch39 -p1 -b .fix-savedie
 %patch40 -p1 -b .fix-default-language
 %patch41 -p1 -b .pixbuf-ref
+%patch42 -p1 -b .allow-escape
 
 %patch100 -p1 -b .change-defaults
 %patch101 -p1 -b .stupid-bullets
@@ -372,6 +373,9 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Tue Oct  2 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-13
+- Actually add said escape == cancel behavior back
+
 * Tue Oct  2 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-12
 - Add escape == cancel behavior back
 
