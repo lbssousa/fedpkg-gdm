@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.20.0
-Release: 14%{?dist}
+Release: 15%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -373,6 +373,12 @@ fi
 %{_datadir}/pixmaps/faces/extras/*.jpg
 
 %changelog
+* Fri Oct 5 2007 Dan Walsh <dwalsh@redhat.com> - 1:2.20.0-14
+- Added pam_selinux_permit and pam_namespace to gdm-pam
+  * This pam module allows user without a password to login when selinux is in enforcing mode
+- Added pam_namespace to gdm-autologin-pam
+- These changes were made to make it easier to setup the xguest user account
+
 * Tue Oct  3 2007 Alexander Larsson <alexl@redhat.com> - 1:2.20.0-14
 - Fix up pam keyring integration to be what the latest version
   of the docs says
@@ -926,7 +932,7 @@ fi
 - bump redhat-artwork requirement to get rid of the boot
   throbber for now, since it seems to have reappeared
   mysteriously (bug 171025)
-
+p
 * Thu Oct 13 2005 Dan Walsh <dwalsh@redhat.com> 1:2.8.0.4-4
 - Change to use getseuserbyname
 
