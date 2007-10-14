@@ -1,13 +1,3 @@
-    Prevent greeter from crashing if background can't be loaded
-    In Fedora 8 we default to animated backgrounds, and
-    the simple greeter doesn't understand that format.  This exposed
-    a crasher bug in the simple greter where it assumed background
-    loading would always succeed.
-    
-    As a side note, the greeter should probably use libbackground
-    (or is it libgnome-desktop?) to draw the background, so it can
-    do animated backgrounds, too.
-
 --- gdm-2.99.0/gui/simple-greeter/gdm-greeter-background.c.fix-crash-on-background-load-failure
 +++ gdm-2.99.0/gui/simple-greeter/gdm-greeter-background.c
 @@ -481,6 +481,10 @@ update_background (GdmGreeterBackground *background)
