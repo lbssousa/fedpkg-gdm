@@ -15,63 +15,16 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.20.0
-Release: 15%{?dist}
+Version: 2.99.0
+Release: 0.2007.10.13.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.20/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.20/gdm-%{version}.tar.gz
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
-Source4: 90-grant-audio-devices-to-gdm.fdi
-Source5: fedora-faces-20070319.tar.bz2
-Source6: default.desktop
-
-Patch4: gdm-2.13.0.4-update-switchdesk-location.patch
-
-Patch19: gdm-2.19.3-move-default-message.patch
-Patch20: gdm-2.19.5-reset-pam.patch
-Patch21: gdm-2.19.1-security-tokens.patch
-
-# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=203917
-Patch25: gdm-2.16.0-indic-langs.patch
-
-Patch28: gdm-2.17.1-desensitize-entry.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=411427
-Patch29: gdm-2.17.7-greeter.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=412576
-Patch32: gdm-2.19.1-a11y-fixes-for-themed-greeter.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=411501
-Patch33: gdm-2.19.6-pass-ats-to-session.patch
-
-# make gdmsetup work with consolehelper
-Patch35: gdmsetup-path.patch
-
-# https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=254164
-Patch37: gdm-2.19.8-selinux.patch
-
-# fixed in upstream svn
-Patch38: hang.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=473480
-Patch39: gdm-2.20.0-fix-savedie.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=453916
-Patch40: gdm-2.20.0-fix-default-language.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=482348
-Patch41: pixbuf-ref.patch
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=135965
-Patch42: gdm-2.20.0-allow-escape.patch
-
-Patch100: gdm-2.20.0-change-defaults.patch
-Patch101: stupid-bullets.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
 
@@ -127,42 +80,19 @@ BuildRequires: libselinux-devel
 
 Requires: audit-libs >= %{libauditver}
 
+Patch0: gdm-2.99.0-fix-crash-on-background-load-failure.patch
+Patch1: gdm-2.99.0-fix-invalid-read.patch
+
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
 reimplementation of xdm, the X Display Manager. Gdm allows you to log
 into your system with the X Window System running and supports running
 several different X sessions on your local machine at the same time.
 
-%package extra-faces
-Summary: Extra faces for GDM
-Group: User Interface/X
-Requires: %name
-
-%description extra-faces
-Extra icons / faces for the GNOME Display Manager.
-
 %prep
-%setup -q -a 5
-
-%patch4 -p1 -b .update-switchdesk-location
-%patch19 -p1 -b .move-default-message
-%patch20 -p1 -b .reset-pam
-%patch21 -p1 -b .security-tokens
-%patch25 -p1 -b .indic-langs
-%patch28 -p1 -b .desensitize-entry
-%patch29 -p0 -b .greeter
-%patch32 -p1 -b .a11y-fixes
-%patch33 -p1 -b .pass-ats-to-session
-%patch35 -p1 -b .gdmsetup-path
-%patch37 -p1 -b .selinux
-%patch38 -p1 -b .hang
-%patch39 -p1 -b .fix-savedie
-%patch40 -p1 -b .fix-default-language
-%patch41 -p1 -b .pixbuf-ref
-%patch42 -p1 -b .allow-escape
-
-%patch100 -p1 -b .change-defaults
-%patch101 -p1 -b .stupid-bullets
+%setup -q
+%patch0 -p1 -b .fix-crash-on-background-load-failure
+%patch1 -p1 -b .fix-invalid-read
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -210,22 +140,9 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
 # remove the other gnome session file, since we put it in gnome-session
 rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
 
-# This got given an unfortunate name, so revert the name for now.
-# See https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=234218
-# and http://bugzilla.gnome.org/show_bug.cgi?id=403690
-cp %{SOURCE6} $RPM_BUILD_ROOT%{_datadir}/gdm/BuiltInSessions/default.desktop
-
 # no dumb flexiserver thing, Xnest is too broken
 rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop
 
-# use consolehelper for gdmsetup
-(cd $RPM_BUILD_ROOT/usr/bin; ln -sf consolehelper gdmsetup)
-
-# fix the "login photo" file
-cat >>$RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmphotosetup.desktop <<EOF
-NoDisplay=true
-EOF
- 
 desktop-file-install --vendor gnome --delete-original       \
   --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications         \
   $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmsetup.desktop || :
@@ -238,19 +155,7 @@ desktop-file-install --delete-original       			\
   --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications          	\
   $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver.desktop || :
 
-# broken install-data-local in gui/Makefile.am makes this necessary
-(cd $RPM_BUILD_ROOT%{_bindir} && ln -sf gdmXnestchooser gdmXnest)
-
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
-
-# grant access to alsa and oss devices for the gdm user
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/hal/fdi/policy/20thirdparty
-cp %{SOURCE4} $RPM_BUILD_ROOT%{_datadir}/hal/fdi/policy/20thirdparty
-
-# replace faces with the ones from fedora-faces
-rm -rf $RPM_BUILD_ROOT%{_datadir}/pixmaps/faces
-mkdir $RPM_BUILD_ROOT%{_datadir}/pixmaps/faces
-cp -Rpr faces $RPM_BUILD_ROOT%{_datadir}/pixmaps
 
 %find_lang gdm --with-gnome
 
@@ -334,48 +239,40 @@ fi
 %defattr(-, root, root)
 %doc AUTHORS COPYING NEWS README TODO
 %dir %{_sysconfdir}/gdm
-%{_sysconfdir}/gdm/Xsession
 %config(noreplace) %{_sysconfdir}/gdm/custom.conf
-%config %{_sysconfdir}/gdm/securitytokens.conf
-%config %{_sysconfdir}/gdm/XKeepsCrashing
-%config %{_sysconfdir}/gdm/locale.alias
 %config %{_sysconfdir}/gdm/Init/*
 %config %{_sysconfdir}/gdm/PostLogin/*
 %config %{_sysconfdir}/gdm/PreSession/*
 %config %{_sysconfdir}/gdm/PostSession/*
-%config %{_sysconfdir}/gdm/modules/*
 %config %{_sysconfdir}/pam.d/gdm
-%config %{_sysconfdir}/pam.d/gdmsetup
 %config %{_sysconfdir}/pam.d/gdm-autologin
-%config %{_sysconfdir}/security/console.apps/gdmsetup
+# not config files
+%{_sysconfdir}/gdm/Xsession
+%{_sysconfdir}/gdm/gdm.schemas
+%{_sysconfdir}/dbus-1/system.d/gdm.conf
 %dir %{_sysconfdir}/gdm/Init
 %dir %{_sysconfdir}/gdm/PreSession
 %dir %{_sysconfdir}/gdm/PostSession
 %dir %{_sysconfdir}/gdm/PostLogin
-%dir %{_sysconfdir}/gdm/modules
 %{_datadir}/pixmaps/*.png
 %{_datadir}/pixmaps/faces/*.png
 %{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/gdm
-%{_datadir}/hal/fdi/policy/20thirdparty/90-grant-audio-devices-to-gdm.fdi
-%{_libdir}/gtk-2.0/modules/*.so
-%{_bindir}/*
 %{_libexecdir}/*
 %{_sbindir}/*
-%doc %{_mandir}/man*/*
 %dir %{_localstatedir}/log/gdm
 
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
-%files extra-faces
-%{_datadir}/pixmaps/faces/extras/*.png
-%{_datadir}/pixmaps/faces/extras/*.jpg
-
 %changelog
-* Fri Oct 5 2007 Dan Walsh <dwalsh@redhat.com> - 1:2.20.0-14
+* Sat Oct 13 2007 Ray Strode <rstrode@redhat.com> - 1:2.99.0-0.2007.10.13.1
+- Add a snapshot from the mccann-gobject branch, totally different 
+  unfinished ui...
+
+* Fri Oct  5 2007 Dan Walsh <dwalsh@redhat.com> - 1:2.20.0-14
 - Added pam_selinux_permit and pam_namespace to gdm-pam
-  * This pam module allows user without a password to login when selinux is in enforcing mode
+  - This pam module allows user without a password to login when selinux is in enforcing mode
 - Added pam_namespace to gdm-autologin-pam
 - These changes were made to make it easier to setup the xguest user account
 

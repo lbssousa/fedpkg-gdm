@@ -1,0 +1,114 @@
+    Pass size of socket address to gdm_address_new_from_sockaddr_storage
+    While sockaddr_storage is big enough to hold most socket address types,
+    we can't assume all socket address types will be as big as sockaddr_storage.
+    This means when copying a sockaddr, we need to know its size.
+
+--- gdm-2.99.0/common/gdm-address.c.fix-invalid-read
++++ gdm-2.99.0/common/gdm-address.c
+@@ -92,14 +92,18 @@ gdm_address_get_family_type (GdmAddress *address)
+  * or %NULL if @sa was invalid or the address family isn't supported.
+  **/
+ GdmAddress *
+-gdm_address_new_from_sockaddr_storage (struct sockaddr_storage *ss)
++gdm_address_new_from_sockaddr_storage (struct sockaddr_storage *ss,
++                                       size_t                   size)
+ {
+         GdmAddress *addr;
+ 
+         g_return_val_if_fail (ss != NULL, NULL);
++        g_return_val_if_fail (size >= sizeof (struct sockaddr), NULL);
++        g_return_val_if_fail (size <= sizeof (struct sockaddr_storage), NULL);
+ 
+         addr = g_new0 (GdmAddress, 1);
+-        addr->ss = g_memdup (ss, sizeof (struct sockaddr_storage));
++        addr->ss = g_new0 (struct sockaddr_storage, 1);
++        memcpy (addr->ss, ss, size);
+ 
+         return addr;
+ }
+@@ -315,7 +319,8 @@ gdm_address_peek_local_list (void)
+         for (res = result; res != NULL; res = res->ai_next) {
+                 GdmAddress *address;
+ 
+-                address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)res->ai_addr);
++                address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)res->ai_addr,
++                                                                 res->ai_addrlen);
+                 the_list = g_list_append (the_list, address);
+         }
+ 
+--- gdm-2.99.0/common/gdm-address.h.fix-invalid-read
++++ gdm-2.99.0/common/gdm-address.h
+@@ -40,7 +40,8 @@ typedef struct _GdmAddress GdmAddress;
+ 
+ GType                    gdm_address_get_type                  (void);
+ 
+-GdmAddress *             gdm_address_new_from_sockaddr_storage (struct sockaddr_storage *ss);
++GdmAddress *             gdm_address_new_from_sockaddr_storage (struct sockaddr_storage *ss,
++                                                                size_t                   size);
+ 
+ int                      gdm_address_get_family_type           (GdmAddress              *address);
+ struct sockaddr_storage *gdm_address_get_sockaddr_storage      (GdmAddress              *address);
+--- gdm-2.99.0/daemon/gdm-xdmcp-display-factory.c.fix-invalid-read
++++ gdm-2.99.0/daemon/gdm-xdmcp-display-factory.c
+@@ -446,7 +446,8 @@ do_bind (guint                     port,
+                         char       *serv;
+                         GdmAddress *addr;
+ 
+-                        addr = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)ai->ai_addr);
++                        addr = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)ai->ai_addr,
++                                                                      ai->ai_addrlen);
+ 
+                         host = NULL;
+                         serv = NULL;
+@@ -1356,7 +1357,8 @@ create_address_from_request (ARRAY8      *req_addr,
+         if (ai != NULL) {
+                 found = TRUE;
+                 if (address != NULL) {
+-                        *address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)ai->ai_addr);
++                        *address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)ai->ai_addr,
++                                                                          ai->ai_addrlen);
+                 }
+         }
+ 
+@@ -2629,7 +2631,8 @@ decode_packet (GIOChannel             *source,
+                 return TRUE;
+         }
+ 
+-        address = gdm_address_new_from_sockaddr_storage (&clnt_ss);
++        address = gdm_address_new_from_sockaddr_storage (&clnt_ss,
++                                                         ss_len);
+         if (address == NULL) {
+                 g_warning (_("XMDCP: Unable to parse address"));
+                 return TRUE;
+--- gdm-2.99.0/gui/simple-chooser/gdm-host-chooser-widget.c.fix-invalid-read
++++ gdm-2.99.0/gui/simple-chooser/gdm-host-chooser-widget.c
+@@ -237,7 +237,8 @@ decode_packet (GIOChannel           *source,
+                 return TRUE;
+         }
+ 
+-        address = gdm_address_new_from_sockaddr_storage (&clnt_ss);
++        address = gdm_address_new_from_sockaddr_storage (&clnt_ss,
++                                                         ss_len);
+         if (address == NULL) {
+                 g_warning (_("XMDCP: Unable to parse address"));
+                 return TRUE;
+@@ -462,7 +463,8 @@ find_broadcast_addresses (GdmHostChooserWidget *widget)
+ 
+                         g_memmove (&sin, &ifreq.ifr_broadaddr, sizeof (struct sockaddr_in));
+                         sin.sin_port = htons (XDM_UDP_PORT);
+-                        address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)&sin);
++                        address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)&sin,
++                                                                         sizeof (struct sockaddr_in));
+                         if (address != NULL) {
+                                 g_debug ("Adding if %s", name);
+                                 gdm_address_debug (address);
+@@ -518,7 +520,8 @@ add_hosts (GdmHostChooserWidget *widget)
+                 for (ai = result; ai != NULL; ai = ai->ai_next) {
+                         GdmAddress *address;
+ 
+-                        address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)ai->ai_addr);
++                        address = gdm_address_new_from_sockaddr_storage ((struct sockaddr_storage *)ai->ai_addr,
++                                                                         ai->ai_addrlen);
+                         if (address != NULL) {
+                                 widget->priv->query_addresses = g_slist_append (widget->priv->query_addresses, address);
+                         }
