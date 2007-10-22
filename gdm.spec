@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.99.0
-Release: 0.2007.10.13.1%{?dist}
+Version: 2.21.1
+Release: 0.2007.10.22.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -266,9 +266,8 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
-* Sat Oct 13 2007 Ray Strode <rstrode@redhat.com> - 1:2.99.0-0.2007.10.13.1
-- Add a snapshot from the mccann-gobject branch, totally different 
-  unfinished ui...
+* Mon Oct 22 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.1-0.2007.10.22.1
+- Add a snapshot gdm trunk, totally different unfinished ui...
 
 * Fri Oct  5 2007 Dan Walsh <dwalsh@redhat.com> - 1:2.20.0-14
 - Added pam_selinux_permit and pam_namespace to gdm-pam
