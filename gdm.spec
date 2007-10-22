@@ -80,9 +80,6 @@ BuildRequires: libselinux-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch0: gdm-2.99.0-fix-crash-on-background-load-failure.patch
-Patch1: gdm-2.99.0-fix-invalid-read.patch
-
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
 reimplementation of xdm, the X Display Manager. Gdm allows you to log
@@ -91,8 +88,6 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
-%patch0 -p1 -b .fix-crash-on-background-load-failure
-%patch1 -p1 -b .fix-invalid-read
 
 %build
 cp -f %{SOURCE1} config/gdm
