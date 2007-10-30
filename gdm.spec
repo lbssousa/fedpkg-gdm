@@ -152,6 +152,9 @@ desktop-file-install --delete-original       			\
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
+find $RPM_BUILD_ROOT -name '*.a' -delete
+find $RPM_BUILD_ROOT -name '*.la' -delete
+
 %find_lang gdm --with-gnome
 
 %clean
@@ -255,6 +258,9 @@ fi
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/gdm
 %{_libexecdir}/*
+%{_libdir}/gdm/settings/plugins
+%{_libdir}/gdm/settings
+%{_libdir}/gdm
 %{_sbindir}/*
 %dir %{_localstatedir}/log/gdm
 
