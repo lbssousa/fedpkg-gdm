@@ -93,8 +93,8 @@ several different X sessions on your local machine at the same time.
 %patch0 -p0 -b .improve-auth-cookie-handling
 
 %build
-cp -f %{SOURCE1} config/gdm
-cp -f %{SOURCE2} config/gdm-autologin
+cp -f %{SOURCE1} data/gdm
+cp -f %{SOURCE2} data/gdm-autologin
 cp -f %{SOURCE3} utils/gdmsetup-pam
 
 intltoolize --force --copy
