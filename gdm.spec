@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.1
-Release: 0.2007.10.30.1%{?dist}
+Version: 2.21.2
+Release: 0.2007.11.09.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,6 +80,8 @@ BuildRequires: libselinux-devel
 
 Requires: audit-libs >= %{libauditver}
 
+Patch0: gdm-2.21.1-improve-auth-cookie-handling.patch
+
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
 reimplementation of xdm, the X Display Manager. Gdm allows you to log
@@ -88,6 +90,7 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
+%patch0 -p0 -b .improve-auth-cookie-handling
 
 %build
 cp -f %{SOURCE1} config/gdm
@@ -267,6 +270,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Fri Nov  9 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.09.1
+- Update to today's snapshot
+
 * Tue Oct 30 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.1-0.2007.10.30.1
 - Update to today's snapshot
 
