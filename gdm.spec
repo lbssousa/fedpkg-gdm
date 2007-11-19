@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.14.2%{?dist}
+Release: 0.2007.11.19.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -81,6 +81,7 @@ BuildRequires: libselinux-devel
 Requires: audit-libs >= %{libauditver}
 
 Patch0: gdm-2.21.2-dont-run-profile.patch
+Patch1: gdm-2.21.2-fix-background.patch
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -91,6 +92,7 @@ several different X sessions on your local machine at the same time.
 %prep
 %setup -q
 %patch0 -p1 -b .dont-run-profile
+%patch1 -p1 -b .fix-background
 
 %build
 cp -f %{SOURCE1} data/gdm
@@ -270,6 +272,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Nov 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.19.1
+- Update to today's snapshot
+
 * Thu Nov 15 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.14.2
 - don't source /etc/profile at startup
 
