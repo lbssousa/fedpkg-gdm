@@ -267,11 +267,13 @@ fi
 %{_libdir}/gdm/settings/plugins/*
 %dir %{_libdir}/gdm/settings
 %{_libdir}/gdm/settings/*
-%{_libdir}/gdm
+%dir %{_libdir}/gdm
+%{_libdir}/gdm/*
 %{_sbindir}/*
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/lib/gdm
 %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
+%{_localstatedir}/lib/gdm/.gconf.mandatory/*
 %{_localstatedir}/lib/gdm/.gconf.path
 
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
