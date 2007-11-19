@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.19.2%{?dist}
+Release: 0.2007.11.19.3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -160,6 +160,9 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
+chmod 1770 $RPM_BUILD_ROOT%{_localstatedir}/lib/gdm
+chown gdm:root $RPM_BUILD_ROOT%{_localstatedir}/lib/gdm
+
 %find_lang gdm --with-gnome
 
 %clean
@@ -279,6 +282,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Nov 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.19.3
+- fix permissions on homedir
+
 * Mon Nov 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.19.2
 - move homedir to /var/lib/gdm
 
