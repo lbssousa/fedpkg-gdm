@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.19.1%{?dist}
+Release: 0.2007.11.19.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -166,8 +166,8 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %pre
-/usr/sbin/useradd -M -u 42 -d /var/gdm -s /sbin/nologin -r gdm > /dev/null 2>&1
-/usr/sbin/usermod -d /var/gdm -s /sbin/nologin gdm >/dev/null 2>&1
+/usr/sbin/useradd -M -u 42 -d /var/lib/gdm -s /sbin/nologin -r gdm > /dev/null 2>&1
+/usr/sbin/usermod -d /var/lib/gdm -s /sbin/nologin gdm >/dev/null 2>&1
 # ignore errors, as we can't disambiguate between gdm already existed
 # and couldn't create account with the current adduser.
 exit 0
@@ -279,6 +279,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 
 %changelog
+* Mon Nov 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.19.2
+- move homedir to /var/lib/gdm
+
 * Mon Nov 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.19.1
 - Update to today's snapshot
 
