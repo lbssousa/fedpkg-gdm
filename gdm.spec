@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.2%{?dist}
+Release: 0.2007.11.20.3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,6 +80,7 @@ BuildRequires: libselinux-devel
 
 Requires: audit-libs >= %{libauditver}
 
+Patch0: gdm-2.21.2-use-metacity.patch
 Patch1: gdm-2.21.2-fix-background.patch
 
 %description
@@ -90,6 +91,7 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
+%patch0 -p1 -b .use-metacity
 %patch1 -p1 -b .fix-background
 
 %build
@@ -278,6 +280,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Tue Nov 20 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.3
+- use metacity for now
+
 * Tue Nov 20 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.2
 - Drop dont run profile patch since dwalsh changed /usr/sbin/gdm label
 
