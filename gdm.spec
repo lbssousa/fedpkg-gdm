@@ -8,7 +8,7 @@
 %define librsvg2_version 2.0.1
 %define libxml2_version 2.4.21
 %define scrollkeeper_version 0.3.4
-%define pam_version 0.99
+%define pam_version 0.99.8.1-11
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
 %define nss_version 3.11.1
@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.3%{?dist}
+Release: 0.2007.11.20.4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -280,6 +280,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Fri Nov 30 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.21.2-0.2007.11.20.4
+- Use the new "substack" support in pam to make keyring unlocking work
+ 
 * Tue Nov 20 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.3
 - use metacity for now
 
