@@ -1,0 +1,11 @@
+diff -up gdm-2.21.2/gui/simple-greeter/gdm-greeter-session.c.use-metacity gdm-2.21.2/gui/simple-greeter/gdm-greeter-session.c
+--- gdm-2.21.2/gui/simple-greeter/gdm-greeter-session.c.use-metacity	2007-11-20 19:23:03.000000000 -0500
++++ gdm-2.21.2/gui/simple-greeter/gdm-greeter-session.c	2007-11-20 19:23:34.000000000 -0500
+@@ -283,6 +283,7 @@ launch_compiz (GdmGreeterSession *sessio
+         g_debug ("GdmGreeterSession: Launching compiz");
+ 
+         ret = FALSE;
++        return ret;
+ 
+         error = NULL;
+         g_spawn_command_line_async ("gtk-window-decorator --replace", &error);
