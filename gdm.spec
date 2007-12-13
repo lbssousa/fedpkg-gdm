@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.4%{?dist}
+Release: 0.2007.11.20.5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -82,6 +82,13 @@ Requires: audit-libs >= %{libauditver}
 
 Patch0: gdm-2.21.2-use-metacity.patch
 Patch1: gdm-2.21.2-fix-background.patch
+Patch2: 2-new-chooser-widget.patch
+Patch3: 3-switch-user-chooser-over.patch
+Patch4: 4-switch-session-chooser-over.patch
+Patch5: 5-dont-shrink-in-test-program.patch
+Patch6: 6-session-chooser-in-login-window.patch
+Patch7: 7-login-window-animation.patch
+
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -93,6 +100,12 @@ several different X sessions on your local machine at the same time.
 %setup -q
 %patch0 -p1 -b .use-metacity
 %patch1 -p1 -b .fix-background
+%patch2 -p1 -b .new-chooser-widget
+%patch3 -p1 -b .switch-user-chooser-over
+%patch4 -p1 -b .switch-session-chooser-over
+%patch5 -p1 -b .dont-shrink-in-test-program
+%patch6 -p1 -b .session-chooser-in-login-window
+%patch7 -p1 -b .login-window-animation
 
 %build
 cp -f %{SOURCE1} data/gdm
@@ -280,6 +293,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Thu Dec 13 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.5
+- add session chooser to login screen
+- add hoaky animations
+
 * Fri Nov 30 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.21.2-0.2007.11.20.4
 - Use the new "substack" support in pam to make keyring unlocking work
  
