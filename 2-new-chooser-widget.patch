@@ -1734,6 +1734,5 @@ index 0000000..9a5581f
 +G_END_DECLS
 +
 +#endif /* __GDM_CHOOSER_WIDGET_H */
--- 
-1.5.3.6
-
++
++
