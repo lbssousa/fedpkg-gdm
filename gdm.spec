@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.5%{?dist}
+Release: 0.2007.11.20.6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -293,6 +293,10 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Fri Dec 14 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.6
+- Fix an uninitialized variable that makes the session list stop
+  growing before its finished sometimes
+
 * Thu Dec 13 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.5
 - add session chooser to login screen
 - add hoaky animations
