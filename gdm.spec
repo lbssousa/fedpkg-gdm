@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.7%{?dist}
+Release: 0.2007.11.20.8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -286,14 +286,16 @@ fi
 %{_sbindir}/*
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/lib/gdm
-%dir %{_localstatedir}/lib/gdm/.gconf.mandatory
-%{_localstatedir}/lib/gdm/.gconf.mandatory/*
-%{_localstatedir}/lib/gdm/.gconf.path
-
+%attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
+%attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
+%attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Fri Dec 21 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.8
+- Fix background (and other settings)
+
 * Wed Dec 19 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.7
 - Improve animation to be less jumpy
 
