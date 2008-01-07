@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.8%{?dist}
+Release: 0.2007.11.20.9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -89,6 +89,7 @@ Patch5: 5-dont-shrink-in-test-program.patch
 Patch6: 6-session-chooser-in-login-window.patch
 Patch7: 7-login-window-animation.patch
 Patch8: 8-improve-animation.patch
+Patch9: gdm-2.21.2-hide-guest.patch
 
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
@@ -107,6 +108,7 @@ several different X sessions on your local machine at the same time.
 %patch6 -p1 -b .session-chooser-in-login-window
 %patch7 -p1 -b .login-window-animation
 %patch8 -p1 -b .improve-animation
+%patch9 -p1 -b .hide-guest
 
 %build
 cp -f %{SOURCE1} data/gdm
@@ -293,6 +295,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Mon Jan  7 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.9
+- hide guest account since it doesn't work
+
 * Fri Dec 21 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.8
 - Fix background (and other settings)
 

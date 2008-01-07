@@ -1,0 +1,12 @@
+diff -up gdm-2.21.2/gui/simple-greeter/gdm-greeter-login-window.c.hide-guest gdm-2.21.2/gui/simple-greeter/gdm-greeter-login-window.c
+--- gdm-2.21.2/gui/simple-greeter/gdm-greeter-login-window.c.hide-guest	2008-01-07 14:28:13.000000000 -0500
++++ gdm-2.21.2/gui/simple-greeter/gdm-greeter-login-window.c	2008-01-07 14:28:26.000000000 -0500
+@@ -806,7 +806,7 @@ load_theme (GdmGreeterLoginWindow *login
+ 
+         /* FIXME: set from gconf */
+         gdm_user_chooser_widget_set_show_other_user (GDM_USER_CHOOSER_WIDGET (login_window->priv->user_chooser), TRUE);
+-        gdm_user_chooser_widget_set_show_guest_user (GDM_USER_CHOOSER_WIDGET (login_window->priv->user_chooser), TRUE);
++        gdm_user_chooser_widget_set_show_guest_user (GDM_USER_CHOOSER_WIDGET (login_window->priv->user_chooser), FALSE);
+ 
+         g_signal_connect (login_window->priv->user_chooser,
+                           "activated",
