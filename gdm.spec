@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.2
-Release: 0.2007.11.20.9%{?dist}
+Release: 0.2007.11.20.10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -295,6 +295,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Mon Jan  15 2008 Dan Walsh <dwalsh@redhat.com> - 1:2.21.2-0.2007.11.20.10
+- Fix gdm.pam file so that session include system-auth happens after other session setup
+
 * Mon Jan  7 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.9
 - hide guest account since it doesn't work
 
