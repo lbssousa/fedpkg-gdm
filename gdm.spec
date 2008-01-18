@@ -15,13 +15,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.2
-Release: 0.2007.11.20.11%{?dist}
+Version: 2.21.5
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.20/gdm-%{version}.tar.gz
+Source: http://ftp.gnome.org/pub/GNOME/sources/gdm/2.21/gdm-%{version}.tar.gz
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -45,6 +45,7 @@ Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
 Requires: hal >= 0.5.9
+Requires: gnome-settings-daemon
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires(post): scrollkeeper
@@ -77,18 +78,10 @@ BuildRequires: xorg-x11-server-Xorg
 BuildRequires: nss-devel >= %{nss_version}
 BuildRequires: ConsoleKit
 BuildRequires: libselinux-devel
+BuildRequires: check-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch0: gdm-2.21.2-use-metacity.patch
-Patch1: gdm-2.21.2-fix-background.patch
-Patch2: 2-new-chooser-widget.patch
-Patch3: 3-switch-user-chooser-over.patch
-Patch4: 4-switch-session-chooser-over.patch
-Patch5: 5-dont-shrink-in-test-program.patch
-Patch6: 6-session-chooser-in-login-window.patch
-Patch7: 7-login-window-animation.patch
-Patch8: 8-improve-animation.patch
 Patch9: gdm-2.21.2-hide-guest.patch
 
 %description
@@ -99,15 +92,6 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
-%patch0 -p1 -b .use-metacity
-%patch1 -p1 -b .fix-background
-%patch2 -p1 -b .new-chooser-widget
-%patch3 -p1 -b .switch-user-chooser-over
-%patch4 -p1 -b .switch-session-chooser-over
-%patch5 -p1 -b .dont-shrink-in-test-program
-%patch6 -p1 -b .session-chooser-in-login-window
-%patch7 -p1 -b .login-window-animation
-%patch8 -p1 -b .improve-animation
 %patch9 -p1 -b .hide-guest
 
 %build
@@ -182,6 +166,11 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
 
 %pre
+if [ "$1" -gt 1 ]; then
+  export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+  gconftool-2 --makefile-uninstall-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
+fi
+
 /usr/sbin/useradd -M -u 42 -d /var/lib/gdm -s /sbin/nologin -r gdm > /dev/null 2>&1
 /usr/sbin/usermod -d /var/lib/gdm -s /sbin/nologin gdm >/dev/null 2>&1
 # ignore errors, as we can't disambiguate between gdm already existed
@@ -196,6 +185,9 @@ touch --no-create /usr/share/icons/hicolor
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
   gtk-update-icon-cache -q /usr/share/icons/hicolor
 fi
+
+export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
 
 # if the user already has a config file, then migrate it to the new
 # location; rpm will ensure that old file will be renamed
@@ -254,6 +246,11 @@ if [ -x /usr/bin/gtk-update-icon-cache ]; then
   gtk-update-icon-cache -q %{_datadir}/icons/hicolor
 fi
 
+if [ "$1" -eq 0 ]; then
+  export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+  gconftool-2 --makefile-uninstall-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
+fi
+
 %files -f gdm.lang
 %defattr(-, root, root)
 %doc AUTHORS COPYING NEWS README TODO
@@ -279,15 +276,9 @@ fi
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/gdm
 %{_libexecdir}/*
-%dir %{_libdir}/gdm/settings/plugins
-%{_libdir}/gdm/settings/plugins/*
-%dir %{_libdir}/gdm/settings
-%{_libdir}/gdm/settings/*
-%dir %{_libdir}/gdm
-%{_libdir}/gdm/*
 %{_sbindir}/*
+%{_sysconfdir}/gconf/schemas/*.schemas
 %dir %{_localstatedir}/log/gdm
-%dir %{_localstatedir}/lib/gdm
 %attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
@@ -295,6 +286,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Fri Jan  18 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.5-1
+- Update to 2.21.5
+
 * Thu Jan  17 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.2-0.2007.11.20.11
 - Rebuild
 
