@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -79,6 +79,7 @@ BuildRequires: nss-devel >= %{nss_version}
 BuildRequires: ConsoleKit
 BuildRequires: libselinux-devel
 BuildRequires: check-devel
+BuildRequires: iso-codes-devel
 
 Requires: audit-libs >= %{libauditver}
 
@@ -286,6 +287,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Thu Jan  24 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.5-2
+- add BuildRequires for iso-codes-devel
+
 * Fri Jan  18 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.5-1
 - Update to 2.21.5
 
