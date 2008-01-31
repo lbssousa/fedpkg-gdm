@@ -12,11 +12,14 @@
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
 %define nss_version 3.11.1
+%define polkit_version 0.7
+%define consolekit_version 0.2.7
+%define hal_version 0.5.9
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.5
-Release: 2%{?dist}
+Version: 2.21.6
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -26,7 +29,7 @@ Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
 
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n) 
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Prereq: /usr/sbin/useradd
 
@@ -40,11 +43,13 @@ Requires: pam >= 0:%{pam_version}
 Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
-Requires: fedorainfinity-gdm-theme 
+Requires: fedorainfinity-gdm-theme
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
-Requires: hal >= 0.5.9
+Requires: hal >= %{hal_version}
+Requires: ConsoleKit >= %{consolekit_version}
+Requires: PolicyKit-gnome >= %{polkit_version}
 Requires: gnome-settings-daemon
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
@@ -67,7 +72,7 @@ BuildRequires: libgsf-devel
 BuildRequires: libtool automake autoconf
 BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
-BuildRequires: gettext 
+BuildRequires: gettext
 BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: audit-libs-devel >= %{libauditver}
@@ -77,6 +82,7 @@ BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
 BuildRequires: ConsoleKit
+BuildRequires: PolicyKit-gnome-devel >= %{polkit_version}
 BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
@@ -278,6 +284,7 @@ fi
 %{_datadir}/gdm
 %{_libexecdir}/*
 %{_sbindir}/*
+%{_bindir}/*
 %{_sysconfdir}/gconf/schemas/*.schemas
 %dir %{_localstatedir}/log/gdm
 %attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
@@ -287,6 +294,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Wed Jan  30 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.6-1
+- Update to 2.21.6
+
 * Thu Jan  24 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.5-2
 - add BuildRequires for iso-codes-devel
 
