@@ -18,8 +18,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.6
-Release: 1%{?dist}
+Version: 2.21.7
+Release: 0.2008.02.08.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -89,8 +89,6 @@ BuildRequires: iso-codes-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch9: gdm-2.21.2-hide-guest.patch
-
 %description
 Gdm (the GNOME Display Manager) is a highly configurable
 reimplementation of xdm, the X Display Manager. Gdm allows you to log
@@ -99,19 +97,12 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
-%patch9 -p1 -b .hide-guest
 
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
 cp -f %{SOURCE3} utils/gdmsetup-pam
 
-intltoolize --force --copy
-aclocal
-libtoolize --force --copy
-automake --add-missing
-autoconf
-autoheader
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
@@ -146,6 +137,8 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
 
 # remove the other gnome session file, since we put it in gnome-session
 rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
+
+mkdir -p %{_datadir}/gdm/autostart/LoginWindow
 
 # no dumb flexiserver thing, Xnest is too broken
 rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop
@@ -286,6 +279,9 @@ fi
 %{_sbindir}/*
 %{_bindir}/*
 %{_sysconfdir}/gconf/schemas/*.schemas
+%{_libdir}/bonobo/servers/GNOME_GdmUserSwitchApplet.server
+%{_datadir}/gnome-2.0/ui/GNOME_GdmUserSwitchApplet.xml
+%dir %{_datadir}/gdm/autostart/LoginWindow
 %dir %{_localstatedir}/log/gdm
 %attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
@@ -294,6 +290,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Fri Feb 8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.7-0.2008.02.08.1
+- Update to 2.21.6
+
 * Wed Jan  30 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.6-1
 - Update to 2.21.6
 
