@@ -139,7 +139,7 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
 # remove the other gnome session file, since we put it in gnome-session
 rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
 
-mkdir -p %{_datadir}/gdm/autostart/LoginWindow
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow
 
 # no dumb flexiserver thing, Xnest is too broken
 rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop
