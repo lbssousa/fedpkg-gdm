@@ -86,6 +86,7 @@ BuildRequires: PolicyKit-gnome-devel >= %{polkit_version}
 BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
+BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
@@ -291,7 +292,7 @@ fi
 
 %changelog
 * Fri Feb 8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.7-0.2008.02.08.1
-- Update to 2.21.6
+- Update to snapshot
 
 * Wed Jan  30 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.6-1
 - Update to 2.21.6
