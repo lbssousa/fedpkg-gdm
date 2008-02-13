@@ -19,7 +19,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.7
-Release: 0.2008.02.08.1%{?dist}
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -291,6 +291,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Tue Feb 12 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.7-1
+- Update to 2.21.7
+
 * Fri Feb 8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.7-0.2008.02.08.1
 - Update to snapshot
 
