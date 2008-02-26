@@ -18,7 +18,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.7
+Version: 2.21.8
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
@@ -28,6 +28,9 @@ Source: http://ftp.gnome.org/pub/GNOME/sources/gdm/2.21/gdm-%{version}.tar.gz
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
+
+Patch1: gdm-2.21.8-fedora-logo.patch
+Patch2: gdm-2.21.8-validate-dmrc.patch
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -98,11 +101,16 @@ several different X sessions on your local machine at the same time.
 
 %prep
 %setup -q
+%patch1 -p1 -b .fedora-logo
+%patch2 -p1 -b .validate-dmrc
 
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
 cp -f %{SOURCE3} utils/gdmsetup-pam
+
+intltoolize --force
+autoreconf
 
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
@@ -291,6 +299,9 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
 %changelog
+* Mon Feb 25 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.8-1
+- Update to 2.21.8
+
 * Tue Feb 12 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.7-1
 - Update to 2.21.7
 
