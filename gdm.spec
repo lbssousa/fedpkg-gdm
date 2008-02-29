@@ -18,8 +18,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.8
-Release: 1%{?dist}
+Version: 2.21.9
+Release: 0.2008.02.29.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -29,11 +29,7 @@ Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
 
-Patch1: gdm-2.21.8-fedora-logo.patch
-Patch2: gdm-2.21.8-validate-dmrc.patch
-
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-
 Prereq: /usr/sbin/useradd
 
 Requires: gtk2 >= 0:%{gtk2_version}
@@ -53,7 +49,7 @@ Requires: xorg-x11-xinit
 Requires: hal >= %{hal_version}
 Requires: ConsoleKit >= %{consolekit_version}
 Requires: PolicyKit-gnome >= %{polkit_version}
-Requires: gnome-settings-daemon
+Requires: gnome-settings-daemon >= 2.21.92
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires(post): scrollkeeper
@@ -93,16 +89,34 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
+Patch0: gdm-2.21.9-dont-steal-all-keypresses.patch
+Patch1: gdm-2.21.9-check-capslock-state-not-capslock-light-state.patch
+
+Patch99: gdm-2.21.8-fedora-logo.patch
+
+%package user-switch-applet
+Summary:   GDM User Switcher Panel Applet
+Group:     User Interface/Desktops
+Requires:  gdm >= 0:2.21.9
+Obsoletes: fast-user-switch-applet
+Provides:  fast-user-switch-applet = %{epoch}:%{version}-%{release}
+
 %description
-Gdm (the GNOME Display Manager) is a highly configurable
-reimplementation of xdm, the X Display Manager. Gdm allows you to log
-into your system with the X Window System running and supports running
-several different X sessions on your local machine at the same time.
+GDM provides the graphical login screen, shown shortly after boot up,
+log out, and when user switching.
+
+%description user-switch-applet
+The GDM user switcher applet provides a mechanism for changing among
+multiple simulanteous logged in users.
 
 %prep
 %setup -q
-%patch1 -p1 -b .fedora-logo
-%patch2 -p1 -b .validate-dmrc
+
+%patch0 -p1 -b .dont-steal-all-keypresses
+%patch1 -p1 -b .check-capslock-state-not-capslock-light-state
+
+
+%patch99 -p1 -b .fedora-logo
 
 %build
 cp -f %{SOURCE1} data/gdm
@@ -141,28 +155,7 @@ rm -f $RPM_BUILD_ROOT%{_sysconfdir}/gdm/Xsession
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 
-# remove the gnome session file, since we don't use it anymore
-rm -f $RPM_BUILD_ROOT%{_sysconfdir}/X11/dm/Sessions/gnome.desktop
-
-# remove the other gnome session file, since we put it in gnome-session
-rm -rf $RPM_BUILD_ROOT%{_datadir}/xsessions
-
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow
-
-# no dumb flexiserver thing, Xnest is too broken
-rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver-xnest.desktop
-
-desktop-file-install --vendor gnome --delete-original       \
-  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications         \
-  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmsetup.desktop || :
-
-desktop-file-install --vendor gnome --delete-original       \
-  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications         \
-  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmphotosetup.desktop || :
-
-desktop-file-install --delete-original       			\
-  --dir $RPM_BUILD_ROOT%{_datadir}/gdm/applications          	\
-  $RPM_BUILD_ROOT%{_datadir}/gdm/applications/gdmflexiserver.desktop || :
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
@@ -283,13 +276,13 @@ fi
 %{_datadir}/pixmaps/faces/*.png
 %{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
-%{_datadir}/gdm
 %{_libexecdir}/*
 %{_sbindir}/*
 %{_bindir}/*
+%{_datadir}/gdm/*.glade
 %{_sysconfdir}/gconf/schemas/*.schemas
-%{_libdir}/bonobo/servers/GNOME_GdmUserSwitchApplet.server
-%{_datadir}/gnome-2.0/ui/GNOME_GdmUserSwitchApplet.xml
+%dir %{_datadir}/gdm
+%dir %{_datadir}/gdm/autostart
 %dir %{_datadir}/gdm/autostart/LoginWindow
 %dir %{_localstatedir}/log/gdm
 %attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
@@ -298,7 +291,18 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 
+%files user-switch-applet
+%defattr(-, root, root)
+%{_libexecdir}/gdm-user-switch-applet
+%{_datadir}/gdm/gdm-user-switch-applet.glade
+%{_libdir}/bonobo/servers/GNOME_FastUserSwitchApplet.server
+%{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
+
 %changelog
+* Fri Feb 29 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.02.29.1
+- Update to snapshot
+- Split user-switcher out
+
 * Mon Feb 25 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.8-1
 - Update to 2.21.8
 
