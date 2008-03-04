@@ -19,7 +19,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 0.2008.02.29.1%{?dist}
+Release: 0.2008.02.29.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -97,7 +97,7 @@ Patch99: gdm-2.21.8-fedora-logo.patch
 %package user-switch-applet
 Summary:   GDM User Switcher Panel Applet
 Group:     User Interface/Desktops
-Requires:  gdm >= 0:2.21.9
+Requires:  gdm >= 0:2.21.9-0
 Obsoletes: fast-user-switch-applet
 Provides:  fast-user-switch-applet = %{epoch}:%{version}-%{release}
 
@@ -276,9 +276,20 @@ fi
 %{_datadir}/pixmaps/faces/*.png
 %{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
-%{_libexecdir}/*
-%{_sbindir}/*
-%{_bindir}/*
+%{_libexecdir}/gdm-factory-slave
+%{_libexecdir}/gdm-host-chooser
+%{_libexecdir}/gdm-product-slave
+%{_libexecdir}/gdm-session-worker
+%{_libexecdir}/gdm-simple-chooser
+%{_libexecdir}/gdm-simple-greeter
+%{_libexecdir}/gdm-simple-slave
+%{_libexecdir}/gdm-xdmcp-chooser-slave
+%{_sbindir}/gdm
+%{_sbindir}/gdm-binary
+%{_sbindir}/gdm-restart
+%{_sbindir}/gdm-safe-restart
+%{_sbindir}/gdm-stop
+%{_bindir}/gdmflexiserver
 %{_datadir}/gdm/*.glade
 %{_sysconfdir}/gconf/schemas/*.schemas
 %dir %{_datadir}/gdm
@@ -299,6 +310,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 3 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.02.29.2
+- Be more explicit in file list; use less globs
+- Don't package user-switcher in both packages!
+
 * Fri Feb 29 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.02.29.1
 - Update to snapshot
 - Split user-switcher out
