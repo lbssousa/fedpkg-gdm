@@ -19,7 +19,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 0.2008.02.29.2%{?dist}
+Release: 0.2008.02.29.3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -91,6 +91,7 @@ Requires: audit-libs >= %{libauditver}
 
 Patch0: gdm-2.21.9-dont-steal-all-keypresses.patch
 Patch1: gdm-2.21.9-check-capslock-state-not-capslock-light-state.patch
+Patch2:	gdm-2.21.9-signal.patch
 
 Patch99: gdm-2.21.8-fedora-logo.patch
 
@@ -114,7 +115,7 @@ multiple simulanteous logged in users.
 
 %patch0 -p1 -b .dont-steal-all-keypresses
 %patch1 -p1 -b .check-capslock-state-not-capslock-light-state
-
+%patch2 -p1 -b .signal
 
 %patch99 -p1 -b .fedora-logo
 
@@ -310,6 +311,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Mar 7 2008 David Woodhouse <dwmw2@redhat.com> - 1:2.21.9-0.2008.02.29.3
+- Fix endianness breakage in signal pipes (#436333)
+
 * Mon Mar 3 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.02.29.2
 - Be more explicit in file list; use less globs
 - Don't package user-switcher in both packages!
