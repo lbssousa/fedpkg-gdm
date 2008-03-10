@@ -282,6 +282,8 @@ fi
 %{_bindir}/gdmflexiserver
 %{_datadir}/gdm/*.glade
 %{_sysconfdir}/gconf/schemas/*.schemas
+%{_datadir}/gdm/gdb-cmd
+%{_libexecdir}/gdm-crash-logger
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/autostart
 %dir %{_datadir}/gdm/autostart/LoginWindow
