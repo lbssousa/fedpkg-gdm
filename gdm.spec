@@ -19,7 +19,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 0.2008.02.29.3%{?dist}
+Release: 0.2008.03.10.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -89,10 +89,6 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch0: gdm-2.21.9-dont-steal-all-keypresses.patch
-Patch1: gdm-2.21.9-check-capslock-state-not-capslock-light-state.patch
-Patch2:	gdm-2.21.9-signal.patch
-
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -113,19 +109,12 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
-%patch0 -p1 -b .dont-steal-all-keypresses
-%patch1 -p1 -b .check-capslock-state-not-capslock-light-state
-%patch2 -p1 -b .signal
-
 %patch99 -p1 -b .fedora-logo
 
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
 cp -f %{SOURCE3} utils/gdmsetup-pam
-
-intltoolize --force
-autoreconf
 
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-console-helper \
@@ -311,6 +300,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 10 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.03.10.1
+- Update to latest snapshot
+
 * Fri Mar 7 2008 David Woodhouse <dwmw2@redhat.com> - 1:2.21.9-0.2008.02.29.3
 - Fix endianness breakage in signal pipes (#436333)
 
