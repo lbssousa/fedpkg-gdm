@@ -19,7 +19,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 0.2008.03.10.1%{?dist}
+Release: 0.2008.03.10.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -89,6 +89,7 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
+Patch0: gdm-2.21.9-prevent-some-spurious-wakeups.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -109,6 +110,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
+%patch0 -p1 -b .prevent-some-spurious-wakeups
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -302,6 +304,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 10 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.03.10.2
+- Prevent some spurious wake ups caused by the
+  timed login timer animation
+
 * Mon Mar 10 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.03.10.1
 - Update to latest snapshot
 
