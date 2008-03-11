@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -77,6 +77,7 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
+Patch1: gdm-null-user.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -97,6 +98,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
+%patch1 -p0 -b .null-user
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -290,6 +292,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 10 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.9-2
+- Fix case where we can't lookup a user.
+
 * Mon Mar 10 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.9-1
 - Update to 2.21.9
 
