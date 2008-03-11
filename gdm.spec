@@ -4,9 +4,6 @@
 %define gtk2_version 2.6.0
 %define libglade2_version 2.0.0
 %define libgnomeui_version 2.2.0
-%define libgnomecanvas_version 2.0.0
-%define librsvg2_version 2.0.1
-%define libxml2_version 2.4.21
 %define scrollkeeper_version 0.3.4
 %define pam_version 0.99.8.1-11
 %define desktop_file_utils_version 0.2.90
@@ -19,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 0.2008.03.10.2%{?dist}
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -35,11 +32,7 @@ Prereq: /usr/sbin/useradd
 Requires: gtk2 >= 0:%{gtk2_version}
 Requires: libglade2 >= 0:%{libglade2_version}
 Requires: libgnomeui >= 0:%{libgnomeui_version}
-Requires: libgnomecanvas >= 0:%{libgnomecanvas_version}
-Requires: librsvg2 >= 0:%{librsvg2_version}
-Requires: libxml2 >= 0:%{libxml2_version}
 Requires: pam >= 0:%{pam_version}
-Requires: usermode
 Requires: /sbin/nologin
 Requires: system-logos
 Requires: fedorainfinity-gdm-theme
@@ -50,6 +43,7 @@ Requires: hal >= %{hal_version}
 Requires: ConsoleKit >= %{consolekit_version}
 Requires: PolicyKit-gnome >= %{polkit_version}
 Requires: gnome-settings-daemon >= 2.21.92
+Requires: iso-codes
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires(post): scrollkeeper
@@ -59,17 +53,11 @@ BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk2-devel >= 0:%{gtk2_version}
 BuildRequires: libglade2-devel >= 0:%{libglade2_version}
 BuildRequires: libgnomeui-devel >= 0:%{libgnomeui_version}
-BuildRequires: libgnomecanvas-devel >= 0:%{libgnomecanvas_version}
-BuildRequires: librsvg2-devel >= 0:%{librsvg2_version}
-BuildRequires: libxml2-devel >= 0:%{libxml2_version}
-BuildRequires: usermode
 BuildRequires: pam-devel >= 0:%{pam_version}
 BuildRequires: fontconfig
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
 BuildRequires: gail-devel >= 0:%{gail_version}
-BuildRequires: libgsf-devel
 BuildRequires: libtool automake autoconf
-BuildRequires: libcroco-devel
 BuildRequires: libattr-devel
 BuildRequires: gettext
 BuildRequires: gnome-doc-utils
@@ -89,7 +77,6 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch0: gdm-2.21.9-prevent-some-spurious-wakeups.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -110,7 +97,6 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
-%patch0 -p1 -b .prevent-some-spurious-wakeups
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -304,6 +290,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 10 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.9-1
+- Update to 2.21.9
+
 * Mon Mar 10 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.9-0.2008.03.10.2
 - Prevent some spurious wake ups caused by the
   timed login timer animation
