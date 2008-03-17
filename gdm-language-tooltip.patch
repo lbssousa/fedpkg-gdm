@@ -1,0 +1,142 @@
+diff -up gdm-2.21.9/gui/simple-greeter/gdm-languages.c.lang-tip gdm-2.21.9/gui/simple-greeter/gdm-languages.c
+--- gdm-2.21.9/gui/simple-greeter/gdm-languages.c.lang-tip	2008-02-25 17:21:43.000000000 -0500
++++ gdm-2.21.9/gui/simple-greeter/gdm-languages.c	2008-03-17 17:57:09.000000000 -0400
+@@ -630,15 +630,18 @@ get_translated_language (const char *cod
+                 const char  *translated_name;
+                 char        *old_locale;
+ 
+-                old_locale = g_strdup (setlocale (LC_MESSAGES, NULL));
+-                setlocale (LC_MESSAGES, locale);
+-                translated_name = dgettext ("iso_639", language);
++		if (locale != NULL) {
++               		old_locale = g_strdup (setlocale (LC_MESSAGES, NULL));
++                	setlocale (LC_MESSAGES, locale);
++		}
+ 
++                translated_name = dgettext ("iso_639", language);
+                 name = get_first_item_in_semicolon_list (translated_name);
+ 
+-                setlocale (LC_MESSAGES, old_locale);
+-                g_free (old_locale);
+-
++		if (locale != NULL) {
++	                setlocale (LC_MESSAGES, old_locale);
++	                g_free (old_locale);
++		}
+             }
+ 
+         return name;
+@@ -676,13 +679,18 @@ get_translated_territory (const char *co
+                 const char *translated_territory;
+                 char       *old_locale;
+ 
+-                old_locale = g_strdup (setlocale (LC_MESSAGES, NULL));
+-                setlocale (LC_MESSAGES, locale);
+-                translated_territory = dgettext ("iso_3166", territory);
+-                setlocale (LC_MESSAGES, old_locale);
+-                g_free (old_locale);
++		if (locale != NULL) {
++	                old_locale = g_strdup (setlocale (LC_MESSAGES, NULL));
++	                setlocale (LC_MESSAGES, locale);
++		}
+ 
++                translated_territory = dgettext ("iso_3166", territory);
+                 name = get_first_item_in_semicolon_list (translated_territory);
++
++		if (locale != NULL) {
++                	setlocale (LC_MESSAGES, old_locale);
++                	g_free (old_locale);
++		}
+         }
+ 
+         return name;
+@@ -929,7 +937,8 @@ territories_init (void)
+ }
+ 
+ char *
+-gdm_get_language_from_name (const char *name)
++gdm_get_language_from_name (const char *name,
++                            const char *locale)
+ {
+         char *full_language;
+         char *language_code;
+@@ -956,10 +965,10 @@ gdm_get_language_from_name (const char *
+                 goto out;
+         }
+ 
+-        language = get_translated_language (language_code, name);
++        language = get_translated_language (language_code, locale);
+ 
+         if (territory_code != NULL) {
+-                territory = get_translated_territory (territory_code, name);
++                territory = get_translated_territory (territory_code, locale);
+         } else {
+                 territory = NULL;
+         }
+diff -up gdm-2.21.9/gui/simple-greeter/gdm-language-option-widget.c.lang-tip gdm-2.21.9/gui/simple-greeter/gdm-language-option-widget.c
+--- gdm-2.21.9/gui/simple-greeter/gdm-language-option-widget.c.lang-tip	2008-02-25 17:21:43.000000000 -0500
++++ gdm-2.21.9/gui/simple-greeter/gdm-language-option-widget.c	2008-03-17 17:56:41.000000000 -0400
+@@ -144,15 +144,18 @@ gdm_language_option_widget_lookup_item (
+                                         char                 **comment)
+ {
+         char *language;
++	char *readable_language;
+ 
+-        language = gdm_get_language_from_name (locale);
++        language = gdm_get_language_from_name (locale, locale);
+ 
+         if (language == NULL) {
+                 return FALSE;
+         }
+ 
++        readable_language = gdm_get_language_from_name (locale, NULL); 
++
+         *name = language;
+-        *comment = g_strdup ("");
++        *comment = readable_language;
+ 
+         return TRUE;
+ }
+diff -up gdm-2.21.9/gui/simple-greeter/gdm-languages.h.lang-tip gdm-2.21.9/gui/simple-greeter/gdm-languages.h
+--- gdm-2.21.9/gui/simple-greeter/gdm-languages.h.lang-tip	2008-02-20 10:56:46.000000000 -0500
++++ gdm-2.21.9/gui/simple-greeter/gdm-languages.h	2008-03-17 15:38:16.000000000 -0400
+@@ -26,7 +26,8 @@
+ 
+ G_BEGIN_DECLS
+ 
+-char *                 gdm_get_language_from_name (const char *name);
++char *                 gdm_get_language_from_name (const char *name,
++                                                   const char *locale);
+ char **                gdm_get_all_language_names (void);
+ void                   gdm_parse_language_name (const char *name,
+                                                 char      **language_codep,
+diff -up gdm-2.21.9/gui/simple-greeter/gdm-language-chooser-widget.c.lang-tip gdm-2.21.9/gui/simple-greeter/gdm-language-chooser-widget.c
+--- gdm-2.21.9/gui/simple-greeter/gdm-language-chooser-widget.c.lang-tip	2008-02-25 17:21:43.000000000 -0500
++++ gdm-2.21.9/gui/simple-greeter/gdm-language-chooser-widget.c	2008-03-17 17:56:08.000000000 -0400
+@@ -117,21 +117,24 @@ gdm_language_chooser_widget_add_language
+ {
+         char *language;
+         char *normalized_name;
++	char *readable_language;
+ 
+         normalized_name = gdm_normalize_language_name (name);
+-        language = gdm_get_language_from_name (normalized_name);
++        language = gdm_get_language_from_name (normalized_name, normalized_name);
++	readable_language = gdm_get_language_from_name (normalized_name, NULL);
+ 
+         if (language != NULL) {
+                 gdm_chooser_widget_add_item (GDM_CHOOSER_WIDGET (widget),
+                                              normalized_name,
+                                              NULL,
+                                              language,
+-                                             "",
++                                             readable_language,
+                                              0,
+                                              FALSE,
+                                              FALSE);
+                 g_free (language);
+         }
++	g_free (readable_language);
+ 
+         g_free (normalized_name);
+ }

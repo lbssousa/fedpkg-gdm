@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.9
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -81,6 +81,7 @@ Patch1: gdm-null-user.patch
 Patch2: gdm-2.21.9-remove-duplicate-signal-verification.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=522033
 Patch3: gdm-no-fuse.patch
+Patch4: gdm-language-tooltip.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -103,7 +104,8 @@ multiple simulanteous logged in users.
 
 %patch1 -p0 -b .null-user
 %patch2 -p1 -b .remove-duplicate-signal-verification
-%patch3 -p1 -b .gdm-no-fuse
+%patch3 -p1 -b .no-fuse
+%patch4 -p1 -b .language-tooltip
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -297,6 +299,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 17 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.9-5
+- Implement tooltips in the language selection dialog
+
 * Mon Mar 17 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.9-4
 - Stop gvfs from using fuse in the sandbox session
 
