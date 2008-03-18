@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.21.9
-Release: 5%{?dist}
+Version: 2.21.10
+Release: 0.2008.03.18.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -77,11 +77,6 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch1: gdm-null-user.patch
-Patch2: gdm-2.21.9-remove-duplicate-signal-verification.patch
-# http://bugzilla.gnome.org/show_bug.cgi?id=522033
-Patch3: gdm-no-fuse.patch
-Patch4: gdm-language-tooltip.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -102,10 +97,6 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
-%patch1 -p0 -b .null-user
-%patch2 -p1 -b .remove-duplicate-signal-verification
-%patch3 -p1 -b .no-fuse
-%patch4 -p1 -b .language-tooltip
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -299,6 +290,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Mar 18 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.03.18.1
+- Update to snapshot
+
 * Mon Mar 17 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.9-5
 - Implement tooltips in the language selection dialog
 
