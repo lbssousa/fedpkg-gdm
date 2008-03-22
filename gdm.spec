@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.03.18.2%{?dist}
+Release: 0.2008.03.18.3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -35,7 +35,6 @@ Requires: libgnomeui >= 0:%{libgnomeui_version}
 Requires: pam >= 0:%{pam_version}
 Requires: /sbin/nologin
 Requires: system-logos
-Requires: fedorainfinity-gdm-theme
 Requires: xorg-x11-server-utils
 Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
@@ -293,6 +292,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Mar 21 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.03.18.3
+- Don't require a theme we don't use
+
 * Wed Mar 19 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.03.18.2
 - Fix default path (bug 430187)
 
