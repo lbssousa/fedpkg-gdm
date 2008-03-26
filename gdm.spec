@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.03.26.1%{?dist}
+Release: 0.2008.03.26.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -291,6 +291,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Mar 26 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.03.26.2
+- Update to newer snapshot that includes more lockdown
+
 * Wed Mar 26 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.03.26.1
 - Update to snapshot
 - Turn on profiling
