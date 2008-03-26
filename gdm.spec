@@ -268,6 +268,7 @@ fi
 %{_sbindir}/gdm-safe-restart
 %{_sbindir}/gdm-stop
 %{_bindir}/gdmflexiserver
+%{_bindir}/gdm-screenshot
 %{_datadir}/gdm/*.glade
 %{_sysconfdir}/gconf/schemas/*.schemas
 %{_datadir}/gdm/gdb-cmd
