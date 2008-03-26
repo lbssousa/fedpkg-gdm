@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.03.18.3%{?dist}
+Release: 0.2008.03.26.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -76,7 +76,6 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 
-Patch0: gdm-2.21.9-fix-default-path.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -97,8 +96,6 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
-%patch0 -p1 -b .fix-default-path
-
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -107,6 +104,7 @@ cp -f %{SOURCE2} data/gdm-autologin
 cp -f %{SOURCE3} utils/gdmsetup-pam
 
 %configure --with-pam-prefix=%{_sysconfdir} \
+	   --enable-profiling      \
 	   --enable-console-helper \
 	   --disable-scrollkeeper  \
 	   --with-console-kit      \
@@ -292,6 +290,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Mar 26 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.03.26.1
+- Update to snapshot
+- Turn on profiling
+
 * Fri Mar 21 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.03.18.3
 - Don't require a theme we don't use
 
