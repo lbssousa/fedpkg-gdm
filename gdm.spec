@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.03.26.3%{?dist}
+Release: 0.2008.03.26.4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -251,6 +251,7 @@ fi
 %dir %{_sysconfdir}/gdm/PostSession
 %dir %{_sysconfdir}/gdm/PostLogin
 %{_datadir}/pixmaps/*.png
+%dir %{_datadir}/pixmaps/faces
 %{_datadir}/pixmaps/faces/*.png
 %{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
@@ -291,6 +292,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 31 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.03.26.4
+- Fix a directory ownership oversight
+
 * Wed Mar 26 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.03.26.3
 - Fix build due to #436349
 
