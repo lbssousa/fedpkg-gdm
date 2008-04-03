@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.03.26.4%{?dist}
+Release: 0.2008.04.02.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -287,11 +287,13 @@ fi
 %files user-switch-applet
 %defattr(-, root, root)
 %{_libexecdir}/gdm-user-switch-applet
-%{_datadir}/gdm/gdm-user-switch-applet.glade
 %{_libdir}/bonobo/servers/GNOME_FastUserSwitchApplet.server
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Apr  2 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.04.02.1
+- Update to snapshot
+
 * Mon Mar 31 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.03.26.4
 - Fix a directory ownership oversight
 
