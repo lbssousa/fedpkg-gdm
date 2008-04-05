@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.03.1%{?dist}
+Release: 0.2008.04.03.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -218,17 +218,18 @@ fi
 
 /usr/sbin/gdm-safe-restart >/dev/null 2>&1 || :
 
+%preun
+if [ "$1" -eq 0 ]; then
+  export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+  gconftool-2 --makefile-uninstall-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
+fi
+
 %postun
 /sbin/ldconfig
 scrollkeeper-update
 touch --no-create %{_datadir}/icons/hicolor
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
   gtk-update-icon-cache -q %{_datadir}/icons/hicolor
-fi
-
-if [ "$1" -eq 0 ]; then
-  export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-  gconftool-2 --makefile-uninstall-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
 fi
 
 %files -f gdm.lang
@@ -291,6 +292,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Apr  4 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.04.03.2
+- Uninstall gconf schemas before the files are gone
+
 * Thu Apr  3 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.03.1
 - Update to snapshot
 - Improves shrink/grow animation of login window
