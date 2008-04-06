@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.03.3%{?dist}
+Release: 0.2008.04.04.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -75,7 +75,6 @@ BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
-Patch0: gdm-2.21.10-fix-autologin-crasher.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -96,7 +95,6 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 
-%patch0 -p1 -b .fix-autologin-crash
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -293,6 +291,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Sat Apr  5 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.04.1
+- Fix jump in animation for autologin
+- Fix crash if LANG="somethingbogus"
+
 * Sat Apr  5 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.03.3
 - Fix crash when canceling autologin
 
