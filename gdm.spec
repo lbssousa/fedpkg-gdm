@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.04.2%{?dist}
+Release: 0.2008.04.06.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -76,6 +76,7 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch0: ck-multi.patch
+Patch98: gdm-2.21.10-disable-debug-messages.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -96,6 +97,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch0 -p1 -b .ck-multi
+%patch98 -p1 -b .disable-debug-messages
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -292,6 +294,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Sun Apr  6 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.06.1
+- Focus face browser after failed login attempt
+- disable debug messages until 2.22.0 is released
+
 * Sat Apr  5 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.04.04.2
 - Improve handling of CK error messages
 
