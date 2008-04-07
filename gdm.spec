@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.06.1%{?dist}
+Release: 0.2008.04.07.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -294,6 +294,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Apr  7 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.07.1
+- Make automatic login timer fade in
+- No more checkboxes in user-switch applet
+
 * Sun Apr  6 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.06.1
 - Focus face browser after failed login attempt
 - disable debug messages until 2.22.0 is released
