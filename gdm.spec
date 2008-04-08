@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.08.1%{?dist}
+Release: 0.2008.04.08.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -286,7 +286,7 @@ fi
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
-%attr(1770, root, gdm) %dir %{_localstatedir}/run/gdm
+%attr(1755, root, gdm) %dir %{_localstatedir}/run/gdm
 
 %files user-switch-applet
 %defattr(-, root, root)
@@ -295,6 +295,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Apr  8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.08.2
+- Fix permissions on /var/run/gdm
+
 * Tue Apr  8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.08.1
 - Install X auth cookies in /var/run/gdm instead of /tmp
 
