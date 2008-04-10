@@ -1,0 +1,14 @@
+diff -up gdm-2.21.10/data/PreSession.in.xkb-groups gdm-2.21.10/data/PreSession.in
+--- gdm-2.21.10/data/PreSession.in.xkb-groups	2008-04-10 16:55:23.000000000 -0400
++++ gdm-2.21.10/data/PreSession.in	2008-04-10 16:57:09.000000000 -0400
+@@ -79,6 +79,10 @@ if [ "x$SESSREG" != "x" ] ; then
+ 	# this is not reached
+ fi
+ 
++# Workaround for an X problem where the initial XKB configuration has
++# and extra group without an associated layout. 
++setxkbcomp
++
+ # some output for easy debugging
+ echo "$0: could not find the sessreg utility, cannot update wtmp and utmp"
+ exit 0

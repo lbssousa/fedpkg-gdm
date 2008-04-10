@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.08.3%{?dist}
+Release: 0.2008.04.08.4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -76,6 +76,7 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch0: ck-multi.patch
+Patch1: xkb-groups.patch
 Patch98: gdm-2.21.10-disable-debug-messages.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
@@ -97,6 +98,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch0 -p1 -b .ck-multi
+%patch1 -p1 -b .xkb-groups
 %patch98 -p1 -b .disable-debug-messages
 %patch99 -p1 -b .fedora-logo
 
@@ -295,6 +297,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Apr 10 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.04.08.4
+- Work around a XKB problem 
+
 * Tue Apr  8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.08.3
 - Language list was incomplete (bug 441613)
 
