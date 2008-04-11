@@ -300,7 +300,7 @@ fi
 
 %changelog
 * Fri Apr 11 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.11.2
-Fix security issue in last commit
+- Fix security issue in last commit
 
 * Fri Apr 11 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.11.1
 - Fix focus handling when tabbing from user-chooser to buttons
