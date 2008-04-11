@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.08.4%{?dist}
+Release: 0.2008.04.11.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -288,7 +288,7 @@ fi
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
-%attr(1755, root, gdm) %dir %{_localstatedir}/run/gdm
+%attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 
 %files user-switch-applet
 %defattr(-, root, root)
@@ -297,8 +297,13 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Apr 11 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.11.1
+- Fix focus handling when tabbing from user-chooser to buttons
+- don't set real uid to user before setcred
+- fix permissions on /var/run/gdm ... again
+
 * Thu Apr 10 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.04.08.4
-- Work around a XKB problem 
+- Work around a XKB problem
 
 * Tue Apr  8 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.08.3
 - Language list was incomplete (bug 441613)
