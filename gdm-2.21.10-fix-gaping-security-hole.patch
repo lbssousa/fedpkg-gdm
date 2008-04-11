@@ -1,0 +1,27 @@
+--- gdm-2.21.10/daemon/gdm-session-worker.c	(revision 6145)
++++ gdm-2.21.10/daemon/gdm-session-worker.c	(working copy)
+@@ -111,6 +111,7 @@ struct GdmSessionWorkerPrivate
+         char             *display_device;
+         char             *hostname;
+         char             *username;
++        uid_t             uid;
+         gboolean          password_is_required;
+ 
+         int               cred_flags;
+@@ -1176,6 +1177,7 @@ _change_user (GdmSessionWorker  *worker,
+                 return FALSE;
+         }
+ #endif
++        worker->priv->uid = uid;
+ 
+         if (setgid (gid) < 0) {
+                 return FALSE;
+@@ -1574,7 +1576,7 @@ gdm_session_worker_start_user_session (G
+                 char  *home_dir;
+                 int    fd;
+ 
+-                if (setuid (getuid ()) < 0) {
++                if (setuid (worker->priv->uid) < 0) {
+                         g_debug ("GdmSessionWorker: could not reset uid - %s", g_strerror (errno));
+                         _exit (1);
+                 }
