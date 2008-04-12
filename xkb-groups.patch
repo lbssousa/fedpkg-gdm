@@ -7,7 +7,7 @@ diff -up gdm-2.21.10/data/PreSession.in.xkb-groups gdm-2.21.10/data/PreSession.i
  
 +# Workaround for an X problem where the initial XKB configuration has
 +# and extra group without an associated layout. 
-+setxkbcomp
++setxkbmap
 +
  # some output for easy debugging
  echo "$0: could not find the sessreg utility, cannot update wtmp and utmp"
