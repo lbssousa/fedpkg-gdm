@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.11.3%{?dist}
+Release: 0.2008.04.11.4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -299,6 +299,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Apr 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.11.4
+- Use start-here instead of fedora-logo-icon to aid generic-logos
+
 * Fri Apr 11 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.21.10-0.2008.04.11.3
 - Fix up the XKB workaround
 

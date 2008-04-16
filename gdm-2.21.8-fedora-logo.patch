@@ -7,7 +7,7 @@ Index: gdm/gui/simple-greeter/gdm-simple-greeter.schemas.in
        <owner>gdm-simple-greeter</owner>
        <type>string</type>
 -      <default>computer</default>
-+      <default>fedora-logo-icon</default>
++      <default>start-here</default>
        <locale name="C">
          <short>Icon name to use for greeter logo</short>
          <long>Set to the themed icon name to use for the greeter logo.</long>
