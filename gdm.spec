@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.11.4%{?dist}
+Release: 0.2008.04.16.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -77,7 +77,6 @@ BuildRequires: gnome-panel-devel
 Requires: audit-libs >= %{libauditver}
 Patch0: ck-multi.patch
 Patch1: xkb-groups.patch
-Patch2: gdm-2.21.10-fix-gaping-security-hole.patch
 Patch98: gdm-2.21.10-disable-debug-messages.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
@@ -100,7 +99,6 @@ multiple simulanteous logged in users.
 %setup -q
 %patch0 -p1 -b .ck-multi
 %patch1 -p1 -b .xkb-groups
-%patch2 -p1 -b .fix-gaping-security-hole
 %patch98 -p1 -b .disable-debug-messages
 %patch99 -p1 -b .fedora-logo
 
@@ -299,6 +297,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Apr 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.16.1
+- Disable typeahead when asking for password so password can't get shown
+  in clear text
+
 * Wed Apr 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.11.4
 - Use start-here instead of fedora-logo-icon to aid generic-logos
 
