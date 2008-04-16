@@ -299,7 +299,7 @@ fi
 %changelog
 * Wed Apr 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.16.1
 - Disable typeahead when asking for password so password can't get shown
-  in clear text
+  in clear text (bug 442300)
 
 * Wed Apr 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.11.4
 - Use start-here instead of fedora-logo-icon to aid generic-logos
