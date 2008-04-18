@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.16.1%{?dist}
+Release: 0.2008.04.18.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -297,6 +297,11 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Apr 18 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.18.1
+- start orca without main window
+- add missing priorities for plugins
+- add more failsafe lockdown
+
 * Wed Apr 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.16.1
 - Disable typeahead when asking for password so password can't get shown
   in clear text (bug 442300)
