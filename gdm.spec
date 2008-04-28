@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.18.2%{?dist}
+Release: 0.2008.04.28.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -297,6 +297,12 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Apr 28 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.28.1
+- a11y improvements
+- make "Suspend" desensitize properly when not-available
+- make resize animation faster
+- user switcher fixes
+
 * Fri Apr 18 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.18.2
 - Get Chinese back in language list
 
