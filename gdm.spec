@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.28.1%{?dist}
+Release: 0.2008.04.29.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -297,6 +297,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Apr 29 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.04.29.1
+- make transient greeter less transient to workaround spurious vt switch
+
 * Mon Apr 28 2008 Ray Strode <rstrode@redhat.com> - 1:2.21.10-0.2008.04.28.1
 - a11y improvements
 - make "Suspend" desensitize properly when not-available
