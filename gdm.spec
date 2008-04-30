@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.21.10
-Release: 0.2008.04.29.1%{?dist}
+Release: 0.2008.04.29.2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -77,7 +77,6 @@ BuildRequires: gnome-panel-devel
 Requires: audit-libs >= %{libauditver}
 Patch0: ck-multi.patch
 Patch1: xkb-groups.patch
-Patch98: gdm-2.21.10-disable-debug-messages.patch
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -99,7 +98,6 @@ multiple simulanteous logged in users.
 %setup -q
 %patch0 -p1 -b .ck-multi
 %patch1 -p1 -b .xkb-groups
-%patch98 -p1 -b .disable-debug-messages
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -297,6 +295,12 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Apr 29 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.04.29.2
+- Fix debugging
+- Fix resetting slave after session migration
+- Desensitize power buttons briefly after page switch
+- Remove Users: label from greeter
+
 * Tue Apr 29 2008 Jon McCann <jmccann@redhat.com> - 1:2.21.10-0.2008.04.29.1
 - make transient greeter less transient to workaround spurious vt switch
 
