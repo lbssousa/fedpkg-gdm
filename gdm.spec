@@ -62,6 +62,7 @@ BuildRequires: gettext
 BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: audit-libs-devel >= %{libauditver}
+BuildRequires: autoconf automake libtool
 BuildRequires: intltool
 %ifnarch s390 s390x ppc64
 BuildRequires: xorg-x11-server-Xorg
@@ -101,6 +102,8 @@ multiple simulanteous logged in users.
 %patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .keyboard-chooser
 %patch99 -p1 -b .fedora-logo
+
+autoreconf
 
 %build
 cp -f %{SOURCE1} data/gdm
