@@ -16,12 +16,12 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.22/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.22/gdm-%{version}.tar.gz
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -76,6 +76,9 @@ BuildRequires: gnome-panel-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
+# from upstream svn
+Patch2: gdm-keyboard-chooser.patch
+# Fedora-specific
 Patch99: gdm-2.21.8-fedora-logo.patch
 
 %package user-switch-applet
@@ -96,6 +99,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch1 -p1 -b .xkb-groups
+%patch2 -p1 -b .keyboard-chooser
 %patch99 -p1 -b .fedora-logo
 
 %build
@@ -293,6 +297,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon May  5 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-4
+- Add a keyboard chooser to the greeter
+
 * Sun May  4 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-3
 - Fix source url
 
