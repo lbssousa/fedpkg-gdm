@@ -16,12 +16,12 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://ftp.gnome.org/pub/GNOME/sources/gdm/2.22/gdm-%{version}.tar.gz
+Source: http://download.gnome.org/sources/gdm/2.22/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -293,6 +293,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Sun May  4 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-3
+- Fix source url
+
 * Fri May  1 2008 Jon McCann <jmccann@redhat.com> - 1:2.22.0-2
 - Retry tagging
 
