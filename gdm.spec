@@ -74,6 +74,7 @@ BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
+BuildRequires: libxklavier-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
