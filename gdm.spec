@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -300,6 +300,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon May  5 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-5
+- Autoreconf
+- Bump rev
+
 * Mon May  5 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-4
 - Add a keyboard chooser to the greeter
 
