@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,6 +80,9 @@ Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 # from upstream svn
 Patch2: gdm-keyboard-chooser.patch
+# from upstream svn
+Patch3: show-users.patch
+
 # Fedora-specific
 Patch99: gdm-2.21.8-fedora-logo.patch
 
@@ -102,6 +105,7 @@ multiple simulanteous logged in users.
 %setup -q
 %patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .keyboard-chooser
+%patch3 -p1 -b .show-users
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -301,6 +305,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu May  8 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-6
+- Add a GConf key to disable the user list
+
 * Mon May  5 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-5
 - Autoreconf
 - Bump rev
