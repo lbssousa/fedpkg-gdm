@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -308,6 +308,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Jun 25 2008 Ray Strode <rstrode@redhat.com> - 1:2.22.0-8
+- After discussion with X team, turn tcp connections off by default,
+  but add back option to toggle on (bug 446672)
+
 * Wed Jun 25 2008 Ray Strode <rstrode@redhat.com> - 1:2.22.0-7
 - enable tcp connections by default
 
