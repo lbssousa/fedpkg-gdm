@@ -1,4 +1,3 @@
-
 %define libauditver 1.0.6
 %define pango_version 1.2.0
 %define gtk2_version 2.6.0
