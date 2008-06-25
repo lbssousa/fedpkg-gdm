@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -82,6 +82,9 @@ Patch2: gdm-keyboard-chooser.patch
 # from upstream svn
 Patch3: show-users.patch
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=446672
+Patch4: gdm-2.22.0-enable-tcp.patch
+
 # Fedora-specific
 Patch99: gdm-2.21.8-fedora-logo.patch
 
@@ -105,6 +108,7 @@ multiple simulanteous logged in users.
 %patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .keyboard-chooser
 %patch3 -p1 -b .show-users
+%patch4 -p1 -b .enable-tcp
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -304,6 +308,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Jun 25 2008 Ray Strode <rstrode@redhat.com> - 1:2.22.0-7
+- enable tcp connections by default
+
 * Thu May  8 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.22.0-6
 - Add a GConf key to disable the user list
 
