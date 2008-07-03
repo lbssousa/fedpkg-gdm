@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -85,6 +85,8 @@ Patch3: show-users.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=446672
 Patch4: gdm-2.22.0-enable-tcp.patch
 
+Patch9: gdm-null-fs.patch
+
 # Fedora-specific
 Patch99: gdm-2.21.8-fedora-logo.patch
 
@@ -109,6 +111,7 @@ multiple simulanteous logged in users.
 %patch2 -p1 -b .keyboard-chooser
 %patch3 -p1 -b .show-users
 %patch4 -p1 -b .enable-tcp
+%patch9 -p1 -b .null-fs
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -308,6 +311,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Jul  3 2008 Jon McCann <jmccann@redhat.com> - 1:2.22.0-9
+- Check for a null filesystem type
+
 * Wed Jun 25 2008 Ray Strode <rstrode@redhat.com> - 1:2.22.0-8
 - After discussion with X team, turn tcp connections off by default,
   but add back option to toggle on (bug 446672)
