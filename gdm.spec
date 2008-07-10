@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -85,7 +85,11 @@ Patch3: show-users.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=446672
 Patch4: gdm-2.22.0-enable-tcp.patch
 
+# fixed in upstream svn
 Patch9: gdm-null-fs.patch
+
+# fixed in upstream svn
+Patch10: lang-tag.patch
 
 # Fedora-specific
 Patch99: gdm-2.21.8-fedora-logo.patch
@@ -112,6 +116,7 @@ multiple simulanteous logged in users.
 %patch3 -p1 -b .show-users
 %patch4 -p1 -b .enable-tcp
 %patch9 -p1 -b .null-fs
+%patch10 -p1 -b .lang-tag
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -311,6 +316,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Jul 10 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.22.0-10
+- Improve rendering of languages
+
 * Thu Jul  3 2008 Jon McCann <jmccann@redhat.com> - 1:2.22.0-9
 - Check for a null filesystem type
 
