@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.22.0
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -90,6 +90,9 @@ Patch9: gdm-null-fs.patch
 
 # fixed in upstream svn
 Patch10: lang-tag.patch
+
+# fixed in upstream svn
+Patch11: icon-names.patch
 
 # Fedora-specific
 Patch99: gdm-2.21.8-fedora-logo.patch
@@ -316,6 +319,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Jul 10 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.22.0-11
+- Fix some broken icons on the login screen
+
 * Thu Jul 10 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.22.0-10
 - Improve rendering of languages
 
