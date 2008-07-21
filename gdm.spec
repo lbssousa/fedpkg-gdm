@@ -14,13 +14,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.22.0
-Release: 12%{?dist}
+Version: 2.23.1
+Release: 0.2008.07.21.1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.22/gdm-%{version}.tar.gz
+Source: http://download.gnome.org/sources/gdm/2.23/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -77,25 +77,9 @@ BuildRequires: libxklavier-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
-# from upstream svn
-Patch2: gdm-keyboard-chooser.patch
-# from upstream svn
-Patch3: show-users.patch
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=446672
-Patch4: gdm-2.22.0-enable-tcp.patch
-
-# fixed in upstream svn
-Patch9: gdm-null-fs.patch
-
-# fixed in upstream svn
-Patch10: lang-tag.patch
-
-# fixed in upstream svn
-Patch11: icon-names.patch
 
 # Fedora-specific
-Patch99: gdm-2.21.8-fedora-logo.patch
+Patch99: gdm-2.23.1-fedora-logo.patch
 
 %package user-switch-applet
 Summary:   GDM User Switcher Panel Applet
@@ -115,12 +99,6 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch1 -p1 -b .xkb-groups
-%patch2 -p1 -b .keyboard-chooser
-%patch3 -p1 -b .show-users
-%patch4 -p1 -b .enable-tcp
-%patch9 -p1 -b .null-fs
-%patch10 -p1 -b .lang-tag
-%patch11 -p1 -b .icon-names
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -320,6 +298,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Jul 21 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.1.0.2008.07.21.1
+- Update to snapshot
+
 * Fri Jul 11 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.22.0-12
 - Actually apply the patch
 
