@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.23.1
-Release: 0.2008.07.28.1%{?dist}
+Version: 2.23.2
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -298,6 +298,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Jul 30 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.2-1
+- Update to 2.23.2
+
 * Mon Jul 28 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.1.0.2008.07.28.1
 - Update to newer snapshot
 
