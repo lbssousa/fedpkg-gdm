@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -44,6 +44,7 @@ Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
+Requires: plymouth-gdm-hooks
 Requires(post): scrollkeeper
 Requires(postun): scrollkeeper
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
@@ -298,6 +299,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Aug 13 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.2-2
+- Require plymouth-gdm-hooks so plymouth-log-viewer gets pulled
+  in on upgrades
+
 * Wed Jul 30 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.2-1
 - Update to 2.23.2
 
@@ -322,6 +327,7 @@ fi
 * Thu Jul 10 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.22.0-10
 - Improve rendering of languages
 
+>>>>>>> 1.402
 * Thu Jul  3 2008 Jon McCann <jmccann@redhat.com> - 1:2.22.0-9
 - Check for a null filesystem type
 
