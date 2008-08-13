@@ -327,7 +327,6 @@ fi
 * Thu Jul 10 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.22.0-10
 - Improve rendering of languages
 
->>>>>>> 1.402
 * Thu Jul  3 2008 Jon McCann <jmccann@redhat.com> - 1:2.22.0-9
 - Check for a null filesystem type
 
