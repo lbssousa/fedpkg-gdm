@@ -11,11 +11,12 @@
 %define polkit_version 0.7
 %define consolekit_version 0.2.7
 %define hal_version 0.5.9
+%define fontconfig_version 2.6.0
 
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -53,7 +54,7 @@ BuildRequires: gtk2-devel >= 0:%{gtk2_version}
 BuildRequires: libglade2-devel >= 0:%{libglade2_version}
 BuildRequires: libgnomeui-devel >= 0:%{libgnomeui_version}
 BuildRequires: pam-devel >= 0:%{pam_version}
-BuildRequires: fontconfig
+BuildRequires: fontconfig >= 0:%{fontconfig_version}
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
 BuildRequires: gail-devel >= 0:%{gail_version}
 BuildRequires: libtool automake autoconf
@@ -79,6 +80,9 @@ BuildRequires: libxklavier-devel
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 
+# Upstreamed
+Patch2: gdm-2.23.2-unknown-lang.patch
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -100,6 +104,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch1 -p1 -b .xkb-groups
+%patch2 -p1 -b .unknown-lang
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -299,6 +304,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Aug 14 2008 Behdad Esfahbod <besfahbo@redhat.com> - 1:2.23.2-3
+- Add upstreamed patch gdm-2.23.2-unknown-lang.patch
+
 * Wed Aug 13 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.2-2
 - Require plymouth-gdm-hooks so plymouth-log-viewer gets pulled
   in on upgrades
