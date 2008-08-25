@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.23.2
-Release: 3%{?dist}
+Version: 2.23.90
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,9 +80,6 @@ BuildRequires: libxklavier-devel
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 
-# Upstreamed
-Patch2: gdm-2.23.2-unknown-lang.patch
-
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -104,7 +101,6 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch1 -p1 -b .xkb-groups
-%patch2 -p1 -b .unknown-lang
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -289,6 +285,7 @@ fi
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/autostart
 %dir %{_datadir}/gdm/autostart/LoginWindow
+%config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
 %attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
@@ -304,6 +301,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Aug 25 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.90-1
+- Update to 2.23.90
+
 * Thu Aug 14 2008 Behdad Esfahbod <besfahbo@redhat.com> - 1:2.23.2-3
 - Add upstreamed patch gdm-2.23.2-unknown-lang.patch
 
