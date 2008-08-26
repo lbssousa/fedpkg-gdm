@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.90
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,6 +80,8 @@ BuildRequires: libxklavier-devel
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 
+Patch2: gdm-metacity.patch
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -101,6 +103,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch1 -p1 -b .xkb-groups
+%patch2 -p0 -b .metacity
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -301,6 +304,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Aug 25 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.90-2
+- Add desktop file for metacity
+
 * Mon Aug 25 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.90-1
 - Update to 2.23.90
 
