@@ -1,5 +1,6 @@
 #%PAM-1.0
 auth     [success=done ignore=ignore default=bad] pam_selinux_permit.so
+auth       required    pam_succeed_if.so user != root quiet
 auth       required    pam_env.so
 auth       substack    system-auth
 auth       optional    pam_gnome_keyring.so
