@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -79,6 +79,7 @@ BuildRequires: libxklavier-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
+Patch2: gdm-2.23.92-force-active-vt.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -101,6 +102,7 @@ multiple simulanteous logged in users.
 %prep
 %setup -q
 %patch1 -p1 -b .xkb-groups
+%patch2 -p1 -b .force-active-vt
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -293,6 +295,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
+%attr(1770, root, gdm) %dir %{_localstatedir}/spool/gdm
 
 %files user-switch-applet
 %defattr(-, root, root)
@@ -301,6 +304,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Sep 11 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-3
+- Add hook to allow for plymouth transition
+
 * Tue Sep  9 2008 Jon McCann <jmccann@redhat.com> - 1:2.23.92-2
 - Disallow root login
 

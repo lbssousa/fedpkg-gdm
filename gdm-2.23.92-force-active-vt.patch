@@ -1,0 +1,172 @@
+commit 01247e06779bef0b4619d6807f31e118d5b55cf0
+Author: Ray Strode <rstrode@halfline-kentsfield.usersys.redhat.com>
+Date:   Thu Sep 11 12:54:19 2008 -0400
+
+    Force vt if force-display-on-active-vt is set
+    
+    This will allow plymouth and gdm to transition smoothly
+
+diff --git a/configure.ac b/configure.ac
+index 4a08418..8891882 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1311,6 +1311,23 @@ fi
+ AC_SUBST(GDM_XAUTH_DIR)
+ 
+ dnl ---------------------------------------------------------------------------
++dnl - Directory to spool events from other processes
++dnl ---------------------------------------------------------------------------
++
++AC_ARG_WITH(spool-dir,
++            AS_HELP_STRING([--with-spool-dir=<dir>],
++                           [spool directory]))
++
++if ! test -z "$with_spool_dir"; then
++   GDM_SPOOL_DIR=$with_spool_dir
++else
++   GDM_SPOOL_DIR=${localstatedir}/spool/gdm
++fi
++
++AC_SUBST(GDM_SPOOL_DIR)
++
++
++dnl ---------------------------------------------------------------------------
+ dnl - Finish
+ dnl ---------------------------------------------------------------------------
+ 
+diff --git a/daemon/Makefile.am b/daemon/Makefile.am
+index 1846ed2..ced03a3 100644
+--- a/daemon/Makefile.am
++++ b/daemon/Makefile.am
+@@ -16,6 +16,7 @@ INCLUDES = \
+ 	-DPIXMAPDIR=\"$(pixmapdir)\"			\
+ 	-DSBINDIR=\"$(sbindir)\"			\
+ 	-DGNOMELOCALEDIR=\""$(datadir)/locale"\"	\
++	-DGDM_SPOOL_DIR=\"$(GDM_SPOOL_DIR)\"  \
+ 	-DGDM_XAUTH_DIR=\"$(GDM_XAUTH_DIR)\"		\
+ 	-DGDM_DEFAULTS_CONF=\"$(GDM_DEFAULTS_CONF)\"	\
+ 	-DGDM_CUSTOM_CONF=\"$(GDM_CUSTOM_CONF)\"	\
+diff --git a/daemon/gdm-server.c b/daemon/gdm-server.c
+index ca37a2a..e6f821f 100644
+--- a/daemon/gdm-server.c
++++ b/daemon/gdm-server.c
+@@ -34,6 +34,8 @@
+ #include <signal.h>
+ #include <sys/resource.h>
+ 
++#include <linux/vt.h>
++
+ #include <glib.h>
+ #include <glib/gi18n.h>
+ #include <glib/gstdio.h>
+@@ -663,6 +665,56 @@ gdm_server_spawn (GdmServer  *server,
+         return ret;
+ }
+ 
++static gboolean
++should_force_display_on_active_vt (void)
++{
++	gboolean should_force_display_on_active_vt;
++
++	should_force_display_on_active_vt = g_file_test (GDM_SPOOL_DIR "/force-display-on-active-vt",
++			               G_FILE_TEST_EXISTS);
++  	g_unlink (GDM_SPOOL_DIR "/force-display-on-active-vt");
++
++  	return should_force_display_on_active_vt;
++}
++
++static int
++get_active_vt (void)
++{
++	int console_fd;
++	struct vt_stat console_state = { 0 };
++
++	console_fd = open ("/dev/tty0", O_RDONLY | O_NOCTTY);
++
++	if (console_fd < 0) {
++		goto out;
++	}
++
++	if (ioctl (console_fd, VT_GETSTATE, &console_state) < 0) {
++		goto out;
++	}
++
++out:
++  	if (console_fd >= 0) {
++    		close (console_fd);
++	}
++
++  return console_state.v_active;
++}
++
++static char *
++get_active_vt_as_string (void)
++{
++	int vt;
++
++	vt = get_active_vt ();
++	
++	if (vt <= 0) {
++		return NULL;
++	}
++
++	return g_strdup_printf ("vt%d", vt);
++}
++
+ /**
+  * gdm_server_start:
+  * @disp: Pointer to a GdmDisplay structure
+@@ -675,8 +727,18 @@ gdm_server_start (GdmServer *server)
+ {
+         gboolean res;
+ 
+-        /* fork X server process */
+-        res = gdm_server_spawn (server, NULL);
++	if (should_force_display_on_active_vt () || TRUE) {
++                char *vt;
++
++		g_free (server->priv->command);
++		server->priv->command = g_strdup (X_SERVER " -nr -verbose");
++                vt = get_active_vt_as_string ();
++		res = gdm_server_spawn (server, vt);
++                g_free (vt);
++	} else {
++		/* fork X server process */
++		res = gdm_server_spawn (server, NULL);
++	}
+ 
+         return res;
+ }
+diff --git a/data/Makefile.am b/data/Makefile.am
+index 30e1f55..400c43d 100644
+--- a/data/Makefile.am
++++ b/data/Makefile.am
+@@ -13,6 +13,7 @@ predir = $(gdmconfdir)/PreSession
+ postlogindir = $(gdmconfdir)/PostLogin
+ workingdir = $(GDM_WORKING_DIR)
+ xauthdir = $(GDM_XAUTH_DIR)
++spooldir = $(GDM_SPOOL_DIR)
+ 
+ if OS_SOLARIS
+    DISTRO_XSESSION=$(srcdir)/Xsession.solaris
+@@ -132,6 +133,7 @@ uninstall-hook:
+ 	-rf \
+ 	$(DESTDIR)$(workingdir)/.gconf.mandatory \
+ 	$(DESTDIR)$(xauthdir)
++	$(DESTDIR)$(spooldir)
+ 
+ install-data-hook: gdm.conf-custom Xsession Init PostSession PreSession gconf.path
+ 	if test '!' -d $(DESTDIR)$(gdmconfdir); then \
+@@ -219,6 +221,12 @@ install-data-hook: gdm.conf-custom Xsession Init PostSession PreSession gconf.pa
+ 		chown root:gdm $(DESTDIR)$(workingdir) || : ; \
+ 	fi
+ 
++	if test '!' -d $(DESTDIR)$(spooldir); then \
++		$(mkinstalldirs) $(DESTDIR)$(spooldir); \
++		chmod 1770 $(DESTDIR)$(spooldir); \
++		chown root:gdm $(DESTDIR)$(spooldir) || : ; \
++	fi
++
+ 	$(INSTALL_DATA) $(srcdir)/gconf.path $(DESTDIR)$(workingdir)/.gconf.path
+ 	gconftool-2 --direct --config-source=xml:merged:$(DESTDIR)$(workingdir)/.gconf.mandatory --recursive-unset /
+ 	gconftool-2 --direct --config-source=xml:merged:$(DESTDIR)$(workingdir)/.gconf.mandatory --load $(srcdir)/session-setup.entries
