@@ -153,7 +153,7 @@ index 30e1f55..400c43d 100644
  	-rf \
  	$(DESTDIR)$(workingdir)/.gconf.mandatory \
  	$(DESTDIR)$(xauthdir)
-+        $(DESTDIR)$(spooldir)
++	$(DESTDIR)$(spooldir)
  
  install-data-hook: gdm.conf-custom Xsession Init PostSession PreSession gconf.path
  	if test '!' -d $(DESTDIR)$(gdmconfdir); then \
@@ -161,11 +161,11 @@ index 30e1f55..400c43d 100644
  		chown root:gdm $(DESTDIR)$(workingdir) || : ; \
  	fi
  
-+        if test '!' -d $(DESTDIR)$(spooldir); then \
-+        	$(mkinstalldirs) $(DESTDIR)$(spooldir); \
-+        	chmod 1770 $(DESTDIR)$(spooldir); \
-+        	chown root:gdm $(DESTDIR)$(spooldir) || : ; \
-+        fi
++	if test '!' -d $(DESTDIR)$(spooldir); then \
++		$(mkinstalldirs) $(DESTDIR)$(spooldir); \
++		chmod 1770 $(DESTDIR)$(spooldir); \
++		chown root:gdm $(DESTDIR)$(spooldir) || : ; \
++	fi
 +
  	$(INSTALL_DATA) $(srcdir)/gconf.path $(DESTDIR)$(workingdir)/.gconf.path
  	gconftool-2 --direct --config-source=xml:merged:$(DESTDIR)$(workingdir)/.gconf.mandatory --recursive-unset /
