@@ -42,7 +42,7 @@ index 1846ed2..ced03a3 100644
  	-DPIXMAPDIR=\"$(pixmapdir)\"			\
  	-DSBINDIR=\"$(sbindir)\"			\
  	-DGNOMELOCALEDIR=\""$(datadir)/locale"\"	\
-+	-DGDM_SPOOL_DIR=\"$(GDM_SPOOL_DIR)\"  \
++        -DGDM_SPOOL_DIR=\"$(GDM_SPOOL_DIR)\"  \
  	-DGDM_XAUTH_DIR=\"$(GDM_XAUTH_DIR)\"		\
  	-DGDM_DEFAULTS_CONF=\"$(GDM_DEFAULTS_CONF)\"	\
  	-DGDM_CUSTOM_CONF=\"$(GDM_CUSTOM_CONF)\"	\
@@ -66,51 +66,51 @@ index ca37a2a..e6f821f 100644
 +static gboolean
 +should_force_display_on_active_vt (void)
 +{
-+	gboolean should_force_display_on_active_vt;
++        gboolean should_force_display_on_active_vt;
 +
-+	should_force_display_on_active_vt = g_file_test (GDM_SPOOL_DIR "/force-display-on-active-vt",
-+			               G_FILE_TEST_EXISTS);
-+  	g_unlink (GDM_SPOOL_DIR "/force-display-on-active-vt");
++        should_force_display_on_active_vt = g_file_test (GDM_SPOOL_DIR "/force-display-on-active-vt",
++                                                         G_FILE_TEST_EXISTS);
++        g_unlink (GDM_SPOOL_DIR "/force-display-on-active-vt");
 +
-+  	return should_force_display_on_active_vt;
++        return should_force_display_on_active_vt;
 +}
 +
 +static int
 +get_active_vt (void)
 +{
-+	int console_fd;
-+	struct vt_stat console_state = { 0 };
++        int console_fd;
++        struct vt_stat console_state = { 0 };
 +
-+	console_fd = open ("/dev/tty0", O_RDONLY | O_NOCTTY);
++        console_fd = open ("/dev/tty0", O_RDONLY | O_NOCTTY);
 +
-+	if (console_fd < 0) {
-+		goto out;
-+	}
++        if (console_fd < 0) {
++                goto out;
++        }
 +
-+	if (ioctl (console_fd, VT_GETSTATE, &console_state) < 0) {
-+		goto out;
-+	}
++        if (ioctl (console_fd, VT_GETSTATE, &console_state) < 0) {
++                goto out;
++        }
 +
 +out:
-+  	if (console_fd >= 0) {
-+    		close (console_fd);
-+	}
++        if (console_fd >= 0) {
++                close (console_fd);
++        }
 +
-+  return console_state.v_active;
++        return console_state.v_active;
 +}
 +
 +static char *
 +get_active_vt_as_string (void)
 +{
-+	int vt;
++        int vt;
 +
-+	vt = get_active_vt ();
-+	
-+	if (vt <= 0) {
-+		return NULL;
-+	}
++        vt = get_active_vt ();
 +
-+	return g_strdup_printf ("vt%d", vt);
++        if (vt <= 0) {
++                return NULL;
++        }
++
++        return g_strdup_printf ("vt%d", vt);
 +}
 +
  /**
@@ -122,18 +122,18 @@ index ca37a2a..e6f821f 100644
  
 -        /* fork X server process */
 -        res = gdm_server_spawn (server, NULL);
-+	if (should_force_display_on_active_vt () || TRUE) {
++        if (should_force_display_on_active_vt ()) {
 +                char *vt;
 +
-+		g_free (server->priv->command);
-+		server->priv->command = g_strdup (X_SERVER " -nr -verbose");
++                g_free (server->priv->command);
++                server->priv->command = g_strdup (X_SERVER " -nr -verbose");
 +                vt = get_active_vt_as_string ();
-+		res = gdm_server_spawn (server, vt);
++                res = gdm_server_spawn (server, vt);
 +                g_free (vt);
-+	} else {
-+		/* fork X server process */
-+		res = gdm_server_spawn (server, NULL);
-+	}
++        } else {
++                /* fork X server process */
++                res = gdm_server_spawn (server, NULL);
++        }
  
          return res;
  }
@@ -153,7 +153,7 @@ index 30e1f55..400c43d 100644
  	-rf \
  	$(DESTDIR)$(workingdir)/.gconf.mandatory \
  	$(DESTDIR)$(xauthdir)
-+	$(DESTDIR)$(spooldir)
++        $(DESTDIR)$(spooldir)
  
  install-data-hook: gdm.conf-custom Xsession Init PostSession PreSession gconf.path
  	if test '!' -d $(DESTDIR)$(gdmconfdir); then \
@@ -161,11 +161,11 @@ index 30e1f55..400c43d 100644
  		chown root:gdm $(DESTDIR)$(workingdir) || : ; \
  	fi
  
-+	if test '!' -d $(DESTDIR)$(spooldir); then \
-+		$(mkinstalldirs) $(DESTDIR)$(spooldir); \
-+		chmod 1770 $(DESTDIR)$(spooldir); \
-+		chown root:gdm $(DESTDIR)$(spooldir) || : ; \
-+	fi
++        if test '!' -d $(DESTDIR)$(spooldir); then \
++        	$(mkinstalldirs) $(DESTDIR)$(spooldir); \
++        	chmod 1770 $(DESTDIR)$(spooldir); \
++        	chown root:gdm $(DESTDIR)$(spooldir) || : ; \
++        fi
 +
  	$(INSTALL_DATA) $(srcdir)/gconf.path $(DESTDIR)$(workingdir)/.gconf.path
  	gconftool-2 --direct --config-source=xml:merged:$(DESTDIR)$(workingdir)/.gconf.mandatory --recursive-unset /

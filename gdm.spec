@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -304,6 +304,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Sep 12 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-4
+- Fix bug in last patch
+
 * Thu Sep 11 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-3
 - Add hook to allow for plymouth transition
 
