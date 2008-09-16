@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -306,6 +306,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Sep 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-6
+- Use _XROOTPMAP_ID instead of _XSETROOT_ID
+
 * Tue Sep 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-5
 - Save root window in XSETROOTID property for transition
 

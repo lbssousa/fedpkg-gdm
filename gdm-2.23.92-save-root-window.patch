@@ -9,7 +9,7 @@ diff -up gdm-2.23.92/daemon/gdm-simple-slave.c.save-root-window gdm-2.23.92/daem
 +        /* The root window has a background that may be useful
 +         * to cross fade or transition from when setting the
 +         * login screen background.  We read it here, and stuff
-+         * it into the standard _XSETROOT_ID root window property,
++         * it into the standard _XROOTPMAP_ID root window property,
 +         * so gnome-settings-daemon can get at it.
 +         */
 +        gdm_slave_save_root_windows (GDM_SLAVE (slave));
@@ -90,7 +90,7 @@ diff -up gdm-2.23.92/daemon/gdm-slave.c.save-root-window gdm-2.23.92/daemon/gdm-
 +        number_of_screens = ScreenCount (slave->priv->server_display);
 +
 +        atom = XInternAtom (slave->priv->server_display,
-+                            "_XSETROOT_ID", False);
++                            "_XROOTPMAP_ID", False);
 +
 +        if (atom == 0) {
 +                return;
