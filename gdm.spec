@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,6 +80,7 @@ BuildRequires: libxklavier-devel
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 Patch2: gdm-2.23.92-force-active-vt.patch
+Patch3: gdm-2.23.92-save-root-window.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -103,6 +104,7 @@ multiple simulanteous logged in users.
 %setup -q
 %patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .force-active-vt
+%patch3 -p1 -b .save-root-window
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -304,6 +306,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Sep 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-5
+- Save root window in XSETROOTID property for transition
+
 * Fri Sep 12 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-4
 - Fix bug in last patch
 
