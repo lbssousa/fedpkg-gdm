@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -87,6 +87,8 @@ Patch4: username-leak.patch
 Patch5: data-leak.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=552578
 Patch6: ssid-leak.patch
+Patch7: gdm-2.23.92-filter-dupes-from-lang-list.patch
+Patch8: gdm-2.23.92-another-locale-fixup.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -114,6 +116,8 @@ multiple simulanteous logged in users.
 %patch4 -p1 -b .username-leak
 %patch5 -p1 -b .data-leak
 %patch6 -p1 -b .ssid-leak
+%patch7 -p1 -b .filter-dupes-from-lang-list
+%patch8 -p1 -b .another-locale-fixup
 
 %patch99 -p1 -b .fedora-logo
 
@@ -316,6 +320,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Sep 17 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-8
+- canonicalize codeset to match output of locale -m
+- filter duplicates from language list
+
 * Tue Sep 16 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.23.92-7
 - Plug a few memory leaks
 
