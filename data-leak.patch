@@ -1,0 +1,11 @@
+diff -up gdm-2.23.92/gui/simple-greeter/gdm-user.c.data-leak gdm-2.23.92/gui/simple-greeter/gdm-user.c
+--- gdm-2.23.92/gui/simple-greeter/gdm-user.c.data-leak	2008-09-16 22:07:39.000000000 -0400
++++ gdm-2.23.92/gui/simple-greeter/gdm-user.c	2008-09-16 22:07:07.000000000 -0400
+@@ -1093,6 +1093,7 @@ frame_pixbuf (GdkPixbuf *source)
+         cairo_to_pixbuf (data, dest);
+ 
+         cairo_destroy (cr);
++        g_free (data);
+ 
+         return dest;
+ }

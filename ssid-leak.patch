@@ -1,0 +1,11 @@
+diff -up gdm-2.23.92/gui/simple-greeter/gdm-user-manager.c.ssid-leak gdm-2.23.92/gui/simple-greeter/gdm-user-manager.c
+--- gdm-2.23.92/gui/simple-greeter/gdm-user-manager.c.ssid-leak	2008-09-16 22:15:20.000000000 -0400
++++ gdm-2.23.92/gui/simple-greeter/gdm-user-manager.c	2008-09-16 22:16:02.000000000 -0400
+@@ -667,6 +667,7 @@ add_sessions_for_user (GdmUserManager *m
+                 maybe_add_session_for_user (manager, user, ssid);
+         }
+ 
++        g_ptr_array_foreach (sessions, (GFunc)g_free, NULL);
+         g_ptr_array_free (sessions, TRUE);
+ 
+  out:

@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -81,6 +81,12 @@ Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 Patch2: gdm-2.23.92-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
+# http://bugzilla.gnome.org/show_bug.cgi?id=552578
+Patch4: username-leak.patch
+# http://bugzilla.gnome.org/show_bug.cgi?id=552578
+Patch5: data-leak.patch
+# http://bugzilla.gnome.org/show_bug.cgi?id=552578
+Patch6: ssid-leak.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -105,6 +111,10 @@ multiple simulanteous logged in users.
 %patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
+%patch4 -p1 -b .username-leak
+%patch5 -p1 -b .data-leak
+%patch6 -p1 -b .ssid-leak
+
 %patch99 -p1 -b .fedora-logo
 
 autoreconf
@@ -306,6 +316,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Sep 16 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.23.92-7
+- Plug a few memory leaks
+
 * Tue Sep 16 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-6
 - Use _XROOTPMAP_ID instead of _XSETROOT_ID
 
