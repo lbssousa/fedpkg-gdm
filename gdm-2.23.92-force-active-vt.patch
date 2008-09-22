@@ -163,7 +163,7 @@ index 30e1f55..400c43d 100644
  
 +	if test '!' -d $(DESTDIR)$(spooldir); then \
 +		$(mkinstalldirs) $(DESTDIR)$(spooldir); \
-+		chmod 1770 $(DESTDIR)$(spooldir); \
++		chmod 775 $(DESTDIR)$(spooldir); \
 +		chown root:gdm $(DESTDIR)$(spooldir) || : ; \
 +	fi
 +

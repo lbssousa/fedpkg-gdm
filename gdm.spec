@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -307,13 +307,13 @@ fi
 %dir %{_datadir}/gdm/autostart/LoginWindow
 %config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
+%dir %{_localstatedir}/spool/gdm
 %attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
 %attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
-%attr(1770, root, gdm) %dir %{_localstatedir}/spool/gdm
 
 %files user-switch-applet
 %defattr(-, root, root)
@@ -322,6 +322,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Sep 22 2008 Ray Strode <rstrode@redhat.com> - 1:2.24.0-2
+- Fix permssions on spool dir
+
 * Mon Sep 22 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.24.0-1
 - Update to 2.24.0
 
