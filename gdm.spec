@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.23.92
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -322,6 +322,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Sep 22 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-10
+- Flush X event queue after setting _XROOTPMAP_ID so there's
+  no race with settings daemon reading the property
+
 * Fri Sep 19 2008 Ray Strode <rstrode@redhat.com> - 1:2.23.92-9
 - Fix crash from language dialog
 
