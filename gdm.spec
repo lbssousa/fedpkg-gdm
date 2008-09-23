@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -310,11 +310,11 @@ fi
 %config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/spool/gdm
-%attr(1750, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
-%attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
-%attr(1640, root, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
+%attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
+%attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
+%attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
+%attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
-%attr(1770, root, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 
 %files user-switch-applet
@@ -324,6 +324,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Sep 23 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.24.0-4
+- Let /var/lib/gdm be owned by gdm, to make pulseaudio happy
+
 * Tue Sep 23 2008 Ray Strode <rstrode@redhat.com> - 1:2.24.0-3
 - Load background after everything else, so the crossfade
   isn't choppy.
