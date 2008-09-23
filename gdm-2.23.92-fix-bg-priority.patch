@@ -1,0 +1,12 @@
+diff -up gdm-2.23.92/gui/simple-greeter/gdm-simple-greeter.schemas.in.fix-bg-priority gdm-2.23.92/gui/simple-greeter/gdm-simple-greeter.schemas.in
+--- gdm-2.23.92/gui/simple-greeter/gdm-simple-greeter.schemas.in.fix-bg-priority	2008-09-23 09:59:12.000000000 -0400
++++ gdm-2.23.92/gui/simple-greeter/gdm-simple-greeter.schemas.in	2008-09-23 09:59:30.000000000 -0400
+@@ -177,7 +177,7 @@
+       <applyto>/apps/gdm/simple-greeter/settings-manager-plugins/background/priority</applyto>
+       <owner>gdm-simple-greeter</owner>
+       <type>int</type>
+-      <default>5</default>
++      <default>25</default>
+       <locale name="C">
+         <short></short>
+         <long></long>
