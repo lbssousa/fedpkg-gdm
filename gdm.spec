@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -43,6 +43,7 @@ Requires: ConsoleKit >= %{consolekit_version}
 Requires: PolicyKit-gnome >= %{polkit_version}
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
+Requires: gnome-session
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires: plymouth-gdm-hooks
@@ -324,6 +325,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Sep 25 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.24.0-5
+- Require gnome-session
+
 * Tue Sep 23 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.24.0-4
 - Let /var/lib/gdm be owned by gdm, to make pulseaudio happy
 
