@@ -91,6 +91,8 @@ Patch6: ssid-leak.patch
 Patch7: gdm-2.23.92-filter-dupes-from-lang-list.patch
 Patch8: gdm-2.23.92-another-locale-fixup.patch
 Patch9: gdm-2.23.92-fix-crash.patch
+# Fix pulled from upstream
+Patch10: gdm-2.24.0-fix-icon-scale.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -121,6 +123,7 @@ multiple simulanteous logged in users.
 %patch7 -p1 -b .filter-dupes-from-lang-list
 %patch8 -p1 -b .another-locale-fixup
 %patch9 -p1 -b .fix-crash
+%patch10 -p1 -b .fix-icon-scale
 
 %patch99 -p1 -b .fedora-logo
 
@@ -326,6 +329,7 @@ fi
 * Tue Sep 30 2008 Ray Strode <rstrode@redhat.com> - 1:2.24.0-6
 - drop background priority change.  Choppyiness in -3 ended up
   being a bug in gnome-settings-daemon.
+- pull patch from upstream to scale face icons with fontsize
 
 * Thu Sep 25 2008 Matthias Clasen <mclasen@redhat.com> - 1:2.24.0-5
 - Require gnome-session
