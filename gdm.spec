@@ -93,6 +93,8 @@ Patch8: gdm-2.23.92-another-locale-fixup.patch
 Patch9: gdm-2.23.92-fix-crash.patch
 # Fix pulled from upstream
 Patch10: gdm-2.24.0-fix-icon-scale.patch
+
+# http://bugzilla.gnome.org/show_bug.cgi?id=554523
 Patch11: gdm-2.24.0-add-panel-slide.patch
 
 # Fedora-specific
