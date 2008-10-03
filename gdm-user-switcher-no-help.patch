@@ -1,0 +1,16 @@
+diff -up gdm-2.24.0/gui/user-switch-applet/GNOME_FastUserSwitchApplet.xml.no-help gdm-2.24.0/gui/user-switch-applet/GNOME_FastUserSwitchApplet.xml
+--- gdm-2.24.0/gui/user-switch-applet/GNOME_FastUserSwitchApplet.xml.no-help	2008-10-03 00:33:07.000000000 -0400
++++ gdm-2.24.0/gui/user-switch-applet/GNOME_FastUserSwitchApplet.xml	2008-10-03 00:33:37.000000000 -0400
+@@ -12,12 +12,6 @@
+       <separator
+        name="GdmSeparator"/>
+       <menuitem
+-       name="Help Item"
+-       verb="GdmHelp"
+-       _label="_Help"
+-       pixtype="stock"
+-       pixname="gtk-help"/>
+-      <menuitem
+        name="About Item"
+        verb="GdmAbout"
+        _label="_About"

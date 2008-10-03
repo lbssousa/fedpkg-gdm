@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -97,6 +97,9 @@ Patch10: gdm-2.24.0-fix-icon-scale.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=554523
 Patch11: gdm-2.24.0-add-panel-slide.patch
 
+# https://bugzilla.redhat.com/show_bug.cgi?id=465121
+Patch12: gdm-user-switcher-no-help.patch
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -128,6 +131,7 @@ multiple simulanteous logged in users.
 %patch9 -p1 -b .fix-crash
 %patch10 -p1 -b .fix-icon-scale
 %patch11 -p1 -b .add-panel-slide
+%patch12 -p1 -b .no-help
 
 %patch99 -p1 -b .fedora-logo
 
@@ -330,6 +334,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Oct  3 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-8
+- Don't show a non-functional help menuitem
+
 * Tue Sep 30 2008 Ray Strode <rstrode@redhat.com> - 1:2.24.0-7
 - Make panel slide in initially like the gnome panel
 
