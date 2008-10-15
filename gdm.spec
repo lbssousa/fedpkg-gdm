@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,7 +80,7 @@ BuildRequires: libxklavier-devel
 
 Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
-Patch2: gdm-2.23.92-force-active-vt.patch
+Patch2: gdm-2.24.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
 # http://bugzilla.gnome.org/show_bug.cgi?id=552578
 Patch4: username-leak.patch
@@ -347,6 +347,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Oct 15 2008 Ray Strode <rstrode@redhat.com> - 1:2.24.0-10
+- Rework "force X on vt1" code to work after the user logs out
+
 * Wed Oct 15 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-9
 - Save some space 
 
