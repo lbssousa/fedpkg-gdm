@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -149,6 +149,19 @@ cp -f %{SOURCE3} utils/gdmsetup-pam
 	   --with-console-kit      \
 	   --with-selinux
 make
+
+# strip unneeded translations from .mo files
+# ideally intltool (ha!) would do that for us
+# http://bugzilla.gnome.org/show_bug.cgi?id=474987
+cd po
+grep -v ".*[.]desktop[.]in.*\|.*[.]server[.]in[.]in$\|.*[.]schemas[.]in$" POTFILES.in > POTFILES.keep
+mv POTFILES.keep POTFILES.in
+intltool-update --pot
+for p in *.po; do
+  msgmerge $p %{name}.pot > $p.out
+  msgfmt -o `basename $p .po`.gmo $p.out
+done
+
 
 %install
 [ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
@@ -334,6 +347,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Oct 15 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-9
+- Save some space 
+
 * Fri Oct  3 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-8
 - Don't show a non-functional help menuitem
 
