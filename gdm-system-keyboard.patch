@@ -1,0 +1,73 @@
+--- gdm-2.24.0/daemon/gdm-session-direct.c	2008-08-21 00:31:47.000000000 -0400
++++ hacked/daemon/gdm-session-direct.c	2008-10-20 00:20:05.000000000 -0400
+@@ -595,14 +595,41 @@
+     return setlocale (LC_MESSAGES, NULL);
+ }
+ 
++static char *
++get_system_default_layout (void)
++{
++    gchar *text, *p, *q;
++    gsize *length;
++    char *result;
++
++    result = NULL;
++    if (g_file_get_contents ("/etc/sysconfig/keyboard", &text, &length, NULL)) {
++        p = strstr (text, "KEYTABLE=\"");
++        if (p) {
++            p += strlen ("KEYTABLE=\"");
++            q = strchr (p, '"');
++            if (q) {
++                result = g_strndup (p, q - p);
++            }
++        }
++        g_free (text);
++    }
++
++    if (!result) {
++        result = g_strdup ("us");
++    }
++
++    return result;
++}
++
+ static const char *
+ get_default_layout_name (GdmSessionDirect *session)
+ {
+-    if (session->priv->saved_layout != NULL) {
+-                return session->priv->saved_layout;
++    if (!session->priv->saved_layout) {
++        session->priv->saved_layout = get_system_default_layout ();
+     }
+ 
+-    return "us";
++    return session->priv->saved_layout;
+ }
+ 
+ static char *
+@@ -1971,9 +1998,10 @@
+                                                      "GDM_LANG",
+                                                      get_language_name (session));
+ 
+-        gdm_session_direct_set_environment_variable (session,
+-                                                     "GDM_KEYBOARD_LAYOUT",
+-                                                     get_layout_name (session));
++	if (g_strcmp0 (get_layout_name (session), get_system_default_layout ()) != 0)
++        	gdm_session_direct_set_environment_variable (session,
++                                                     	     "GDM_KEYBOARD_LAYOUT",
++                                                             get_layout_name (session));
+ 
+         gdm_session_direct_set_environment_variable (session,
+                                                      "DISPLAY",
+--- gdm-2.24.0/daemon/gdm-session-settings.c	2008-07-10 11:07:42.000000000 -0400
++++ hacked/daemon/gdm-session-settings.c	2008-10-19 23:55:02.000000000 -0400
+@@ -149,8 +149,7 @@
+ {
+         g_return_if_fail (GDM_IS_SESSION_SETTINGS (settings));
+ 
+-        if (settings->priv->layout_name == NULL ||
+-            strcmp (settings->priv->layout_name, layout_name) != 0) {
++        if (g_strcmp0 (settings->priv->layout_name, layout_name) != 0) {
+                 settings->priv->layout_name = g_strdup (layout_name);
+                 g_object_notify (G_OBJECT (settings), "layout-name");
+         }

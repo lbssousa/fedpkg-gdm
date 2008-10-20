@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.24.0
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -100,6 +100,10 @@ Patch11: gdm-2.24.0-add-panel-slide.patch
 # https://bugzilla.redhat.com/show_bug.cgi?id=465121
 Patch12: gdm-user-switcher-no-help.patch
 
+# uses /etc/sysconfig/keyboard and is thus not directly upstreamable
+# should probably be changed to get the system layout from the X server
+Patch13: gdm-system-keyboard.patch
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -132,6 +136,7 @@ multiple simulanteous logged in users.
 %patch10 -p1 -b .fix-icon-scale
 %patch11 -p1 -b .add-panel-slide
 %patch12 -p1 -b .no-help
+%patch13 -p1 -b .system-keyboard
 
 %patch99 -p1 -b .fedora-logo
 
@@ -347,6 +352,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Oct 20 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-11
+- Respect system keyboard setting
+
 * Wed Oct 15 2008 Ray Strode <rstrode@redhat.com> - 1:2.24.0-10
 - Rework "force X on vt1" code to work after the user logs out
 
