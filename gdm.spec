@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -114,7 +114,7 @@ multiple simulanteous logged in users.
 
 %patch99 -p1 -b .fedora-logo
 
-autoreconf
+autoreconf -i -f
 
 %build
 cp -f %{SOURCE1} data/gdm
@@ -326,7 +326,7 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
-* Thu Dec  4 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.1-1
+* Thu Dec  4 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.1-2
 - Update to 2.25.1
 
 * Mon Oct 20 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-11
