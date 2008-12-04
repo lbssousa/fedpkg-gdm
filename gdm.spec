@@ -15,13 +15,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.24.0
-Release: 11%{?dist}
+Version: 2.25.1
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.24/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.25/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdmsetup-pam
@@ -82,23 +82,6 @@ Requires: audit-libs >= %{libauditver}
 Patch1: xkb-groups.patch
 Patch2: gdm-2.24.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
-# http://bugzilla.gnome.org/show_bug.cgi?id=552578
-Patch4: username-leak.patch
-# http://bugzilla.gnome.org/show_bug.cgi?id=552578
-Patch5: data-leak.patch
-# http://bugzilla.gnome.org/show_bug.cgi?id=552578
-Patch6: ssid-leak.patch
-Patch7: gdm-2.23.92-filter-dupes-from-lang-list.patch
-Patch8: gdm-2.23.92-another-locale-fixup.patch
-Patch9: gdm-2.23.92-fix-crash.patch
-# Fix pulled from upstream
-Patch10: gdm-2.24.0-fix-icon-scale.patch
-
-# http://bugzilla.gnome.org/show_bug.cgi?id=554523
-Patch11: gdm-2.24.0-add-panel-slide.patch
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=465121
-Patch12: gdm-user-switcher-no-help.patch
 
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
@@ -127,15 +110,6 @@ multiple simulanteous logged in users.
 %patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
-%patch4 -p1 -b .username-leak
-%patch5 -p1 -b .data-leak
-%patch6 -p1 -b .ssid-leak
-%patch7 -p1 -b .filter-dupes-from-lang-list
-%patch8 -p1 -b .another-locale-fixup
-%patch9 -p1 -b .fix-crash
-%patch10 -p1 -b .fix-icon-scale
-%patch11 -p1 -b .add-panel-slide
-%patch12 -p1 -b .no-help
 %patch13 -p1 -b .system-keyboard
 
 %patch99 -p1 -b .fedora-logo
@@ -352,6 +326,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Dec  4 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.1-1
+- Update to 2.25.1
+
 * Mon Oct 20 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-11
 - Respect system keyboard setting
 
