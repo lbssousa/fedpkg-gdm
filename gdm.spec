@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -79,7 +79,6 @@ BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel
 
 Requires: audit-libs >= %{libauditver}
-Patch1: xkb-groups.patch
 Patch2: gdm-2.24.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
 
@@ -107,7 +106,6 @@ multiple simulanteous logged in users.
 
 %prep
 %setup -q
-%patch1 -p1 -b .xkb-groups
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
 %patch13 -p1 -b .system-keyboard
@@ -326,8 +324,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
-* Wed Dec 17 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.2-1
+* Wed Dec 17 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.2-2
 - Update to 2.25.2
+- Drop the xkb groups workaround to see if the issue disappeared
 
 * Thu Dec  4 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.1-2
 - Update to 2.25.1
