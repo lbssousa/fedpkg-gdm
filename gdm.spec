@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -81,6 +81,7 @@ BuildRequires: libxklavier-devel
 Requires: audit-libs >= %{libauditver}
 Patch2: gdm-2.24.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
+Patch4: gdm-2.25.2-append-logs.patch
 
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
@@ -108,6 +109,7 @@ multiple simulanteous logged in users.
 %setup -q
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
+%patch4 -p1 -b .append-logs
 %patch13 -p1 -b .system-keyboard
 
 %patch99 -p1 -b .fedora-logo
@@ -324,6 +326,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Jan 22 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-3
+- Open log files for append to make selinux lock down easier
+
 * Wed Dec 17 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.25.2-2
 - Update to 2.25.2
 - Drop the xkb groups workaround to see if the issue disappeared
