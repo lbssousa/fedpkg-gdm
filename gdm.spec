@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -77,6 +77,8 @@ BuildRequires: check-devel
 BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel
+
+Provides: service(graphical-login)
 
 Requires: audit-libs >= %{libauditver}
 Patch2: gdm-2.24.0-force-active-vt.patch
@@ -326,6 +328,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Feb 20 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-4
+- add Provides: service(graphical-login) to help anaconda
+
 * Thu Jan 22 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-3
 - Open log files for append to make selinux lock down easier
 
