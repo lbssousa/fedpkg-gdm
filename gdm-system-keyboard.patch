@@ -1,29 +1,69 @@
---- gdm-2.24.0/daemon/gdm-session-direct.c	2008-08-21 00:31:47.000000000 -0400
-+++ hacked/daemon/gdm-session-direct.c	2008-10-20 00:20:05.000000000 -0400
-@@ -595,14 +595,41 @@
+diff -up gdm-2.25.2/configure.ac.system-keyboard gdm-2.25.2/configure.ac
+--- gdm-2.25.2/configure.ac.system-keyboard	2009-02-20 23:00:35.658319764 -0500
++++ gdm-2.25.2/configure.ac	2009-02-20 23:00:46.150086289 -0500
+@@ -69,6 +69,7 @@ AC_SUBST(COMMON_LIBS)
+ PKG_CHECK_MODULES(DAEMON,
+         dbus-glib-1 >= $DBUS_GLIB_REQUIRED_VERSION
+         gobject-2.0 >= $GLIB_REQUIRED_VERSION
++	hal
+ )
+ AC_SUBST(DAEMON_CFLAGS)
+ AC_SUBST(DAEMON_LIBS)
+diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemon/gdm-session-direct.c
+--- gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard	2008-08-26 15:04:00.000000000 -0400
++++ gdm-2.25.2/daemon/gdm-session-direct.c	2009-02-20 23:01:17.830045657 -0500
+@@ -45,6 +45,8 @@
+ #include <dbus/dbus-glib.h>
+ #include <dbus/dbus-glib-lowlevel.h>
+ 
++#include <libhal.h>
++
+ #include "gdm-session-direct.h"
+ #include "gdm-session.h"
+ #include "gdm-session-private.h"
+@@ -595,14 +597,60 @@ get_default_language_name (GdmSessionDir
      return setlocale (LC_MESSAGES, NULL);
  }
  
 +static char *
-+get_system_default_layout (void)
++get_system_default_layout (GdmSessionDirect *session)
 +{
-+    gchar *text, *p, *q;
-+    gsize *length;
++    DBusConnection *connection;
++    LibHalContext *ctx;
++    char **devices;
++    int n_devices;
++    char *layout;
 +    char *result;
 +
 +    result = NULL;
-+    if (g_file_get_contents ("/etc/sysconfig/keyboard", &text, &length, NULL)) {
-+        p = strstr (text, "KEYTABLE=\"");
-+        if (p) {
-+            p += strlen ("KEYTABLE=\"");
-+            q = strchr (p, '"');
-+            if (q) {
-+                result = g_strndup (p, q - p);
-+            }
-+        }
-+        g_free (text);
++
++    connection = dbus_g_connection_get_connection (session->priv->connection);
++    ctx = libhal_ctx_new ();
++    libhal_ctx_set_dbus_connection (ctx, connection);
++
++    if (!libhal_ctx_init (ctx, NULL)) {
++        goto out;
 +    }
 +
++    devices = libhal_find_device_by_capability (ctx,
++                                                "input.keyboard",
++                                                &n_devices,
++                                                NULL);
++    if (n_devices > 0) {
++        layout = libhal_device_get_property_string (ctx,
++                                                    devices[0],
++                                                    "input.xkb.layout",
++                                                    NULL);
++	result = g_strdup (layout);
++	libhal_free_string (layout);
++    }
++
++    libhal_free_string_array (devices);
++
++    libhal_ctx_shutdown (ctx, NULL);
++    libhal_ctx_free (ctx);
++
++out:
 +    if (!result) {
 +        result = g_strdup ("us");
 +    }
@@ -37,7 +77,7 @@
 -    if (session->priv->saved_layout != NULL) {
 -                return session->priv->saved_layout;
 +    if (!session->priv->saved_layout) {
-+        session->priv->saved_layout = get_system_default_layout ();
++        session->priv->saved_layout = get_system_default_layout (session);
      }
  
 -    return "us";
@@ -45,23 +85,24 @@
  }
  
  static char *
-@@ -1971,9 +1998,10 @@
+@@ -1971,9 +2019,10 @@ setup_session_environment (GdmSessionDir
                                                       "GDM_LANG",
                                                       get_language_name (session));
  
 -        gdm_session_direct_set_environment_variable (session,
 -                                                     "GDM_KEYBOARD_LAYOUT",
 -                                                     get_layout_name (session));
-+	if (g_strcmp0 (get_layout_name (session), get_system_default_layout ()) != 0)
++	if (g_strcmp0 (get_layout_name (session), get_system_default_layout (session)) != 0)
 +        	gdm_session_direct_set_environment_variable (session,
 +                                                     	     "GDM_KEYBOARD_LAYOUT",
 +                                                             get_layout_name (session));
  
          gdm_session_direct_set_environment_variable (session,
                                                       "DISPLAY",
---- gdm-2.24.0/daemon/gdm-session-settings.c	2008-07-10 11:07:42.000000000 -0400
-+++ hacked/daemon/gdm-session-settings.c	2008-10-19 23:55:02.000000000 -0400
-@@ -149,8 +149,7 @@
+diff -up gdm-2.25.2/daemon/gdm-session-settings.c.system-keyboard gdm-2.25.2/daemon/gdm-session-settings.c
+--- gdm-2.25.2/daemon/gdm-session-settings.c.system-keyboard	2008-08-26 15:04:00.000000000 -0400
++++ gdm-2.25.2/daemon/gdm-session-settings.c	2009-01-23 23:55:38.000000000 -0500
+@@ -149,8 +149,7 @@ gdm_session_settings_set_layout_name (Gd
  {
          g_return_if_fail (GDM_IS_SESSION_SETTINGS (settings));
  

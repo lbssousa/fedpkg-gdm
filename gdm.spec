@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -328,6 +328,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Feb 20 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.25.2-5
+- Get the default keyboard layout out of hal device properties
+  instead of /etc/sysconfig/keyboard
+
 * Fri Feb 20 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-4
 - add Provides: service(graphical-login) to help anaconda
 
