@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -328,6 +328,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Feb 24 2009 Matthias Clasen  <mclasen@redhat.com>
+- Refine the hal patch
+
 * Tue Feb 24 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:2.25.2-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
 
