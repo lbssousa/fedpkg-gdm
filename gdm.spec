@@ -8,7 +8,6 @@
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
 %define nss_version 3.11.1
-%define polkit_version 0.7
 %define consolekit_version 0.2.7
 %define hal_version 0.5.9
 %define fontconfig_version 2.6.0
@@ -16,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -40,7 +39,7 @@ Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
 Requires: hal >= %{hal_version}
 Requires: ConsoleKit >= %{consolekit_version}
-Requires: PolicyKit-gnome >= %{polkit_version}
+Requires: PolicyKit-authentication-agent
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
 Requires: gnome-session
@@ -328,6 +327,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Feb 27 2009 Matthias Clasen  <mclasen@redhat.com>
+- Require PolicyKit-authentication-agent
+
 * Tue Feb 24 2009 Matthias Clasen  <mclasen@redhat.com>
 - Refine the hal patch
 
