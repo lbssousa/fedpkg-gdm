@@ -1,0 +1,12 @@
+diff -up gdm-2.25.2/data/greeter-autostart/gnome-power-manager.desktop.in.in.start-faster gdm-2.25.2/data/greeter-autostart/gnome-power-manager.desktop.in
+--- gdm-2.25.2/data/greeter-autostart/gnome-power-manager.desktop.in.in.start-faster	2009-03-03 17:16:56.209495297 -0500
++++ gdm-2.25.2/data/greeter-autostart/gnome-power-manager.desktop.in.in	2009-03-03 17:17:07.493469010 -0500
+@@ -8,7 +8,6 @@ Terminal=false
+ Type=Application
+ Categories=
+ OnlyShowIn=GNOME;XFCE;
+-X-GNOME-Autostart-Phase=Initialization
+ X-GNOME-Bugzilla-Bugzilla=GNOME
+ X-GNOME-Bugzilla-Product=gnome-power-manager
+ X-GNOME-Bugzilla-Component=gnome-power-manager
+

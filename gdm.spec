@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -88,6 +88,9 @@ Patch4: gdm-2.25.2-append-logs.patch
 # should probably be changed to get the system layout from the X server
 Patch13: gdm-system-keyboard.patch
 
+Patch14: gdm-2.25.2-multistack-but-boring.patch
+Patch15: gdm-2.25.2-start-faster.patch
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -112,6 +115,9 @@ multiple simulanteous logged in users.
 %patch3 -p1 -b .save-root-window
 %patch4 -p1 -b .append-logs
 %patch13 -p1 -b .system-keyboard
+
+%patch14 -p1 -b .multistack-but-boring
+%patch15 -p1 -b .start-faster
 
 %patch99 -p1 -b .fedora-logo
 
@@ -171,6 +177,10 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
+
+rm -f $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter/gdm-greeter-extension.h
+rm -f $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/pam.d/gdm-password
 
 %find_lang gdm --with-gnome
 
@@ -307,6 +317,9 @@ fi
 %{_sysconfdir}/gconf/schemas/*.schemas
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
+%{_libdir}/libgdm*.so*
+%{_libdir}/gdm/simple-greeter/plugins/password.so
+%{_datadir}/gdm/simple-greeter/extensions/password/page.ui
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/autostart
 %dir %{_datadir}/gdm/autostart/LoginWindow
@@ -320,6 +333,7 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 
+
 %files user-switch-applet
 %defattr(-, root, root)
 %{_libexecdir}/gdm-user-switch-applet
@@ -327,6 +341,12 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Tue Mar 3 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-9
+- Add limited 'one-stack-only' version of multistack patch
+  (See https://fedoraproject.org/wiki/Features/MultiplePAMStacksInGDM)
+- Drop 10 second delay in start up because of broken autostart
+  file
+
 * Fri Feb 27 2009 Matthias Clasen  <mclasen@redhat.com>
 - Require PolicyKit-authentication-agent
 
