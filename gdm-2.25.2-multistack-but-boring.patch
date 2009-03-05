@@ -5589,7 +5589,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-client.h.multistack-but-borin
  
 diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but-boring gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c
 --- gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but-boring	2008-11-18 17:19:05.000000000 -0500
-+++ gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c	2009-03-04 21:03:53.141431898 -0500
++++ gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c	2009-03-05 09:33:10.435596361 -0500
 @@ -1,7 +1,7 @@
  /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
   *
@@ -5746,7 +5746,8 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
 -        set_busy (login_window);
 -        set_sensitive (login_window, FALSE);
 +        GtkActionGroup *actions;
-+
+ 
+-        _gdm_greeter_login_window_set_interactive (login_window, TRUE);
 +        actions = gdm_conversation_get_actions (GDM_CONVERSATION (task));
 +
 +        if (actions != NULL) {
@@ -5788,8 +5789,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
 +                        break;
 +                }
 +        }
- 
--        _gdm_greeter_login_window_set_interactive (login_window, TRUE);
++
 +}
 +
 +static void
@@ -5900,14 +5900,21 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
 +GdmTask *
 +find_task_with_service_name (GdmGreeterLoginWindow *login_window,
 +                             const char            *service_name)
-+{
+ {
+-        const char *typed_text;
+-        char       *null_text;
 +        GdmTask *task;
 +
 +        task = gdm_task_list_foreach_task (GDM_TASK_LIST (login_window->priv->conversation_list),
 +                                           (GdmTaskListForeachFunc)
 +                                           task_has_service_name,
 +                                           (gpointer) service_name);
-+
+ 
+-        /* try to scrub out any secret info */
+-        typed_text = gtk_entry_get_text (GTK_ENTRY (entry));
+-        null_text = g_strnfill (strlen (typed_text) + 1, '\b');
+-        gtk_entry_set_text (GTK_ENTRY (entry), null_text);
+-        gtk_entry_set_text (GTK_ENTRY (entry), "");
 +        return task;
 +}
 +
@@ -5915,16 +5922,9 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
 +reset_task (GdmTaskList           *task_list,
 +            GdmTask               *task,
 +            GdmGreeterLoginWindow *login_window)
- {
--        const char *typed_text;
--        char       *null_text;
++{
 +        char *name;
- 
--        /* try to scrub out any secret info */
--        typed_text = gtk_entry_get_text (GTK_ENTRY (entry));
--        null_text = g_strnfill (strlen (typed_text) + 1, '\b');
--        gtk_entry_set_text (GTK_ENTRY (entry), null_text);
--        gtk_entry_set_text (GTK_ENTRY (entry), "");
++
 +        name = gdm_task_get_name (task);
 +        g_debug ("Resetting task '%s'", name);
 +        g_free (name);
@@ -5947,13 +5947,13 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          }
  
 -        entry = glade_xml_get_widget (GDM_GREETER_LOGIN_WINDOW (login_window)->priv->xml, "auth-prompt-entry");
+-
+-        delete_entry_text (entry);
 +        gdm_task_list_foreach_task (GDM_TASK_LIST (login_window->priv->conversation_list),
 +                                    (GdmTaskListForeachFunc)
 +                                    reset_task,
 +                                    login_window);
  
--        delete_entry_text (entry);
--
 -        gtk_entry_set_visibility (GTK_ENTRY (entry), TRUE);
          set_message (login_window, "");
 -
@@ -6274,7 +6274,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
  }
  
  static void
-@@ -1330,43 +1579,180 @@ on_users_loaded (GdmUserChooserWidget  *
+@@ -1330,43 +1579,183 @@ on_users_loaded (GdmUserChooserWidget  *
          gdm_chooser_widget_activate_if_one_item (GDM_CHOOSER_WIDGET (login_window->priv->user_chooser));
  }
  
@@ -6375,6 +6375,9 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
 +static void
 +begin_auto_login (GdmGreeterLoginWindow *login_window)
 +{
++        g_signal_emit (G_OBJECT (login_window), signals[USER_SELECTED],
++                       0, GDM_USER_CHOOSER_USER_AUTO);
++
 +        g_signal_emit (login_window, signals[BEGIN_AUTO_LOGIN], 0,
 +                       login_window->priv->timed_login_username);
 +
@@ -6476,7 +6479,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
  }
  
  static void
-@@ -1505,6 +1891,69 @@ create_computer_info (GdmGreeterLoginWin
+@@ -1505,6 +1894,69 @@ create_computer_info (GdmGreeterLoginWin
  #define INVISIBLE_CHAR_BULLET        0x2022
  #define INVISIBLE_CHAR_NONE          0
  
@@ -6546,7 +6549,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
  static GtkWidget *
  custom_widget_constructor (GladeXML              *xml,
                             char                  *func_name,
-@@ -1527,6 +1976,8 @@ custom_widget_constructor (GladeXML     
+@@ -1527,6 +1979,8 @@ custom_widget_constructor (GladeXML     
  
          if (strcmp (name, "user-chooser") == 0) {
                 widget = gdm_user_chooser_widget_new ();
@@ -6555,7 +6558,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          }
  
          gdm_profile_end (NULL);
-@@ -1537,7 +1988,6 @@ custom_widget_constructor (GladeXML     
+@@ -1537,7 +1991,6 @@ custom_widget_constructor (GladeXML     
  static void
  load_theme (GdmGreeterLoginWindow *login_window)
  {
@@ -6563,7 +6566,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          GtkWidget *button;
          GtkWidget *box;
          GtkWidget *image;
-@@ -1591,7 +2041,7 @@ load_theme (GdmGreeterLoginWindow *login
+@@ -1591,7 +2044,7 @@ load_theme (GdmGreeterLoginWindow *login
                            login_window);
          g_signal_connect (login_window->priv->user_chooser,
                            "activated",
@@ -6572,7 +6575,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
                            login_window);
          g_signal_connect (login_window->priv->user_chooser,
                            "deactivated",
-@@ -1600,8 +2050,20 @@ load_theme (GdmGreeterLoginWindow *login
+@@ -1600,8 +2053,20 @@ load_theme (GdmGreeterLoginWindow *login
  
          gtk_widget_show (login_window->priv->user_chooser);
  
@@ -6593,7 +6596,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
  
          button = glade_xml_get_widget (login_window->priv->xml, "suspend-button");
          g_signal_connect (button, "clicked", G_CALLBACK (suspend_button_clicked), login_window);
-@@ -1617,14 +2079,6 @@ load_theme (GdmGreeterLoginWindow *login
+@@ -1617,14 +2082,6 @@ load_theme (GdmGreeterLoginWindow *login
          button = glade_xml_get_widget (login_window->priv->xml, "shutdown-button");
          g_signal_connect (button, "clicked", G_CALLBACK (shutdown_button_clicked), login_window);
  
@@ -6608,7 +6611,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          create_computer_info (login_window);
  
          box = glade_xml_get_widget (login_window->priv->xml, "computer-info-event-box");
-@@ -1757,6 +2211,15 @@ gdm_greeter_login_window_class_init (Gdm
+@@ -1757,6 +2214,15 @@ gdm_greeter_login_window_class_init (Gdm
          widget_class->key_press_event = gdm_greeter_login_window_key_press_event;
          widget_class->size_request = gdm_greeter_login_window_size_request;
  
@@ -6624,7 +6627,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          signals [BEGIN_AUTO_LOGIN] =
                  g_signal_new ("begin-auto-login",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1773,9 +2236,9 @@ gdm_greeter_login_window_class_init (Gdm
+@@ -1773,9 +2239,9 @@ gdm_greeter_login_window_class_init (Gdm
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, begin_verification),
                                NULL,
                                NULL,
@@ -6636,7 +6639,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          signals [BEGIN_VERIFICATION_FOR_USER] =
                  g_signal_new ("begin-verification-for-user",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1783,9 +2246,9 @@ gdm_greeter_login_window_class_init (Gdm
+@@ -1783,9 +2249,9 @@ gdm_greeter_login_window_class_init (Gdm
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, begin_verification_for_user),
                                NULL,
                                NULL,
@@ -6648,7 +6651,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          signals [QUERY_ANSWER] =
                  g_signal_new ("query-answer",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1793,9 +2256,9 @@ gdm_greeter_login_window_class_init (Gdm
+@@ -1793,9 +2259,9 @@ gdm_greeter_login_window_class_init (Gdm
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, query_answer),
                                NULL,
                                NULL,
@@ -6660,7 +6663,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
          signals [USER_SELECTED] =
                  g_signal_new ("user-selected",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1833,9 +2296,9 @@ gdm_greeter_login_window_class_init (Gdm
+@@ -1833,9 +2299,9 @@ gdm_greeter_login_window_class_init (Gdm
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, start_session),
                                NULL,
                                NULL,
@@ -6672,7 +6675,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
  
          g_object_class_install_property (object_class,
                                           PROP_DISPLAY_IS_LOCAL,
-@@ -1888,6 +2351,232 @@ on_gconf_key_changed (GConfClient       
+@@ -1888,6 +2354,232 @@ on_gconf_key_changed (GConfClient       
          }
  }
  
@@ -7180,7 +7183,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.h.multistack-but
  G_END_DECLS
  
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-greeter-plugin.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/gdm-greeter-plugin.c	2009-03-04 21:03:53.146447953 -0500
 @@ -0,0 +1,255 @@
 +/*
@@ -7439,7 +7442,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-greeter-plugin.c
 +}
 +
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-greeter-plugin.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/gdm-greeter-plugin.h	2009-03-04 21:03:53.147432504 -0500
 @@ -0,0 +1,61 @@
 +/*
@@ -7769,7 +7772,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-session.c.multistack-but-bori
  }
  
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-plugin-manager.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/gdm-plugin-manager.c	2009-03-04 21:03:53.151447317 -0500
 @@ -0,0 +1,478 @@
 +/*
@@ -8251,7 +8254,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-plugin-manager.c
 +        return g_hash_table_lookup (manager->priv->plugins, name);
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-plugin-manager.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/gdm-plugin-manager.h	2009-03-04 21:03:53.152449048 -0500
 @@ -0,0 +1,66 @@
 +/*
@@ -8321,7 +8324,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-plugin-manager.h
 +
 +#endif /* __GDM_PLUGIN_MANAGER_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-task-list.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/gdm-task-list.c	2009-03-04 21:03:53.153442188 -0500
 @@ -0,0 +1,329 @@
 +/*
@@ -8654,7 +8657,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-task-list.c
 +        return g_list_length (widget->priv->tasks);
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/gdm-task-list.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/gdm-task-list.h	2009-03-04 21:03:53.154446921 -0500
 @@ -0,0 +1,80 @@
 +/*
@@ -8800,7 +8803,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-user-chooser-widget.c.multistack-but-
          pixbuf = gtk_icon_theme_load_icon (widget->priv->icon_theme,
                                             "emblem-default",
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-conversation.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-conversation.c	2009-03-04 21:03:53.157442475 -0500
 @@ -0,0 +1,186 @@
 +/*
@@ -8990,7 +8993,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-convers
 +        return was_chosen;
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-conversation.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-conversation.h	2009-03-04 21:03:53.158446161 -0500
 @@ -0,0 +1,93 @@
 +/*
@@ -9087,7 +9090,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-convers
 +
 +#endif /* __GDM_CONVERSATION_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-greeter-extension.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-greeter-extension.c	2009-03-04 21:03:53.159446844 -0500
 @@ -0,0 +1,93 @@
 +/*
@@ -9184,7 +9187,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-greeter
 +        g_signal_emit (extension, signals [LOAD_FAILED], 0, error);
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-greeter-extension.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-greeter-extension.h	2009-03-04 21:03:53.160442079 -0500
 @@ -0,0 +1,55 @@
 +/*
@@ -9243,7 +9246,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-greeter
 +G_END_DECLS
 +#endif /* __GDM_GREETER_EXTENSION_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdmsimplegreeter.pc.in
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdmsimplegreeter.pc.in	2009-03-04 21:03:53.161442133 -0500
 @@ -0,0 +1,11 @@
 +prefix=@prefix@
@@ -9258,7 +9261,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdmsimplegr
 +Libs: -L${libdir} -lgdmsimplegreeter
 +Cflags: -I${includedir}/gdm/simple-greeter
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-task.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-task.c	2009-03-04 21:03:53.162442257 -0500
 @@ -0,0 +1,123 @@
 +/*
@@ -9385,7 +9388,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-task.c
 +                              0);
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-task.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-task.h	2009-03-04 21:03:53.163442172 -0500
 @@ -0,0 +1,64 @@
 +/*
@@ -9453,7 +9456,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/gdm-task.h
 +
 +#endif /* __GDM_TASK_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/Makefile.am
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/libgdmsimplegreeter/Makefile.am	2009-03-04 21:03:53.164444252 -0500
 @@ -0,0 +1,48 @@
 +NULL =
@@ -9583,7 +9586,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/Makefile.am.multistack-but-boring gdm-2.2
  	$(EXTRA_GREETER_LIBS)   	\
  	$(SIMPLE_GREETER_LIBS)		\
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c	2009-03-04 21:03:53.167443367 -0500
 @@ -0,0 +1,304 @@
 +/*
@@ -9891,7 +9894,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerp
 +        gdm_fingerprint_extension_reset (GDM_CONVERSATION (extension));
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.h	2009-03-04 21:03:53.168442094 -0500
 @@ -0,0 +1,56 @@
 +/*
@@ -9951,7 +9954,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerp
 +
 +#endif /* GDM_FINGERPRINT_EXTENSION_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint	2009-03-04 21:03:53.169450949 -0500
 @@ -0,0 +1,10 @@
 +#%PAM-1.0
@@ -9965,7 +9968,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/gdm-fingerp
 +session    required    pam_namespace.so
 +session    include     system-auth
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/Makefile.am
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/Makefile.am	2009-03-04 21:03:53.170444507 -0500
 @@ -0,0 +1,50 @@
 +NULL =
@@ -10019,7 +10022,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/Makefile.am
 +        *~                              \
 +        Makefile.in
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/page.ui
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/page.ui	2009-03-04 21:03:53.171445819 -0500
 @@ -0,0 +1,56 @@
 +<?xml version="1.0"?>
@@ -10079,7 +10082,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/page.ui
 +    </object>
 +</interface>
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/plugin.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/plugin.c	2009-03-04 21:03:53.172450483 -0500
 @@ -0,0 +1,40 @@
 +/*
@@ -10123,12 +10126,12 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/fingerprint/plugin.c
 +        return GDM_GREETER_EXTENSION (extension);
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/Makefile.am
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/Makefile.am	2009-03-04 21:03:53.173442226 -0500
 @@ -0,0 +1 @@
 +SUBDIRS = password
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password-extension.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password-extension.c	2009-03-04 21:03:53.174446121 -0500
 @@ -0,0 +1,323 @@
 +/*
@@ -10455,7 +10458,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password-e
 +        gdm_password_extension_reset (GDM_CONVERSATION (extension));
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password-extension.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password-extension.h	2009-03-04 21:03:53.175446036 -0500
 @@ -0,0 +1,56 @@
 +/*
@@ -10515,7 +10518,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password-e
 +
 +#endif /* GDM_PASSWORD_EXTENSION_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password	2009-03-04 21:03:53.176442109 -0500
 @@ -0,0 +1,13 @@
 +#%PAM-1.0
@@ -10532,7 +10535,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/gdm-password
 +session    optional    pam_gnome_keyring.so auto_start
 +session    include     system-auth
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/Makefile.am
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/password/Makefile.am	2009-03-04 21:03:53.177442234 -0500
 @@ -0,0 +1,44 @@
 +NULL =
@@ -10580,7 +10583,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/Makefile.am
 +        *~                              \
 +        Makefile.in
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/page.ui
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/password/page.ui	2009-03-04 21:03:53.178442358 -0500
 @@ -0,0 +1,56 @@
 +<?xml version="1.0"?>
@@ -10640,7 +10643,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/page.ui
 +    </object>
 +</interface>
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/plugin.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/password/plugin.c	2009-03-04 21:03:53.179446254 -0500
 @@ -0,0 +1,40 @@
 +/*
@@ -10684,7 +10687,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/password/plugin.c
 +        return GDM_GREETER_EXTENSION (extension);
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard.c	2009-03-04 21:03:53.181445175 -0500
 @@ -0,0 +1,558 @@
 +/* gdm-smartcard.c - smartcard object
@@ -11246,7 +11249,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +        return NULL;
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c	2009-03-04 21:03:53.182438804 -0500
 @@ -0,0 +1,440 @@
 +/*
@@ -11690,7 +11693,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +        gdm_smartcard_extension_reset (GDM_CONVERSATION (extension));
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.h	2009-03-04 21:03:53.184436468 -0500
 @@ -0,0 +1,56 @@
 +/*
@@ -11750,7 +11753,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +
 +#endif /* GDM_SMARTCARD_EXTENSION_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard.h	2009-03-04 21:03:53.185432192 -0500
 @@ -0,0 +1,94 @@
 +/* securitycard.h - api for reading and writing data to a security card
@@ -11848,7 +11851,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +G_END_DECLS
 +#endif                                /* GDM_SMARTCARD_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-manager.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-manager.c	2009-03-04 21:03:53.188432285 -0500
 @@ -0,0 +1,1394 @@
 +/* gdm-smartcard-manager.c - object for monitoring smartcard insertion and
@@ -13246,7 +13249,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +}
 +#endif
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-manager.h
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-manager.h	2009-03-04 21:03:53.189434924 -0500
 @@ -0,0 +1,86 @@
 +/* gdm-smartcard-manager.h - object for monitoring smartcard insertion and
@@ -13336,7 +13339,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +G_END_DECLS
 +#endif                                /* GDM_SMARTCARD_MANAGER_H */
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard	2009-03-04 21:03:53.190448876 -0500
 @@ -0,0 +1,11 @@
 +#%PAM-1.0
@@ -13351,7 +13354,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +session    required    pam_namespace.so
 +session    include     system-auth
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-worker.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard-worker.c	2009-03-04 21:03:53.191446556 -0500
 @@ -0,0 +1,167 @@
 +#include "config.h"
@@ -13522,7 +13525,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/gdm-smartcard
 +        return 0;
 +}
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/Makefile.am
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/Makefile.am	2009-03-04 21:03:53.192442070 -0500
 @@ -0,0 +1,71 @@
 +NULL =
@@ -13597,7 +13600,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/Makefile.am
 +        *~                              \
 +        Makefile.in
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/page.ui
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/page.ui	2009-03-04 21:03:53.193451204 -0500
 @@ -0,0 +1,56 @@
 +<?xml version="1.0"?>
@@ -13657,7 +13660,7 @@ diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/page.ui
 +    </object>
 +</interface>
 diff -up /dev/null gdm-2.25.2/gui/simple-greeter/plugins/smartcard/plugin.c
---- /dev/null	2009-03-04 12:14:59.552269004 -0500
+--- /dev/null	2009-03-05 04:25:32.556261885 -0500
 +++ gdm-2.25.2/gui/simple-greeter/plugins/smartcard/plugin.c	2009-03-04 21:03:53.194449722 -0500
 @@ -0,0 +1,40 @@
 +/*
