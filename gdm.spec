@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -341,6 +341,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Mar 4 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-10
+- Add some fixes for autologin
+
 * Tue Mar 3 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-9
 - Add limited 'one-stack-only' version of multistack patch
   (See https://fedoraproject.org/wiki/Features/MultiplePAMStacksInGDM)
