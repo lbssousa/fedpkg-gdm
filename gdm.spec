@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 13%{?dist}
+Release: 14%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -341,6 +341,12 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Mar 6 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-14
+- Reset "start session when ready" state to FALSE when starting
+  new greeter from existing slave.  May fix problem Chris Ball
+  is seeing with language selection in autologin the second time
+  after boot up.
+
 * Thu Mar 5 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-13
 - 2.25.2-10 fixes were actually only for timed login.
   Add same fix for auto login
