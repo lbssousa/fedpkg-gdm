@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 14%{?dist}
+Release: 15%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -341,6 +341,11 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 9 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-15
+- Don't race with PAM modules that ask questions during
+  pam_open_session (and don't subsequently go bonkers when
+  losing the race).
+
 * Fri Mar 6 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-14
 - Reset "start session when ready" state to FALSE when starting
   new greeter from existing slave.  May fix problem Chris Ball
