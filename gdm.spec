@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 17%{?dist}
+Release: 18%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -46,6 +46,8 @@ Requires: gnome-session
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires: plymouth-gdm-hooks
+# We need 1.0.4-5 since it lets us use "localhost" in auth cookies
+Requires: libXau >= 1.0.4-4
 Requires(post): scrollkeeper
 Requires(postun): scrollkeeper
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
@@ -344,6 +346,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Mar 12 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-18
+- Add Requires: libXau >= 1.0.4-4 to use localhost in xauth cookies
+- Use localhost instead of g_get_host_name ()
+
 * Thu Mar 12 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-17
 - Don't force X server on active vt more than once
 
