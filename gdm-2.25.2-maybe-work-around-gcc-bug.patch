@@ -1,0 +1,27 @@
+diff -up gdm-2.25.2/gui/simple-greeter/gdm-chooser-widget.c.maybe-work-around-gcc-bug gdm-2.25.2/gui/simple-greeter/gdm-chooser-widget.c
+--- gdm-2.25.2/gui/simple-greeter/gdm-chooser-widget.c.maybe-work-around-gcc-bug	2009-03-12 15:19:51.102176587 -0400
++++ gdm-2.25.2/gui/simple-greeter/gdm-chooser-widget.c	2009-03-12 15:20:57.411172890 -0400
+@@ -2311,6 +2311,7 @@ stop_timer (GdmChooserWidget    *widget,
+         GtkTreeModel *model;
+         GtkTreePath  *path;
+         GtkTreeIter   iter;
++        volatile double zero = 0.0;
+ 
+         model = GTK_TREE_MODEL (widget->priv->list_store);
+ 
+@@ -2320,12 +2321,12 @@ stop_timer (GdmChooserWidget    *widget,
+ 
+         gtk_list_store_set (widget->priv->list_store, &iter,
+                             CHOOSER_TIMER_START_TIME_COLUMN,
+-                            0.0, -1);
++                            zero, -1);
+         gtk_list_store_set (widget->priv->list_store, &iter,
+                             CHOOSER_TIMER_DURATION_COLUMN,
+-                            0.0, -1);
++                            zero, -1);
+         gtk_list_store_set (widget->priv->list_store, &iter,
+-                            CHOOSER_TIMER_VALUE_COLUMN, 0.0, -1);
++                            CHOOSER_TIMER_VALUE_COLUMN, zero, -1);
+ 
+         widget->priv->number_of_active_timers--;
+         if (widget->priv->number_of_active_timers == 0) {
