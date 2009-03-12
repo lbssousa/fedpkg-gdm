@@ -335,7 +335,7 @@ diff -ur gdm-2.24.0/daemon/gdm-slave.c new/daemon/gdm-slave.c
 diff -ur gdm-2.24.0/daemon/gdm-static-display.c new/daemon/gdm-static-display.c
 --- gdm-2.24.0/daemon/gdm-static-display.c	2008-07-10 11:07:42.000000000 -0400
 +++ new/daemon/gdm-static-display.c	2008-10-15 16:24:38.000000000 -0400
-@@ -86,10 +86,26 @@
+@@ -86,10 +86,27 @@
  }
  
  static gboolean
@@ -357,8 +357,9 @@ diff -ur gdm-2.24.0/daemon/gdm-static-display.c new/daemon/gdm-static-display.c
  
 +        if (triggered_to_force_display_on_active_vt ()) {
 +                g_object_set (display, "force-active-vt", TRUE, NULL);
++        } else {
++                g_object_set (display, "force-active-vt", FALSE, NULL);
 +        }
-+
          GDM_DISPLAY_CLASS (gdm_static_display_parent_class)->manage (display);
  
          return TRUE;
