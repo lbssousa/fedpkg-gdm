@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.25.2
-Release: 19%{?dist}
+Release: 20%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -93,7 +93,7 @@ Patch13: gdm-system-keyboard.patch
 Patch14: gdm-2.25.2-multistack-but-boring.patch
 Patch15: gdm-2.25.2-start-faster.patch
 
-Patch16: gdm-2.25.2-use-resolvable-hostname.patch
+Patch16: gdm-2.25.2-dont-depend-on-hostname.patch
 Patch17: gdm-2.25.2-maybe-work-around-gcc-bug.patch
 
 # Fedora-specific
@@ -123,7 +123,7 @@ multiple simulanteous logged in users.
 
 %patch14 -p1 -b .multistack-but-boring
 %patch15 -p1 -b .start-faster
-%patch16 -p1 -b .use-resolvable-hostname
+%patch16 -p1 -b .dont-depend-on-hostname
 %patch17 -p1 -b .maybe-work-around-gcc-bug
 
 %patch99 -p1 -b .fedora-logo
@@ -348,6 +348,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Sat Mar 14 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-20
+- Drop the use localhost patch because it broke things.
+  Instead add authorization that doesn't depend on a hostname
+
 * Thu Mar 12 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-19
 - Add a lame patch in the off chance it might work around a
   gcc bug on ppc:

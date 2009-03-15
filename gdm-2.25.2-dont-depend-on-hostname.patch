@@ -1,0 +1,212 @@
+commit c8ff53ab9bd73dd6f752afbf7f7d541ec5e4514e
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Sat Mar 14 22:11:10 2009 -0400
+
+    Make GetX11Cookie dbus method work
+    
+    We were trying to send a binary blob as a utf-8 string.
+    Now we use an ugly GArray.
+
+diff --git a/daemon/gdm-display.c b/daemon/gdm-display.c
+index 323d941..671857a 100644
+--- a/daemon/gdm-display.c
++++ b/daemon/gdm-display.c
+@@ -416,19 +416,16 @@ gdm_display_remove_user_authorization (GdmDisplay *display,
+ 
+ gboolean
+ gdm_display_get_x11_cookie (GdmDisplay *display,
+-                            char      **x11_cookie,
+-                            gsize      *x11_cookie_size,
++                            GArray    **x11_cookie,
+                             GError    **error)
+ {
+         g_return_val_if_fail (GDM_IS_DISPLAY (display), FALSE);
+ 
+         if (x11_cookie != NULL) {
+-                *x11_cookie = g_memdup (display->priv->x11_cookie,
+-                                        display->priv->x11_cookie_size);
+-        }
+-
+-        if (x11_cookie_size != NULL) {
+-                *x11_cookie_size = display->priv->x11_cookie_size;
++                *x11_cookie = g_array_new (FALSE, FALSE, sizeof (char));
++                g_array_append_vals (*x11_cookie,
++                                     display->priv->x11_cookie,
++                                     display->priv->x11_cookie_size);
+         }
+ 
+         return TRUE;
+diff --git a/daemon/gdm-display.h b/daemon/gdm-display.h
+index 2914c81..607ea1d 100644
+--- a/daemon/gdm-display.h
++++ b/daemon/gdm-display.h
+@@ -125,8 +125,7 @@ gboolean            gdm_display_get_timed_login_details        (GdmDisplay *disp
+ 
+ /* exported but protected */
+ gboolean            gdm_display_get_x11_cookie                 (GdmDisplay *display,
+-                                                                char      **x11_cookie,
+-                                                                gsize      *cookie_size,
++                                                                GArray     **x11_cookie,
+                                                                 GError    **error);
+ gboolean            gdm_display_get_x11_authority_file         (GdmDisplay *display,
+                                                                 char      **filename,
+diff --git a/daemon/gdm-display.xml b/daemon/gdm-display.xml
+index e8a2369..a92e37f 100644
+--- a/daemon/gdm-display.xml
++++ b/daemon/gdm-display.xml
+@@ -11,7 +11,7 @@
+       <arg name="name" direction="out" type="i"/>
+     </method>
+     <method name="GetX11Cookie">
+-      <arg name="x11_cookie" direction="out" type="s"/>
++      <arg name="x11_cookie" direction="out" type="ay"/>
+     </method>
+     <method name="GetX11AuthorityFile">
+       <arg name="filename" direction="out" type="s"/>
+diff --git a/daemon/gdm-xdmcp-display-factory.c b/daemon/gdm-xdmcp-display-factory.c
+index 58cdf59..b12b726 100644
+--- a/daemon/gdm-xdmcp-display-factory.c
++++ b/daemon/gdm-xdmcp-display-factory.c
+@@ -2277,19 +2277,17 @@ gdm_xdmcp_handle_request (GdmXdmcpDisplayFactory *factory,
+                                 ARRAY8  authorization_name;
+                                 ARRAY8  authorization_data;
+                                 gint32  session_number;
+-                                char   *cookie;
+-                                gsize   cookie_size;
++                                GArray *cookie;
+                                 char   *name;
+ 
+-                                gdm_display_get_x11_cookie (display, &cookie,
+-                                                            &cookie_size, NULL);
++                                gdm_display_get_x11_cookie (display, &cookie, NULL);
+ 
+                                 gdm_display_get_x11_display_name (display, &name, NULL);
+ 
+                                 g_debug ("GdmXdmcpDisplayFactory: Sending authorization key for display %s", name);
+                                 g_free (name);
+ 
+-                                g_debug ("GdmXdmcpDisplayFactory: cookie len %d", (int) cookie_size);
++                                g_debug ("GdmXdmcpDisplayFactory: cookie len %d", (int) cookie->len);
+ 
+                                 session_number = gdm_xdmcp_display_get_session_number (GDM_XDMCP_DISPLAY (display));
+ 
+@@ -2304,8 +2302,10 @@ gdm_xdmcp_handle_request (GdmXdmcpDisplayFactory *factory,
+                                 authorization_name.data     = (CARD8 *) "MIT-MAGIC-COOKIE-1";
+                                 authorization_name.length   = strlen ((char *) authorization_name.data);
+ 
+-                                authorization_data.data     = (CARD8 *) cookie;
+-                                authorization_data.length   = cookie_size;
++                                authorization_data.data     = (CARD8 *) cookie->data;
++                                authorization_data.length   = cookie->len;
++
++                                g_array_free (cookie, TRUE);
+ 
+                                 /* the addrs are NOT copied */
+                                 gdm_xdmcp_send_accept (factory,
+commit 8d141425bed92140b866c1a83e460aa74d97760f
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Sat Mar 14 22:11:58 2009 -0400
+
+    Don't make slave and greeter display authorization dependent on hostname
+    
+    The hostname can get changed out from under us at any
+    point, so we need to give the slave (and its helpers)
+    and the greeter access to the display based solely on the
+    X11 cookie, without any hostname constraints.
+
+diff --git a/daemon/gdm-slave.c b/daemon/gdm-slave.c
+index 19432dc..a241f73 100644
+--- a/daemon/gdm-slave.c
++++ b/daemon/gdm-slave.c
+@@ -89,6 +89,8 @@ struct GdmSlavePrivate
+         char            *parent_display_name;
+         char            *parent_display_x11_authority_file;
+ 
++        GArray          *display_x11_cookie;
++
+         DBusGProxy      *display_proxy;
+         DBusGConnection *connection;
+ };
+@@ -449,6 +451,12 @@ gdm_slave_connect_to_x11_display (GdmSlave *slave)
+         sigaddset (&mask, SIGCHLD);
+         sigprocmask (SIG_BLOCK, &mask, &omask);
+ 
++        /* Give slave access to the display independent of current hostname */
++        XSetAuthorization ("MIT-MAGIC-COOKIE-1",
++                           strlen ("MIT-MAGIC-COOKIE-1"),
++                           slave->priv->display_x11_cookie->data,
++                           slave->priv->display_x11_cookie->len);
++
+         slave->priv->server_display = XOpenDisplay (slave->priv->display_name);
+ 
+         sigprocmask (SIG_SETMASK, &omask, NULL);
+@@ -458,8 +466,35 @@ gdm_slave_connect_to_x11_display (GdmSlave *slave)
+                 g_warning ("Unable to connect to display %s", slave->priv->display_name);
+                 ret = FALSE;
+         } else {
++                XHostAddress host_entries[2] = {
++                        { FamilyServerInterpreted },
++                        { FamilyServerInterpreted }
++                };
++                XServerInterpretedAddress si_entries[2];
++
+                 g_debug ("GdmSlave: Connected to display %s", slave->priv->display_name);
+                 ret = TRUE;
++
++                /* Give programs run by the slave and greeter access to the display
++                 * independent of current hostname
++                 */
++                si_entries[0].type = "localuser";
++                si_entries[0].typelength = strlen ("localuser");
++                si_entries[1].type = "localuser";
++                si_entries[1].typelength = strlen ("localuser");
++
++                si_entries[0].value = "root";
++                si_entries[0].valuelength = strlen ("root");
++                si_entries[1].value = GDM_USERNAME;
++                si_entries[1].valuelength = strlen (GDM_USERNAME);
++
++                host_entries[0].address = (char *) &si_entries[0];
++                host_entries[0].length = sizeof (XServerInterpretedAddress);
++                host_entries[1].address = (char *) &si_entries[1];
++                host_entries[1].length = sizeof (XServerInterpretedAddress);
++
++                XAddHosts (slave->priv->server_display, host_entries,
++                           G_N_ELEMENTS (host_entries));
+         }
+ 
+         return ret;
+@@ -639,6 +674,25 @@ gdm_slave_real_start (GdmSlave *slave)
+ 
+         error = NULL;
+         res = dbus_g_proxy_call (slave->priv->display_proxy,
++                                 "GetX11Cookie",
++                                 &error,
++                                 G_TYPE_INVALID,
++                                 dbus_g_type_get_collection ("GArray", G_TYPE_CHAR),
++                                 &slave->priv->display_x11_cookie,
++                                 G_TYPE_INVALID);
++        if (! res) {
++                if (error != NULL) {
++                        g_warning ("Failed to get value: %s", error->message);
++                        g_error_free (error);
++                } else {
++                        g_warning ("Failed to get value");
++                }
++
++                return FALSE;
++        }
++
++        error = NULL;
++        res = dbus_g_proxy_call (slave->priv->display_proxy,
+                                  "GetX11AuthorityFile",
+                                  &error,
+                                  G_TYPE_INVALID,
+@@ -1475,6 +1529,7 @@ gdm_slave_finalize (GObject *object)
+         g_free (slave->priv->display_x11_authority_file);
+         g_free (slave->priv->parent_display_name);
+         g_free (slave->priv->parent_display_x11_authority_file);
++        g_array_free (slave->priv->display_x11_cookie, TRUE);
+ 
+         G_OBJECT_CLASS (gdm_slave_parent_class)->finalize (object);
+ }
