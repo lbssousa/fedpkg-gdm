@@ -7045,7 +7045,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.glade.multistack
  			    </widget>
  			    <packing>
  			      <property name="padding">0</property>
-@@ -699,17 +673,11 @@
+@@ -699,16 +673,11 @@
  			  </child>
  
  			  <child>
@@ -7059,7 +7059,6 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.glade.multistack
 -			      <property name="max_length">0</property>
 -			      <property name="text" translatable="yes"></property>
 -			      <property name="has_frame">True</property>
--			      <property name="invisible_char">•</property>
 -			      <property name="activates_default">True</property>
 +			      <property name="int1">0</property>
 +			      <property name="int2">0</property>
@@ -7705,7 +7704,7 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-session.c.multistack-but-bori
 +        gdm_greeter_client_call_start_session_when_ready (session->priv->client, service_name, TRUE);
  }
  
- static void
+ static int
 @@ -321,7 +358,10 @@ toggle_login_window (GdmGreeterSession *
                  is_local = gdm_greeter_client_get_display_is_local (session->priv->client);
                  g_debug ("GdmGreeterSession: Starting a login window local:%d", is_local);

@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.25.2
-Release: 20%{?dist}
+Version: 2.26.0
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -82,7 +82,7 @@ BuildRequires: libxklavier-devel
 Provides: service(graphical-login)
 
 Requires: audit-libs >= %{libauditver}
-Patch2: gdm-2.24.0-force-active-vt.patch
+Patch2: gdm-2.26.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
 Patch4: gdm-2.25.2-append-logs.patch
 
@@ -124,7 +124,7 @@ multiple simulanteous logged in users.
 %patch14 -p1 -b .multistack-but-boring
 %patch15 -p1 -b .start-faster
 %patch16 -p1 -b .dont-depend-on-hostname
-%patch17 -p1 -b .maybe-work-around-gcc-bug
+#%patch17 -p1 -b .maybe-work-around-gcc-bug
 
 %patch99 -p1 -b .fedora-logo
 
@@ -348,6 +348,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 16 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-1
+- Update to 2.26.0
+- Drop gcc workaround.  it might not be needed now.
+
 * Sat Mar 14 2009 Ray Strode <rstrode@redhat.com> - 1:2.25.2-20
 - Drop the use localhost patch because it broke things.
   Instead add authorization that doesn't depend on a hostname
