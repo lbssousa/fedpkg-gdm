@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -94,7 +94,9 @@ Patch14: gdm-2.25.2-multistack-but-boring.patch
 Patch15: gdm-2.25.2-start-faster.patch
 
 Patch16: gdm-2.25.2-dont-depend-on-hostname.patch
-Patch17: gdm-2.25.2-maybe-work-around-gcc-bug.patch
+
+# http://bugzilla.redhat.com/show_bug.cgi?id=485974
+Patch17: gdm-2.26.0-clean-up-auth-entries.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -124,7 +126,7 @@ multiple simulanteous logged in users.
 %patch14 -p1 -b .multistack-but-boring
 %patch15 -p1 -b .start-faster
 %patch16 -p1 -b .dont-depend-on-hostname
-#%patch17 -p1 -b .maybe-work-around-gcc-bug
+%patch17 -p1 -b .clean-up-auth-entries
 
 %patch99 -p1 -b .fedora-logo
 
@@ -348,6 +350,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 16 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-2
+- Clean up empty auth dirs so they don't hang around forever
+  (bug 485974)
+
 * Mon Mar 16 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-1
 - Update to 2.26.0
 - Drop gcc workaround.  it might not be needed now.
