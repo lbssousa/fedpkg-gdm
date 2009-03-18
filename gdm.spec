@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -350,6 +350,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Wed Mar 18 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-3
+- emit "user-selected" signal for non-user items in the list
+  as well.
+
 * Mon Mar 16 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-2
 - Clean up empty auth dirs so they don't hang around forever
   (bug 485974)

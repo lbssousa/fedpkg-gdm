@@ -6407,8 +6407,8 @@ diff -up gdm-2.25.2/gui/simple-greeter/gdm-greeter-login-window.c.multistack-but
 +static void
 +begin_auto_login (GdmGreeterLoginWindow *login_window)
 +{
-+        g_signal_emit (G_OBJECT (login_window), signals[USER_SELECTED],
-+                       0, GDM_USER_CHOOSER_USER_AUTO);
++//        g_signal_emit (G_OBJECT (login_window), signals[USER_SELECTED],
++//                       0, GDM_USER_CHOOSER_USER_AUTO);
 +
 +        g_signal_emit (login_window, signals[BEGIN_AUTO_LOGIN], 0,
 +                       login_window->priv->timed_login_username);
@@ -14299,3 +14299,17 @@ index 1924185..d6b9724 100644
                            "info",
                            G_CALLBACK (on_session_info),
                            slave);
+diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
+index 9797e67..3ac506c 100644
+--- a/gui/simple-greeter/gdm-greeter-login-window.c
++++ b/gui/simple-greeter/gdm-greeter-login-window.c
+@@ -1738,6 +1738,9 @@ on_user_chooser_activated (GdmUserChooserWidget  *user_chooser,
+         item_id = gdm_chooser_widget_get_active_item (GDM_CHOOSER_WIDGET (user_chooser));
+         g_debug ("GdmGreeterLoginWindow: item chosen '%s'", item_id);
+ 
++        g_signal_emit (G_OBJECT (login_window), signals[USER_SELECTED],
++                       0, item_id);
++
+         if (strcmp (item_id, GDM_USER_CHOOSER_USER_OTHER) == 0) {
+                 g_debug ("GdmGreeterLoginWindow: Starting all auth conversations");
+                 g_free (item_id);
