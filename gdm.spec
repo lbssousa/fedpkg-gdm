@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -350,6 +350,11 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Thu Mar 19 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-4
+- Use gethostname() instead of g_get_host_name() when writing
+  out xauth files, because the hostname may change out from
+  under us and glib caches it.
+
 * Wed Mar 18 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-3
 - emit "user-selected" signal for non-user items in the list
   as well.
