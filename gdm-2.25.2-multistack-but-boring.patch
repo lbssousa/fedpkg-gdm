@@ -3455,7 +3455,7 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.multistack-but-boring gdm-2.25.2
 +                conversation = (GdmSessionConversation *) value;
 +
 +                send_dbus_string_signal (conversation, "SetLayoutName",
-+                                         get_language_name (impl));
++                                         get_layout_name (impl));
 +        }
  }
  

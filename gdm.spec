@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.0
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -350,6 +350,9 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Fri Mar 20 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-6
+- Fix problem in keyboard layout selector (483195)
+
 * Thu Mar 19 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-5
 - Use gethostname() _properly_ instead of g_get_host_name() when writing
   out xauth files, because the hostname may change out from
