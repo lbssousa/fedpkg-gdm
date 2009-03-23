@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.0
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -98,6 +98,8 @@ Patch16: gdm-2.25.2-dont-depend-on-hostname.patch
 # http://bugzilla.redhat.com/show_bug.cgi?id=485974
 Patch17: gdm-2.26.0-clean-up-auth-entries.patch
 
+Patch18: gdm-2.26.0-load-settings-for-other-user.patch
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -127,6 +129,7 @@ multiple simulanteous logged in users.
 %patch15 -p1 -b .start-faster
 %patch16 -p1 -b .dont-depend-on-hostname
 %patch17 -p1 -b .clean-up-auth-entries
+%patch18 -p1 -b .load-settings-for-other-user
 
 %patch99 -p1 -b .fedora-logo
 
@@ -350,6 +353,10 @@ fi
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %changelog
+* Mon Mar 23 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-7
+- Load session and language settings when username is read on
+  Other user
+
 * Fri Mar 20 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-6
 - Fix problem in keyboard layout selector (483195)
 
