@@ -11,6 +11,7 @@
 %define consolekit_version 0.2.7
 %define hal_version 0.5.9
 %define fontconfig_version 2.6.0
+%define _default_patch_fuzz 999
 
 Summary: The GNOME Display Manager
 Name: gdm
