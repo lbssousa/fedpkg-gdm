@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.0
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -23,7 +23,13 @@ URL: http://download.gnome.org/sources/gdm
 Source: http://download.gnome.org/sources/gdm/2.25/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
-Source3: gdmsetup-pam
+Source3: gdm-password.pam
+Source4: gdm-smartcard.pam
+Source5: gdm-fingerprint.pam
+Source6: gdm-smartcard-16.png
+Source7: gdm-smartcard-48.png
+Source8: gdm-fingerprint-16.png
+Source9: gdm-fingerprint-48.png
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Prereq: /usr/sbin/useradd
@@ -90,7 +96,6 @@ Patch4: gdm-2.25.2-append-logs.patch
 # should probably be changed to get the system layout from the X server
 Patch13: gdm-system-keyboard.patch
 
-Patch14: gdm-2.25.2-multistack-but-boring.patch
 Patch15: gdm-2.25.2-start-faster.patch
 
 Patch16: gdm-2.25.2-dont-depend-on-hostname.patch
@@ -99,6 +104,7 @@ Patch16: gdm-2.25.2-dont-depend-on-hostname.patch
 Patch17: gdm-2.26.0-clean-up-auth-entries.patch
 
 Patch18: gdm-2.26.0-load-settings-for-other-user.patch
+Patch19: gdm-2.26.0-multistack.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -110,6 +116,16 @@ Requires:  gdm >= 0:2.21.9-0
 Obsoletes: fast-user-switch-applet
 Provides:  fast-user-switch-applet = %{epoch}:%{version}-%{release}
 
+%package plugin-smartcard
+Summary:   GDM smartcard plugin
+Group:     User Interface/Desktops
+Requires:  gdm = %{epoch}:%{version}-%{release}
+
+%package plugin-fingerprint
+Summary:   GDM fingerprint plugin
+Group:     User Interface/Desktops
+Requires:  gdm = %{epoch}:%{version}-%{release}
+
 %description
 GDM provides the graphical login screen, shown shortly after boot up,
 log out, and when user switching.
@@ -118,6 +134,12 @@ log out, and when user switching.
 The GDM user switcher applet provides a mechanism for changing among
 multiple simulanteous logged in users.
 
+%description plugin-smartcard
+The GDM smartcard plugin provides functionality necessary to use a smart card with GDM.
+
+%description plugin-fingerprint
+The GDM fingerprint plugin provides functionality necessary to use a fingerprint reader with GDM.
+
 %prep
 %setup -q
 %patch2 -p1 -b .force-active-vt
@@ -125,11 +147,11 @@ multiple simulanteous logged in users.
 %patch4 -p1 -b .append-logs
 %patch13 -p1 -b .system-keyboard
 
-%patch14 -p1 -b .multistack-but-boring
 %patch15 -p1 -b .start-faster
 %patch16 -p1 -b .dont-depend-on-hostname
 %patch17 -p1 -b .clean-up-auth-entries
 %patch18 -p1 -b .load-settings-for-other-user
+%patch19 -p1 -b .multistack
 
 %patch99 -p1 -b .fedora-logo
 
@@ -138,7 +160,13 @@ autoreconf -i -f
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
-cp -f %{SOURCE3} utils/gdmsetup-pam
+cp -f %{SOURCE3} gui/simple-greeter/plugins/password/gdm-password.pam
+cp -f %{SOURCE4} gui/simple-greeter/plugins/smartcard/gdm-smartcard.pam
+cp -f %{SOURCE5} gui/simple-greeter/plugins/fingerprint/gdm-fingerprint.pam
+cp -f %{SOURCE6} gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png
+cp -f %{SOURCE7} gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png
+cp -f %{SOURCE8} gui/simple-greeter/plugins/fingerprint/icons/16x16/gdm-fingerprint.png
+cp -f %{SOURCE9} gui/simple-greeter/plugins/fingerprint/icons/48x48/gdm-fingerprint.png
 
 %configure --with-pam-prefix=%{_sysconfdir} \
 	   --enable-profiling      \
@@ -192,7 +220,6 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 
 rm -f $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter/gdm-greeter-extension.h
 rm -f $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
-rm -f $RPM_BUILD_ROOT%{_sysconfdir}/pam.d/gdm-password
 
 %find_lang gdm --with-gnome
 
@@ -297,6 +324,7 @@ fi
 %config %{_sysconfdir}/gdm/PostSession/*
 %config %{_sysconfdir}/pam.d/gdm
 %config %{_sysconfdir}/pam.d/gdm-autologin
+%config %{_sysconfdir}/pam.d/gdm-password
 # not config files
 %{_sysconfdir}/gdm/Xsession
 %{_sysconfdir}/gdm/gdm.schemas
@@ -345,14 +373,29 @@ fi
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 
-
 %files user-switch-applet
 %defattr(-, root, root)
 %{_libexecdir}/gdm-user-switch-applet
 %{_libdir}/bonobo/servers/GNOME_FastUserSwitchApplet.server
 %{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
+%files plugin-smartcard
+%defattr(-, root, root)
+%config %{_sysconfdir}/pam.d/gdm-smartcard
+%{_datadir}/gdm/simple-greeter/extensions/smartcard/page.ui
+%{_libdir}/gdm/simple-greeter/plugins/smartcard.so
+%{_libexecdir}/gdm-smartcard-worker
+
+%files plugin-fingerprint
+%defattr(-, root, root)
+%config %{_sysconfdir}/pam.d/gdm-fingerprint
+%{_datadir}/gdm/simple-greeter/extensions/fingerprint/page.ui
+%{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
+
 %changelog
+* Mon Apr 13 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-8
+- Add less boring multistack patch for testing
+
 * Mon Mar 23 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-7
 - Load session and language settings when username is read on
   Other user
