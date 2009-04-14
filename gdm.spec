@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.26.0
-Release: 8%{?dist}
+Version: 2.26.1
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -91,20 +91,11 @@ Provides: service(graphical-login)
 Requires: audit-libs >= %{libauditver}
 Patch2: gdm-2.26.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
-Patch4: gdm-2.25.2-append-logs.patch
 
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
 Patch13: gdm-system-keyboard.patch
 
-Patch15: gdm-2.25.2-start-faster.patch
-
-Patch16: gdm-2.25.2-dont-depend-on-hostname.patch
-
-# http://bugzilla.redhat.com/show_bug.cgi?id=485974
-Patch17: gdm-2.26.0-clean-up-auth-entries.patch
-
-Patch18: gdm-2.26.0-load-settings-for-other-user.patch
 Patch19: gdm-2.26.0-multistack.patch
 
 # Fedora-specific
@@ -145,13 +136,8 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %setup -q
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
-%patch4 -p1 -b .append-logs
 %patch13 -p1 -b .system-keyboard
 
-%patch15 -p1 -b .start-faster
-%patch16 -p1 -b .dont-depend-on-hostname
-%patch17 -p1 -b .clean-up-auth-entries
-%patch18 -p1 -b .load-settings-for-other-user
 %patch19 -p1 -b .multistack
 
 %patch99 -p1 -b .fedora-logo
@@ -394,6 +380,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Apr 14 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-1
+- Update to 2.26.1
+
 * Mon Apr 13 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.0-8
 - Add less boring multistack patch for testing
 
