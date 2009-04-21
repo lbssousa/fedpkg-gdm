@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -96,7 +96,7 @@ Patch3: gdm-2.23.92-save-root-window.patch
 # should probably be changed to get the system layout from the X server
 Patch13: gdm-system-keyboard.patch
 
-Patch19: gdm-2.26.0-multistack.patch
+Patch19: gdm-2.26.1-multistack.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -380,6 +380,10 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Apr 21 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-2
+- Stop inactive pam conversations when one succeeds.
+  Should fix bug 496234
+
 * Tue Apr 14 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-1
 - Update to 2.26.1
 

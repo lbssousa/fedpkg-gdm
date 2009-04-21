@@ -1,4 +1,4 @@
-From 9376a6f3e7fcd139f50dcf0d8c91ce93c8215ec6 Mon Sep 17 00:00:00 2001
+From b96b21d5497ce4ed3b362f4dc09b2f5fd654f3a3 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 13:52:19 -0500
 Subject: [PATCH 01/33] Add a comment marking protected api in chooser
@@ -27,7 +27,7 @@ index 578e613..7e3e59c 100644
 1.6.2.2
 
 
-From 73b2c5ea212dcd38a5c825f264261138edb1f03d Mon Sep 17 00:00:00 2001
+From fafe68243000a7b2f97086daa3d4ad651e7ac905 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 17:44:37 -0500
 Subject: [PATCH 02/33] Drop duplicated entry introspection output
@@ -52,7 +52,7 @@ index 2e01d33..cecce83 100644
 1.6.2.2
 
 
-From c785ddc8f889a566dc247847721a19e88ad9a88f Mon Sep 17 00:00:00 2001
+From 4dc394bb5b87d3cbead40bb6565eec75d755ddae Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 10:07:03 -0500
 Subject: [PATCH 03/33] Make lookup_item not warn when passing NULL for args
@@ -113,7 +113,7 @@ index f0298c6..b1ba9b4 100644
 1.6.2.2
 
 
-From d888673141c9b947ccada6293600765f618c2ef5 Mon Sep 17 00:00:00 2001
+From c68b126096e04b3b963a10658d5a835ab716599f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 15:35:00 -0500
 Subject: [PATCH 04/33] Drop "stopped" signal from worker-job class
@@ -209,7 +209,7 @@ index d42eb37..5ad1c92 100644
 1.6.2.2
 
 
-From d0e4d6a9602b519b2ce991aaabc1dc0b102aca96 Mon Sep 17 00:00:00 2001
+From b1fbbdad6d4fd847b248aaad7eec9a8730714b06 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 11:00:08 -0500
 Subject: [PATCH 05/33] Drop session "Open" in favor of "StartConversation"
@@ -1417,7 +1417,7 @@ index c6a158c..d9fa26e 100644
 1.6.2.2
 
 
-From b79fde5ef2f6c41a516b78dc0666b212ba537273 Mon Sep 17 00:00:00 2001
+From 2e566b37c2b17117a70d1fa4c9e97cfdfeb27e75 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Feb 2009 10:55:03 -0500
 Subject: [PATCH 06/33] Rename session worker to the service it's managing
@@ -1606,7 +1606,7 @@ index d24f025..4833f23 100644
 1.6.2.2
 
 
-From d51d5c4ed394b68eaeaccd43f2556a2729584774 Mon Sep 17 00:00:00 2001
+From cb5359d77225d4cada0664504ef48f47cee49601 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 13:01:48 -0500
 Subject: [PATCH 07/33] Make greeter explicitly request PAM conversation
@@ -1952,7 +1952,7 @@ index 17afb4e..40d5e1f 100644
 1.6.2.2
 
 
-From a9dfd48535ac44d93dbdaa383c4de03b5d76f3a4 Mon Sep 17 00:00:00 2001
+From 312dc5d4950e91983113ac5e482d6a57b1a31258 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 15:18:31 -0500
 Subject: [PATCH 08/33] Store multiple conversations in the session
@@ -2220,7 +2220,7 @@ index 0a71512..4bb14f4 100644
 1.6.2.2
 
 
-From 20255effdda49485f61927d78cdb27abf19d6779 Mon Sep 17 00:00:00 2001
+From 96270a54f06f565aafad25ef9d961c16774b8e1b Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Mar 2009 22:09:21 -0500
 Subject: [PATCH 09/33] start autologin conversation when creating session if necessary
@@ -2258,7 +2258,7 @@ index 732c085..30faaa6 100644
 1.6.2.2
 
 
-From 05215925c9946ea7011ef7281e9dab34026523e9 Mon Sep 17 00:00:00 2001
+From 736b134ce488097d962afc2e322288557ce5fda4 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 22 Jan 2009 08:52:01 -0500
 Subject: [PATCH 10/33] Propagate service name to more layers
@@ -4877,10 +4877,10 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index ea4b8bd..b986189 100644
+index fa39c3b..3b4288c 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2564,6 +2564,28 @@ worker_dbus_filter_function (DBusConnection *connection,
+@@ -2574,6 +2574,28 @@ worker_dbus_filter_function (DBusConnection *connection,
          return DBUS_HANDLER_RESULT_HANDLED;
  }
  
@@ -4909,7 +4909,7 @@ index ea4b8bd..b986189 100644
  static GObject *
  gdm_session_worker_constructor (GType                  type,
                                  guint                  n_construct_properties,
-@@ -2590,6 +2612,11 @@ gdm_session_worker_constructor (GType                  type,
+@@ -2600,6 +2622,11 @@ gdm_session_worker_constructor (GType                  type,
                  exit (1);
          }
  
@@ -6300,7 +6300,7 @@ index 40d5e1f..ca6fb4f 100644
 1.6.2.2
 
 
-From e1627378385cacea168afeb61771dc1c1536db70 Mon Sep 17 00:00:00 2001
+From 75d9abdf87e20d4382882f47f1434381f0a944bf Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Sat, 7 Feb 2009 11:36:40 -0500
 Subject: [PATCH 11/33] emit "ConversationStopped" signal at end of conv
@@ -6651,7 +6651,7 @@ index e18f907..d08613f 100644
 1.6.2.2
 
 
-From 0f3e91582818b7cabd9b0b44e06b624759a1e8ae Mon Sep 17 00:00:00 2001
+From 66e8c2a4e38fc9bdd60b83c9bed480ed3bc90358 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 9 Mar 2009 15:41:12 -0400
 Subject: [PATCH 12/33] Don't tear down greeter until pam_open_session finishes
@@ -7000,10 +7000,10 @@ index 6e15f75..3bf8ed7 100644
  
          iface->cancel = gdm_session_relay_cancel;
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index b986189..302d608 100644
+index 3b4288c..b470d88 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2187,13 +2187,13 @@ do_open_session (GdmSessionWorker *worker)
+@@ -2197,13 +2197,13 @@ do_open_session (GdmSessionWorker *worker)
          res = gdm_session_worker_open_user_session (worker, &error);
          if (! res) {
                  send_dbus_string_method (worker->priv->connection,
@@ -7019,7 +7019,7 @@ index b986189..302d608 100644
  }
  
  static void
-@@ -2309,7 +2309,7 @@ on_start_program (GdmSessionWorker *worker,
+@@ -2319,7 +2319,7 @@ on_start_program (GdmSessionWorker *worker,
          const char *text;
          dbus_bool_t res;
  
@@ -7028,7 +7028,7 @@ index b986189..302d608 100644
  
          dbus_error_init (&error);
          res = dbus_message_get_args (message,
-@@ -2448,6 +2448,14 @@ on_establish_credentials (GdmSessionWorker *worker,
+@@ -2458,6 +2458,14 @@ on_establish_credentials (GdmSessionWorker *worker,
  }
  
  static void
@@ -7043,7 +7043,7 @@ index b986189..302d608 100644
  on_reauthenticate (GdmSessionWorker *worker,
                     DBusMessage      *message)
  {
-@@ -2507,6 +2515,8 @@ worker_dbus_handle_message (DBusConnection *connection,
+@@ -2517,6 +2525,8 @@ worker_dbus_handle_message (DBusConnection *connection,
                  on_authorize (worker, message);
          } else if (dbus_message_is_signal (message, GDM_SESSION_DBUS_INTERFACE, "EstablishCredentials")) {
                  on_establish_credentials (worker, message);
@@ -7230,7 +7230,7 @@ index d08613f..17f5f7a 100644
 1.6.2.2
 
 
-From 95ca599fa5fe182bc09ab4ff359cdb8e67a17410 Mon Sep 17 00:00:00 2001
+From 61199d66b2ea68ae38215cf614e897c86f1abf1a Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 30 Jan 2009 23:57:31 -0500
 Subject: [PATCH 13/33] Add limited support for multiple pam stacks
@@ -7987,7 +7987,7 @@ index 0000000..ade21b6
 1.6.2.2
 
 
-From 6c9b5b6334732c53867d863e80a8cc3210cc1563 Mon Sep 17 00:00:00 2001
+From 1411345bfefbba0c1213152fdf890b5691661bd5 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Mar 2009 11:19:40 -0500
 Subject: [PATCH 14/33] Create session settings object when first starting worker
@@ -8001,10 +8001,10 @@ set by the user.
  1 files changed, 1 insertions(+), 2 deletions(-)
 
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 302d608..d3d356c 100644
+index b470d88..33706d7 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2050,8 +2050,6 @@ do_setup (GdmSessionWorker *worker)
+@@ -2060,8 +2060,6 @@ do_setup (GdmSessionWorker *worker)
          GError  *error;
          gboolean res;
  
@@ -8013,7 +8013,7 @@ index 302d608..d3d356c 100644
          g_signal_connect_swapped (worker->priv->user_settings,
                                    "notify::language-name",
                                    G_CALLBACK (on_saved_language_name_read),
-@@ -2668,6 +2666,7 @@ gdm_session_worker_init (GdmSessionWorker *worker)
+@@ -2678,6 +2676,7 @@ gdm_session_worker_init (GdmSessionWorker *worker)
                                                             g_str_equal,
                                                             (GDestroyNotify) g_free,
                                                             (GDestroyNotify) g_free);
@@ -8025,7 +8025,7 @@ index 302d608..d3d356c 100644
 1.6.2.2
 
 
-From 3358198f6e5780ec02fb3adc3dcd7b47b8dae77c Mon Sep 17 00:00:00 2001
+From 2d2ad2f1ff74adf42bbe00fc650676f7816a644a Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 5 Feb 2009 15:20:25 -0500
 Subject: [PATCH 15/33] Queue a greeter reset when the user clicks cancel
@@ -8164,7 +8164,7 @@ index 17f5f7a..09a7425 100644
 1.6.2.2
 
 
-From 7f82493b40ea7c05586029603ebde42c65aa1bec Mon Sep 17 00:00:00 2001
+From 5231302bd0b9611984639530884b14e6400e786f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:23:48 -0500
 Subject: [PATCH 16/33] Add a plugin based extension system to greeter
@@ -8225,7 +8225,7 @@ run.
  create mode 100644 gui/simple-greeter/plugins/password/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index be6580d..f0842c8 100644
+index 925a353..23df306 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -18,6 +18,22 @@ AC_PROG_CXX
@@ -12345,7 +12345,7 @@ index 0000000..9b87c67
 1.6.2.2
 
 
-From 84507da713c1ed0aa1b49aaff32ef8a3b623a626 Mon Sep 17 00:00:00 2001
+From ff3ec0b56e8343b86eec5edf9399ff12826cf861 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Sat, 7 Feb 2009 21:17:49 -0500
 Subject: [PATCH 17/33] Force session reset if all PAM conversations fail
@@ -12404,7 +12404,7 @@ index 2e9a1a0..92a4c85 100644
 1.6.2.2
 
 
-From 9449c8b47a1b8a1657599820256f3757d189e890 Mon Sep 17 00:00:00 2001
+From 619749c673af1404da29c82504a42f85f0f05be7 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 18 Feb 2009 12:32:39 -0500
 Subject: [PATCH 18/33] Add a way for plugins to pick users from list
@@ -12561,7 +12561,7 @@ index f1910cf..fb4bf49 100644
 1.6.2.2
 
 
-From c6d4f75ae3d2a9bc6242ea0245989e41becb80c3 Mon Sep 17 00:00:00 2001
+From 250fde71f653d72ac3e5f4528dd70492ae11e285 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 14:05:20 -0500
 Subject: [PATCH 19/33] Add new api to ask when chooser widget is done loading items
@@ -12617,7 +12617,7 @@ index 7e3e59c..6a07843 100644
 1.6.2.2
 
 
-From 30a9844e1ce4db5363d2179bd8d6ad363fa44c71 Mon Sep 17 00:00:00 2001
+From cd41af42ac3bdb25d30b03be33efa20edb23b72d Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 14:31:27 -0500
 Subject: [PATCH 20/33] Tell tasks they're ready only after user list loads
@@ -12677,7 +12677,7 @@ index 8711992..e44122c 100644
 1.6.2.2
 
 
-From 53437dbdb93925167dd8ae084a0ba97af8b03cff Mon Sep 17 00:00:00 2001
+From 15dfb038516dcb27866371a1dcfd988137bd5072 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:25:47 -0500
 Subject: [PATCH 21/33] Add fingerprint plugin
@@ -12685,31 +12685,40 @@ Subject: [PATCH 21/33] Add fingerprint plugin
 This commit adds a plugin to initiate a conversation for
 fingerprint scans.
 ---
- configure.ac                                       |    1 +
+ configure.ac                                       |    4 +
  gui/simple-greeter/plugins/Makefile.am             |    2 +-
- gui/simple-greeter/plugins/fingerprint/Makefile.am |   54 ++++
+ gui/simple-greeter/plugins/fingerprint/Makefile.am |   56 ++++
  .../fingerprint/gdm-fingerprint-extension.c        |  299 ++++++++++++++++++++
  .../fingerprint/gdm-fingerprint-extension.h        |   56 ++++
  .../plugins/fingerprint/gdm-fingerprint.pam        |   17 ++
+ .../plugins/fingerprint/icons/16x16/Makefile.am    |    5 +
+ .../plugins/fingerprint/icons/48x48/Makefile.am    |    5 +
+ .../plugins/fingerprint/icons/Makefile.am          |    1 +
  gui/simple-greeter/plugins/fingerprint/page.ui     |   56 ++++
  gui/simple-greeter/plugins/fingerprint/plugin.c    |   40 +++
- 8 files changed, 524 insertions(+), 1 deletions(-)
+ 11 files changed, 540 insertions(+), 1 deletions(-)
  create mode 100644 gui/simple-greeter/plugins/fingerprint/Makefile.am
  create mode 100644 gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
  create mode 100644 gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.h
  create mode 100644 gui/simple-greeter/plugins/fingerprint/gdm-fingerprint.pam
+ create mode 100644 gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am
+ create mode 100644 gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am
+ create mode 100644 gui/simple-greeter/plugins/fingerprint/icons/Makefile.am
  create mode 100644 gui/simple-greeter/plugins/fingerprint/page.ui
  create mode 100644 gui/simple-greeter/plugins/fingerprint/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index f0842c8..13b2cac 100644
+index 23df306..da7ce2c 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1402,6 +1402,7 @@ gui/simple-greeter/libgdmsimplegreeter/Makefile
+@@ -1402,6 +1402,10 @@ gui/simple-greeter/libgdmsimplegreeter/Makefile
  gui/simple-greeter/libgdmsimplegreeter/gdmsimplegreeter.pc
  gui/simple-greeter/plugins/Makefile
  gui/simple-greeter/plugins/password/Makefile
 +gui/simple-greeter/plugins/fingerprint/Makefile
++gui/simple-greeter/plugins/fingerprint/icons/Makefile
++gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile
++gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile
  gui/simple-chooser/Makefile
  gui/user-switch-applet/Makefile
  utils/Makefile
@@ -12722,10 +12731,12 @@ index c0390db..9811a68 100644
 +SUBDIRS = password fingerprint
 diff --git a/gui/simple-greeter/plugins/fingerprint/Makefile.am b/gui/simple-greeter/plugins/fingerprint/Makefile.am
 new file mode 100644
-index 0000000..d5f7e28
+index 0000000..25fb6e8
 --- /dev/null
 +++ b/gui/simple-greeter/plugins/fingerprint/Makefile.am
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,56 @@
++SUBDIRS = icons
++
 +NULL =
 +PAM_SERVICE_NAME = gdm-fingerprint
 +
@@ -12782,7 +12793,7 @@ index 0000000..d5f7e28
 +        Makefile.in
 diff --git a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
 new file mode 100644
-index 0000000..7f5eb1c
+index 0000000..b20dd65
 --- /dev/null
 +++ b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
 @@ -0,0 +1,299 @@
@@ -13080,7 +13091,7 @@ index 0000000..7f5eb1c
 +                                                       GDM_TYPE_FINGERPRINT_EXTENSION,
 +                                                       GdmFingerprintExtensionPrivate);
 +
-+        extension->priv->icon = g_themed_icon_new ("stock_allow-effects");
++        extension->priv->icon = g_themed_icon_new ("gdm-fingerprint");
 +        create_page (extension);
 +        create_actions (extension);
 +        gdm_fingerprint_extension_reset (GDM_CONVERSATION (extension));
@@ -13170,6 +13181,35 @@ index 0000000..1a1c777
 +session     optional      pam_keyinit.so revoke
 +session     required      pam_limits.so
 +session     required      pam_unix.so
+diff --git a/gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am b/gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am
+new file mode 100644
+index 0000000..f42e317
+--- /dev/null
++++ b/gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am
+@@ -0,0 +1,5 @@
++iconsdir = $(datadir)/icons/hicolor/16x16/apps
++
++icons_DATA = gdm-fingerprint.png
++
++EXTRA_DIST = $(icons_DATA)
+diff --git a/gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am b/gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am
+new file mode 100644
+index 0000000..f4ab2a0
+--- /dev/null
++++ b/gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am
+@@ -0,0 +1,5 @@
++iconsdir = $(datadir)/icons/hicolor/48x48/apps
++
++icons_DATA = gdm-fingerprint.png
++
++EXTRA_DIST = $(icons_DATA)
+diff --git a/gui/simple-greeter/plugins/fingerprint/icons/Makefile.am b/gui/simple-greeter/plugins/fingerprint/icons/Makefile.am
+new file mode 100644
+index 0000000..c20f10d
+--- /dev/null
++++ b/gui/simple-greeter/plugins/fingerprint/icons/Makefile.am
+@@ -0,0 +1 @@
++SUBDIRS = 16x16 48x48
 diff --git a/gui/simple-greeter/plugins/fingerprint/page.ui b/gui/simple-greeter/plugins/fingerprint/page.ui
 new file mode 100644
 index 0000000..fe6da78
@@ -13282,7 +13322,7 @@ index 0000000..5ea9925
 1.6.2.2
 
 
-From 49ade5091550014f22b93ef888861f536fb04fd8 Mon Sep 17 00:00:00 2001
+From 8374d74f6c66da5f6b5afa4d504b5fccaeba41f7 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 11 Feb 2009 08:47:52 -0500
 Subject: [PATCH 22/33] Add start of a smartcard plugin
@@ -13290,9 +13330,9 @@ Subject: [PATCH 22/33] Add start of a smartcard plugin
 It contains a copy and paste of an old RHEL patch
 I did a few years ago.
 ---
- configure.ac                                       |    8 +
+ configure.ac                                       |   11 +
  gui/simple-greeter/plugins/Makefile.am             |    2 +-
- gui/simple-greeter/plugins/smartcard/Makefile.am   |   75 ++
+ gui/simple-greeter/plugins/smartcard/Makefile.am   |   77 ++
  .../plugins/smartcard/gdm-smartcard-extension.c    |  420 ++++++
  .../plugins/smartcard/gdm-smartcard-extension.h    |   56 +
  .../plugins/smartcard/gdm-smartcard-manager.c      | 1394 ++++++++++++++++++++
@@ -13301,9 +13341,14 @@ I did a few years ago.
  .../plugins/smartcard/gdm-smartcard.c              |  558 ++++++++
  .../plugins/smartcard/gdm-smartcard.h              |   94 ++
  .../plugins/smartcard/gdm-smartcard.pam            |   18 +
+ .../plugins/smartcard/icons/16x16/Makefile.am      |    5 +
+ .../smartcard/icons/16x16/gdm-smartcard.png        |  Bin 0 -> 871 bytes
+ .../plugins/smartcard/icons/48x48/Makefile.am      |    5 +
+ .../smartcard/icons/48x48/gdm-smartcard.png        |  Bin 0 -> 4202 bytes
+ .../plugins/smartcard/icons/Makefile.am            |    1 +
  gui/simple-greeter/plugins/smartcard/page.ui       |   56 +
  gui/simple-greeter/plugins/smartcard/plugin.c      |   40 +
- 13 files changed, 2973 insertions(+), 1 deletions(-)
+ 18 files changed, 2989 insertions(+), 1 deletions(-)
  create mode 100644 gui/simple-greeter/plugins/smartcard/Makefile.am
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.h
@@ -13313,11 +13358,16 @@ I did a few years ago.
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard.c
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard.h
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard.pam
+ create mode 100644 gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am
+ create mode 100644 gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png
+ create mode 100644 gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am
+ create mode 100644 gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png
+ create mode 100644 gui/simple-greeter/plugins/smartcard/icons/Makefile.am
  create mode 100644 gui/simple-greeter/plugins/smartcard/page.ui
  create mode 100644 gui/simple-greeter/plugins/smartcard/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index 13b2cac..af5d316 100644
+index da7ce2c..3b2b925 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -67,6 +67,7 @@ GNOME_PANEL_REQUIRED_VERSION=2.0.0
@@ -13341,11 +13391,14 @@ index 13b2cac..af5d316 100644
  PKG_CHECK_MODULES(XLIB, x11 xau, ,
    [AC_PATH_XTRA
      if test "x$no_x" = xyes; then
-@@ -1403,6 +1410,7 @@ gui/simple-greeter/libgdmsimplegreeter/gdmsimplegreeter.pc
- gui/simple-greeter/plugins/Makefile
- gui/simple-greeter/plugins/password/Makefile
- gui/simple-greeter/plugins/fingerprint/Makefile
+@@ -1406,6 +1413,10 @@ gui/simple-greeter/plugins/fingerprint/Makefile
+ gui/simple-greeter/plugins/fingerprint/icons/Makefile
+ gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile
+ gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile
 +gui/simple-greeter/plugins/smartcard/Makefile
++gui/simple-greeter/plugins/smartcard/icons/Makefile
++gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile
++gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile
  gui/simple-chooser/Makefile
  gui/user-switch-applet/Makefile
  utils/Makefile
@@ -13358,10 +13411,12 @@ index 9811a68..3dd336f 100644
 +SUBDIRS = password fingerprint smartcard
 diff --git a/gui/simple-greeter/plugins/smartcard/Makefile.am b/gui/simple-greeter/plugins/smartcard/Makefile.am
 new file mode 100644
-index 0000000..15d0174
+index 0000000..1ccebda
 --- /dev/null
 +++ b/gui/simple-greeter/plugins/smartcard/Makefile.am
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,77 @@
++SUBDIRS = icons
++
 +NULL =
 +PAM_SERVICE_NAME = gdm-smartcard
 +
@@ -13439,7 +13494,7 @@ index 0000000..15d0174
 +        Makefile.in
 diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 new file mode 100644
-index 0000000..621d1ab
+index 0000000..632ee2d
 --- /dev/null
 +++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 @@ -0,0 +1,420 @@
@@ -13858,7 +13913,7 @@ index 0000000..621d1ab
 +                                                       GDM_TYPE_SMARTCARD_EXTENSION,
 +                                                       GdmSmartcardExtensionPrivate);
 +
-+        extension->priv->icon = g_themed_icon_new ("apple-green");
++        extension->priv->icon = g_themed_icon_new ("gdm-smartcard");
 +        create_page (extension);
 +        create_actions (extension);
 +        gdm_smartcard_extension_reset (GDM_CONVERSATION (extension));
@@ -16278,6 +16333,152 @@ index 0000000..3c803f7
 +session     optional      pam_keyinit.so revoke
 +session     required      pam_limits.so
 +session     required      pam_unix.so
+diff --git a/gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am b/gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am
+new file mode 100644
+index 0000000..661d687
+--- /dev/null
++++ b/gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am
+@@ -0,0 +1,5 @@
++iconsdir = $(datadir)/icons/hicolor/16x16/apps
++
++icons_DATA = gdm-smartcard.png
++
++EXTRA_DIST = $(icons_DATA)
+diff --git a/gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png b/gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..0112af1b8d891ad312f9fcc3bf6074df3e003359
+GIT binary patch
+literal 871
+zcmV-t1DO1YP)<h;3K|Lk000e1NJLTq000mG000mO1^@s6AM^iV00001b5ch_0Itp)
+z=>Px#24YJ`L;wH)0002_L%V+f000SaNLh0L01ejw01ejxLMWSf00007bV*G`2iXJ-
+z6cQQvze?o*000?uMObu0Z*6U5Zgc=ca%Ew3Wn>_CX>@2HM@dakSAh-}0008QNkl<Z
+zILoDzO=uKn0EVCWc6N4VH=}F?g{J6QBie2n4H`-{iH3Ocr_xLD)X+mq4R}|3XeEcG
+zP)QFBf>25h)mRS()F5IML|LeofZ5$Phq#SvEXn3)x9QHz&V1jD*OHUa=lnh|yoWc&
+zo1+2m0}628RN4)kP9zfJhGEoz$TZEX{|)Htgf`%?ZQIABl!txa-_X&~;rI9Vo88^r
+z<nwt(Mn*QTFF2Y?r9O+I=!oZe>1;L|^!4>6dV71>-}NC2_0X(TUE+qIrDYmT)AaSb
+zqQSwzu&1X-?Cbi7rG`eaTxYT75y*%ZE6&r0<4pW|3Ey2K2m+~;x&Y(=rCFBMd{LP<
+ze!f%2@g%ktXZzbJvY9kitjV=&V+;=uGc+_rtyZH_sW3S?$@KK}cfeU)DJ6Ufjwku*
+z#Jf~p{6)1o%ag||*tX5+=qR~dj#8<_+}s>O2(sBM#bWVH7>3^p-}m(}(unH<C4H1q
+zWHK4r+uJD>3ls_kY}+QE&oeeQMlzYCTCI{!r;|XJ05A-lFao6%Gcz-k%VnBP$+`1i
+z^JL;6j^og}#l)>&;?s|J5k(Q5do}@lp##MA7)pgK{$tR(^AIgbgR>VO(YA9dDYL-`
+zsh`;Y<p!MD+jMMP<A+aP@psMP-hFxnfaf{@cumPKH~-|1=PR84yb~qfLZPv}e}LA#
+z@N(%lawET!GFCAI7oZ{l5=IPwdsFjl+mU9z?h*tcD+_Z3fh0x)fUDyUsu2TS0~G-v
+z0AfPp_`wW&+tPGyUS#>%6?x&ziM4udm5K2(B3uPvQ%dL5Nt5QX;$Nu&Y|(&dU|=Ac
+znwoM8g@R?8=8}~1uJ8MIfoDQ+^ZMlj@4UAwMAl}h&MMZb@Tk<}`x}kRnq^tHG);3I
+x$GHPM0G_Y=$2Q;_pbrQE4|oMk0zdM9c?}H%H!P_~w{rjh002ovPDHLkV1ieHj1>R?
+
+literal 0
+HcmV?d00001
+
+diff --git a/gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am b/gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am
+new file mode 100644
+index 0000000..e79d85b
+--- /dev/null
++++ b/gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am
+@@ -0,0 +1,5 @@
++iconsdir = $(datadir)/icons/hicolor/48x48/apps
++
++icons_DATA = gdm-smartcard.png
++
++EXTRA_DIST = $(icons_DATA)
+diff --git a/gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png b/gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..35d5578d9ec83ae6b17aa7230c1b4df34e13e2cc
+GIT binary patch
+literal 4202
+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
+ARR910
+
+literal 0
+HcmV?d00001
+
+diff --git a/gui/simple-greeter/plugins/smartcard/icons/Makefile.am b/gui/simple-greeter/plugins/smartcard/icons/Makefile.am
+new file mode 100644
+index 0000000..c20f10d
+--- /dev/null
++++ b/gui/simple-greeter/plugins/smartcard/icons/Makefile.am
+@@ -0,0 +1 @@
++SUBDIRS = 16x16 48x48
 diff --git a/gui/simple-greeter/plugins/smartcard/page.ui b/gui/simple-greeter/plugins/smartcard/page.ui
 new file mode 100644
 index 0000000..fe6da78
@@ -16390,7 +16591,7 @@ index 0000000..fffbd50
 1.6.2.2
 
 
-From 13aad0517da16305096619edf7039666ce219b08 Mon Sep 17 00:00:00 2001
+From 4cfc355618cbc1d47650ad7483d06c3980cfcc46 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 23 Feb 2009 17:57:06 -0500
 Subject: [PATCH 23/33] Add a new "choosable" property to show tasks in user list
@@ -16474,7 +16675,7 @@ index 9894e65..c75bf29 100644
  
  #endif /* __GDM_TASK_H */
 diff --git a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
-index 7f5eb1c..7c74ecf 100644
+index b20dd65..7aa99e7 100644
 --- a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
 +++ b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
 @@ -188,12 +188,19 @@ gdm_fingerprint_extension_get_description (GdmTask *task)
@@ -16522,7 +16723,7 @@ index fae73be..e6c608a 100644
  
  static void
 diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-index 621d1ab..f09b4e4 100644
+index 632ee2d..ed19e62 100644
 --- a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 +++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 @@ -290,12 +290,19 @@ gdm_smartcard_extension_get_description (GdmTask *task)
@@ -16549,7 +16750,7 @@ index 621d1ab..f09b4e4 100644
 1.6.2.2
 
 
-From 2680b95658e405c6dd8bdfdabc8f65563c145848 Mon Sep 17 00:00:00 2001
+From 11616eee76ac2e6c75c4b090f590696159eb3b92 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 24 Feb 2009 15:12:35 -0500
 Subject: [PATCH 24/33] Separate handling of non-users in user list from users
@@ -16696,7 +16897,7 @@ index b1cb281..e0737b8 100644
  
  void
 diff --git a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
-index 7c74ecf..63f6ef3 100644
+index 7aa99e7..316ef46 100644
 --- a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
 +++ b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
 @@ -287,8 +287,6 @@ create_page (GdmFingerprintExtension *extension)
@@ -16712,7 +16913,7 @@ index 7c74ecf..63f6ef3 100644
 1.6.2.2
 
 
-From be32bed9081cd6dfedea8fdbaa488693823edc11 Mon Sep 17 00:00:00 2001
+From 7643db3623d28426893d7648ff65e3f030339c5d Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 27 Feb 2009 15:44:13 -0500
 Subject: [PATCH 25/33] Initiate smart card auth when clicking on it in list
@@ -16772,7 +16973,7 @@ index 3f4c031..782cee8 100644
  
          g_debug ("GdmGreeterLoginWindow: Switching to shrunken authentication mode");
 diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-index f09b4e4..8e87db6 100644
+index ed19e62..d3641ba 100644
 --- a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 +++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 @@ -103,7 +103,7 @@ on_smartcard_event (GIOChannel   *io_channel,
@@ -16788,7 +16989,7 @@ index f09b4e4..8e87db6 100644
 1.6.2.2
 
 
-From 3889d41f9eae0838dfc0e7e0e0bedefe3f649e74 Mon Sep 17 00:00:00 2001
+From 11d32d79e676ec4c46ad5bb1b51c2a8f17c519f0 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 11:10:28 -0500
 Subject: [PATCH 26/33] Only show task list if user is selected
@@ -16986,7 +17187,7 @@ index 25831a6..162b784 100644
 1.6.2.2
 
 
-From 03c44926a11cdb18f9f5492abcee8f6b11aca892 Mon Sep 17 00:00:00 2001
+From 3122b474ebd0325e2cd6e45748f3a67e3436a5a6 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 13:53:34 -0500
 Subject: [PATCH 27/33] Pull verification functions out into their own subroutines
@@ -17158,7 +17359,7 @@ index 78e4644..ac3767a 100644
 1.6.2.2
 
 
-From f06b523bd8e19902ce38affcdffcbabc0dd4d7b0 Mon Sep 17 00:00:00 2001
+From 23902b5f178ef6662850ae81a96f3c9aafc66317 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 13:57:34 -0500
 Subject: [PATCH 28/33] Add new function find_task_with_service_name
@@ -17282,7 +17483,7 @@ index ac3767a..fa93108 100644
 1.6.2.2
 
 
-From 32b7ce16fbb4a46369932e4b4d648135b87636b1 Mon Sep 17 00:00:00 2001
+From adf32974d4fb816688498552727d664c80653064 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 15:23:51 -0500
 Subject: [PATCH 29/33] Drop the different auth modes in favor of calling reset manually
@@ -17433,7 +17634,7 @@ index fa93108..ed009a4 100644
 1.6.2.2
 
 
-From c3c9927ace5ea32c918277ec70a379ef61d421dc Mon Sep 17 00:00:00 2001
+From 996f22a0da8d207932f1efc1b30b337c485fa681 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 17:09:16 -0500
 Subject: [PATCH 30/33] Notify plugins if their user choose requests fail
@@ -17594,7 +17795,7 @@ index fb4bf49..b37b21e 100644
  G_END_DECLS
  
 diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-index 8e87db6..5a2c380 100644
+index d3641ba..73e0f84 100644
 --- a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 +++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 @@ -53,6 +53,7 @@ struct _GdmSmartcardExtensionPrivate
@@ -17646,7 +17847,7 @@ index 8e87db6..5a2c380 100644
 1.6.2.2
 
 
-From 8697958c238a200a33d7954d82965d11ef36419b Mon Sep 17 00:00:00 2001
+From c98a8ac6971b44071aef38a29b550378554a733b Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 13 Apr 2009 14:19:50 -0400
 Subject: [PATCH 31/33] reset all conversations if password conversation fails
@@ -17682,299 +17883,166 @@ index a16948f..3daf89d 100644
 1.6.2.2
 
 
-From 7b65eadcc7ab206c0ac8167cc22a30cfaaf07f5a Mon Sep 17 00:00:00 2001
+From 339ca93db8f4896eaf02667c1268ddc9d1830345 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
-Date: Mon, 13 Apr 2009 16:49:12 -0400
-Subject: [PATCH 32/33] Add icon for smartcard plugin
+Date: Tue, 21 Apr 2009 10:25:18 -0400
+Subject: [PATCH 32/33] When one PAM conversation wins, stop the others
 
-We were just using the green apple before.
+This doesn't work yet, it's still in progress code.
 ---
- configure.ac                                       |    3 +++
- gui/simple-greeter/plugins/smartcard/Makefile.am   |    2 ++
- .../plugins/smartcard/gdm-smartcard-extension.c    |    2 +-
- .../plugins/smartcard/icons/16x16/Makefile.am      |    5 +++++
- .../smartcard/icons/16x16/gdm-smartcard.png        |  Bin 0 -> 871 bytes
- .../plugins/smartcard/icons/48x48/Makefile.am      |    5 +++++
- .../smartcard/icons/48x48/gdm-smartcard.png        |  Bin 0 -> 4202 bytes
- .../plugins/smartcard/icons/Makefile.am            |    1 +
- 8 files changed, 17 insertions(+), 1 deletions(-)
- create mode 100644 gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am
- create mode 100644 gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png
- create mode 100644 gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am
- create mode 100644 gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png
- create mode 100644 gui/simple-greeter/plugins/smartcard/icons/Makefile.am
+ daemon/gdm-session-direct.c |   64 ++++++++++++++++++++++++++++++-------------
+ daemon/gdm-simple-slave.c   |    2 +-
+ 2 files changed, 46 insertions(+), 20 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index af5d316..aa54a9b 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1411,6 +1411,9 @@ gui/simple-greeter/plugins/Makefile
- gui/simple-greeter/plugins/password/Makefile
- gui/simple-greeter/plugins/fingerprint/Makefile
- gui/simple-greeter/plugins/smartcard/Makefile
-+gui/simple-greeter/plugins/smartcard/icons/Makefile
-+gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile
-+gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile
- gui/simple-chooser/Makefile
- gui/user-switch-applet/Makefile
- utils/Makefile
-diff --git a/gui/simple-greeter/plugins/smartcard/Makefile.am b/gui/simple-greeter/plugins/smartcard/Makefile.am
-index 15d0174..1ccebda 100644
---- a/gui/simple-greeter/plugins/smartcard/Makefile.am
-+++ b/gui/simple-greeter/plugins/smartcard/Makefile.am
-@@ -1,3 +1,5 @@
-+SUBDIRS = icons
-+
- NULL =
- PAM_SERVICE_NAME = gdm-smartcard
+diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
+index 805adbf..cb84f01 100644
+--- a/daemon/gdm-session-direct.c
++++ b/daemon/gdm-session-direct.c
+@@ -2284,6 +2284,40 @@ gdm_session_direct_open_session (GdmSession *session,
+ }
  
-diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-index 5a2c380..73e0f84 100644
---- a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-+++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-@@ -433,7 +433,7 @@ gdm_smartcard_extension_init (GdmSmartcardExtension *extension)
-                                                        GDM_TYPE_SMARTCARD_EXTENSION,
-                                                        GdmSmartcardExtensionPrivate);
+ static void
++stop_all_other_conversations (GdmSessionDirect        *session,
++                              GdmSessionConversation  *conversation_to_keep)
++{
++        GHashTableIter iter;
++        gpointer key, value;
++
++        if (session->priv->conversations == NULL) {
++                return;
++        }
++
++        if (conversation_to_keep == NULL) {
++                g_debug ("GdmSessionDirect: Stopping all conversations");
++        } else {
++                g_debug ("GdmSessionDirect: Stopping all conversations "
++                         "except for %s", conversation_to_keep->service_name);
++        }
++
++        g_hash_table_iter_init (&iter, session->priv->conversations);
++        while (g_hash_table_iter_next (&iter, &key, &value)) {
++                GdmSessionConversation *conversation;
++
++                conversation = (GdmSessionConversation *) value;
++
++                if (conversation == conversation_to_keep) {
++                        continue;
++                }
++
++                stop_conversation (conversation);
++        }
++
++        g_hash_table_remove_all (session->priv->conversations);
++}
++
++static void
+ gdm_session_direct_start_session (GdmSession *session,
+                                   const char *service_name)
+ {
+@@ -2295,12 +2329,20 @@ gdm_session_direct_start_session (GdmSession *session,
+         g_return_if_fail (session != NULL);
+         g_return_if_fail (impl->priv->is_running == FALSE);
  
--        extension->priv->icon = g_themed_icon_new ("apple-green");
-+        extension->priv->icon = g_themed_icon_new ("gdm-smartcard");
-         create_page (extension);
-         create_actions (extension);
-         gdm_smartcard_extension_reset (GDM_CONVERSATION (extension));
-diff --git a/gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am b/gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am
-new file mode 100644
-index 0000000..661d687
---- /dev/null
-+++ b/gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile.am
-@@ -0,0 +1,5 @@
-+iconsdir = $(datadir)/icons/hicolor/16x16/apps
++        conversation = find_conversation_by_name (impl, service_name);
 +
-+icons_DATA = gdm-smartcard.png
++        if (conversation == NULL) {
++                g_warning ("GdmSessionDirect: Tried to start session of "
++                           "nonexistent conversation %s", service_name);
++                return;
++        }
 +
-+EXTRA_DIST = $(icons_DATA)
-diff --git a/gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png b/gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png
-new file mode 100644
-index 0000000000000000000000000000000000000000..0112af1b8d891ad312f9fcc3bf6074df3e003359
-GIT binary patch
-literal 871
-zcmV-t1DO1YP)<h;3K|Lk000e1NJLTq000mG000mO1^@s6AM^iV00001b5ch_0Itp)
-z=>Px#24YJ`L;wH)0002_L%V+f000SaNLh0L01ejw01ejxLMWSf00007bV*G`2iXJ-
-z6cQQvze?o*000?uMObu0Z*6U5Zgc=ca%Ew3Wn>_CX>@2HM@dakSAh-}0008QNkl<Z
-zILoDzO=uKn0EVCWc6N4VH=}F?g{J6QBie2n4H`-{iH3Ocr_xLD)X+mq4R}|3XeEcG
-zP)QFBf>25h)mRS()F5IML|LeofZ5$Phq#SvEXn3)x9QHz&V1jD*OHUa=lnh|yoWc&
-zo1+2m0}628RN4)kP9zfJhGEoz$TZEX{|)Htgf`%?ZQIABl!txa-_X&~;rI9Vo88^r
-z<nwt(Mn*QTFF2Y?r9O+I=!oZe>1;L|^!4>6dV71>-}NC2_0X(TUE+qIrDYmT)AaSb
-zqQSwzu&1X-?Cbi7rG`eaTxYT75y*%ZE6&r0<4pW|3Ey2K2m+~;x&Y(=rCFBMd{LP<
-ze!f%2@g%ktXZzbJvY9kitjV=&V+;=uGc+_rtyZH_sW3S?$@KK}cfeU)DJ6Ufjwku*
-z#Jf~p{6)1o%ag||*tX5+=qR~dj#8<_+}s>O2(sBM#bWVH7>3^p-}m(}(unH<C4H1q
-zWHK4r+uJD>3ls_kY}+QE&oeeQMlzYCTCI{!r;|XJ05A-lFao6%Gcz-k%VnBP$+`1i
-z^JL;6j^og}#l)>&;?s|J5k(Q5do}@lp##MA7)pgK{$tR(^AIgbgR>VO(YA9dDYL-`
-zsh`;Y<p!MD+jMMP<A+aP@psMP-hFxnfaf{@cumPKH~-|1=PR84yb~qfLZPv}e}LA#
-z@N(%lawET!GFCAI7oZ{l5=IPwdsFjl+mU9z?h*tcD+_Z3fh0x)fUDyUsu2TS0~G-v
-z0AfPp_`wW&+tPGyUS#>%6?x&ziM4udm5K2(B3uPvQ%dL5Nt5QX;$Nu&Y|(&dU|=Ac
-znwoM8g@R?8=8}~1uJ8MIfoDQ+^ZMlj@4UAwMAl}h&MMZb@Tk<}`x}kRnq^tHG);3I
-x$GHPM0G_Y=$2Q;_pbrQE4|oMk0zdM9c?}H%H!P_~w{rjh002ovPDHLkV1ieHj1>R?
-
-literal 0
-HcmV?d00001
-
-diff --git a/gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am b/gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am
-new file mode 100644
-index 0000000..e79d85b
---- /dev/null
-+++ b/gui/simple-greeter/plugins/smartcard/icons/48x48/Makefile.am
-@@ -0,0 +1,5 @@
-+iconsdir = $(datadir)/icons/hicolor/48x48/apps
++        stop_all_other_conversations (impl, conversation);
 +
-+icons_DATA = gdm-smartcard.png
-+
-+EXTRA_DIST = $(icons_DATA)
-diff --git a/gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png b/gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png
-new file mode 100644
-index 0000000000000000000000000000000000000000..35d5578d9ec83ae6b17aa7230c1b4df34e13e2cc
-GIT binary patch
-literal 4202
-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
-ARR910
-
-literal 0
-HcmV?d00001
-
-diff --git a/gui/simple-greeter/plugins/smartcard/icons/Makefile.am b/gui/simple-greeter/plugins/smartcard/icons/Makefile.am
-new file mode 100644
-index 0000000..c20f10d
---- /dev/null
-+++ b/gui/simple-greeter/plugins/smartcard/icons/Makefile.am
-@@ -0,0 +1 @@
-+SUBDIRS = 16x16 48x48
+         command = get_session_command (impl);
+         program = g_strdup_printf (GDMCONFDIR "/Xsession \"%s\"", command);
+         g_free (command);
+ 
+-        conversation = find_conversation_by_name (impl, service_name);
+-
+         setup_session_environment (impl);
+         send_environment (impl, conversation);
+ 
+@@ -2311,23 +2353,7 @@ gdm_session_direct_start_session (GdmSession *session,
+ static void
+ stop_all_conversations (GdmSessionDirect *session)
+ {
+-        GHashTableIter iter;
+-        gpointer key, value;
+-
+-        if (session->priv->conversations == NULL) {
+-                return;
+-        }
+-
+-        g_hash_table_iter_init (&iter, session->priv->conversations);
+-        while (g_hash_table_iter_next (&iter, &key, &value)) {
+-                GdmSessionConversation *conversation;
+-
+-                conversation = (GdmSessionConversation *) value;
+-
+-                stop_conversation (conversation);
+-        }
+-
+-        g_hash_table_remove_all (session->priv->conversations);
++        stop_all_other_conversations (session, NULL);
+ }
+ 
+ static void
+diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
+index 09a7425..a70c9c9 100644
+--- a/daemon/gdm-simple-slave.c
++++ b/daemon/gdm-simple-slave.c
+@@ -569,7 +569,7 @@ on_session_conversation_stopped (GdmSession     *session,
+         gboolean res;
+         g_debug ("GdmSimpleSlave: conversation stopped");
+ 
+-        if (slave->priv->greeter_server != NULL) {
++        if (slave->priv->greeter != NULL) {
+                 res = gdm_greeter_server_conversation_stopped (slave->priv->greeter_server,
+                                                                service_name);
+                 if (! res) {
 -- 
 1.6.2.2
 
 
-From 771ee68a51d5140130116b4ab5aa67dae7334969 Mon Sep 17 00:00:00 2001
+From 80107a061b3ac2300e9cec17f18d5dc02557a8d3 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
-Date: Mon, 13 Apr 2009 16:50:11 -0400
-Subject: [PATCH 33/33] Add icon for fingerprint plugin
+Date: Tue, 21 Apr 2009 15:30:28 -0400
+Subject: [PATCH 33/33] When one PAM conv. wins, actually stop the others
 
-We were just using some random one before
+We weren't properly keeping the winning conversation
+around in the previous commit
 ---
- configure.ac                                       |    3 +++
- gui/simple-greeter/plugins/fingerprint/Makefile.am |    2 ++
- .../fingerprint/gdm-fingerprint-extension.c        |    2 +-
- .../plugins/fingerprint/icons/16x16/Makefile.am    |    5 +++++
- .../plugins/fingerprint/icons/48x48/Makefile.am    |    5 +++++
- .../plugins/fingerprint/icons/Makefile.am          |    1 +
- 6 files changed, 17 insertions(+), 1 deletions(-)
- create mode 100644 gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am
- create mode 100644 gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am
- create mode 100644 gui/simple-greeter/plugins/fingerprint/icons/Makefile.am
+ daemon/gdm-session-direct.c |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index aa54a9b..287dfa5 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1410,6 +1410,9 @@ gui/simple-greeter/libgdmsimplegreeter/gdmsimplegreeter.pc
- gui/simple-greeter/plugins/Makefile
- gui/simple-greeter/plugins/password/Makefile
- gui/simple-greeter/plugins/fingerprint/Makefile
-+gui/simple-greeter/plugins/fingerprint/icons/Makefile
-+gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile
-+gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile
- gui/simple-greeter/plugins/smartcard/Makefile
- gui/simple-greeter/plugins/smartcard/icons/Makefile
- gui/simple-greeter/plugins/smartcard/icons/16x16/Makefile
-diff --git a/gui/simple-greeter/plugins/fingerprint/Makefile.am b/gui/simple-greeter/plugins/fingerprint/Makefile.am
-index d5f7e28..25fb6e8 100644
---- a/gui/simple-greeter/plugins/fingerprint/Makefile.am
-+++ b/gui/simple-greeter/plugins/fingerprint/Makefile.am
-@@ -1,3 +1,5 @@
-+SUBDIRS = icons
-+
- NULL =
- PAM_SERVICE_NAME = gdm-fingerprint
+diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
+index cb84f01..7173080 100644
+--- a/daemon/gdm-session-direct.c
++++ b/daemon/gdm-session-direct.c
+@@ -2308,13 +2308,20 @@ stop_all_other_conversations (GdmSessionDirect        *session,
+                 conversation = (GdmSessionConversation *) value;
  
-diff --git a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
-index 63f6ef3..316ef46 100644
---- a/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
-+++ b/gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
-@@ -297,7 +297,7 @@ gdm_fingerprint_extension_init (GdmFingerprintExtension *extension)
-                                                        GDM_TYPE_FINGERPRINT_EXTENSION,
-                                                        GdmFingerprintExtensionPrivate);
+                 if (conversation == conversation_to_keep) {
+-                        continue;
++                        g_hash_table_iter_steal (&iter);
++                        g_free (key);
++                } else {
++                        stop_conversation (conversation);
+                 }
+-
+-                stop_conversation (conversation);
+         }
  
--        extension->priv->icon = g_themed_icon_new ("stock_allow-effects");
-+        extension->priv->icon = g_themed_icon_new ("gdm-fingerprint");
-         create_page (extension);
-         create_actions (extension);
-         gdm_fingerprint_extension_reset (GDM_CONVERSATION (extension));
-diff --git a/gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am b/gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am
-new file mode 100644
-index 0000000..f42e317
---- /dev/null
-+++ b/gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile.am
-@@ -0,0 +1,5 @@
-+iconsdir = $(datadir)/icons/hicolor/16x16/apps
+         g_hash_table_remove_all (session->priv->conversations);
 +
-+icons_DATA = gdm-fingerprint.png
-+
-+EXTRA_DIST = $(icons_DATA)
-diff --git a/gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am b/gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am
-new file mode 100644
-index 0000000..f4ab2a0
---- /dev/null
-+++ b/gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile.am
-@@ -0,0 +1,5 @@
-+iconsdir = $(datadir)/icons/hicolor/48x48/apps
-+
-+icons_DATA = gdm-fingerprint.png
-+
-+EXTRA_DIST = $(icons_DATA)
-diff --git a/gui/simple-greeter/plugins/fingerprint/icons/Makefile.am b/gui/simple-greeter/plugins/fingerprint/icons/Makefile.am
-new file mode 100644
-index 0000000..c20f10d
---- /dev/null
-+++ b/gui/simple-greeter/plugins/fingerprint/icons/Makefile.am
-@@ -0,0 +1 @@
-+SUBDIRS = 16x16 48x48
++        if (conversation_to_keep != NULL) {
++                g_hash_table_insert (session->priv->conversations,
++                                     g_strdup (conversation_to_keep->service_name),
++                                     conversation_to_keep);
++        }
+ }
+ 
+ static void
 -- 
 1.6.2.2
 
