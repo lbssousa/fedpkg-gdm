@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -112,11 +112,13 @@ Provides:  fast-user-switch-applet = %{epoch}:%{version}-%{release}
 Summary:   GDM smartcard plugin
 Group:     User Interface/Desktops
 Requires:  gdm = %{epoch}:%{version}-%{release}
+Requires:  pam_pkcs11
 
 %package plugin-fingerprint
 Summary:   GDM fingerprint plugin
 Group:     User Interface/Desktops
 Requires:  gdm = %{epoch}:%{version}-%{release}
+Requires:  fprintd-pam
 
 %description
 GDM provides the graphical login screen, shown shortly after boot up,
@@ -380,6 +382,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Apr 24 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-3
+- Add Requires for pam modules in plugins
+
 * Tue Apr 21 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-2
 - Stop inactive pam conversations when one succeeds.
   Should fix bug 496234
