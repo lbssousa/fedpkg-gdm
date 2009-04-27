@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -169,7 +169,7 @@ make
 # ideally intltool (ha!) would do that for us
 # http://bugzilla.gnome.org/show_bug.cgi?id=474987
 cd po
-grep -v ".*[.]desktop[.]in.*\|.*[.]server[.]in[.]in$\|.*[.]schemas[.]in$" POTFILES.in > POTFILES.keep
+grep -v ".*[.]desktop[.]in.*\|.*[.]server[.]in[.]in$" POTFILES.in > POTFILES.keep
 mv POTFILES.keep POTFILES.in
 intltool-update --pot
 for p in *.po; do
@@ -382,6 +382,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Apr 27 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.26.1-4
+- Don't drop schemas translations from po files
+
 * Fri Apr 24 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-3
 - Add Requires for pam modules in plugins
 
