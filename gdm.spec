@@ -98,8 +98,8 @@ Patch13: gdm-system-keyboard.patch
 
 Patch19: gdm-2.26.1-multistack.patch
 
-# fixed upstream, rh 502778•
-Patch22: gdm-2.26.0-fix-lang-regex.patch•
+# fixed upstream, rh 502778
+Patch22: gdm-2.26.0-fix-lang-regex.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
