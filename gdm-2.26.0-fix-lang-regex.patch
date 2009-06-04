@@ -1,0 +1,22 @@
+commit 74cdbc6d71120f2d9c91965ead989f68cadb4bac
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Wed Jun 3 23:52:06 2009 -0400
+
+    Fix language name parsing regex
+    
+    It didn't properly escape the "." character so it was allowing
+    any character to be matched instead of just periods.
+
+diff --git a/gui/simple-greeter/gdm-languages.c b/gui/simple-greeter/gdm-languages.c
+index 2d862b2..429ba28 100644
+--- a/gui/simple-greeter/gdm-languages.c
++++ b/gui/simple-greeter/gdm-languages.c
+@@ -123,7 +123,7 @@ gdm_parse_language_name (const char *name,
+         error = NULL;
+         re = g_regex_new ("^(?P<language>[^_.@[:space:]]+)"
+                           "(_(?P<territory>[[:upper:]]+))?"
+-                          "(.(?P<codeset>[-_0-9a-zA-Z]+))?"
++                          "(\\.(?P<codeset>[-_0-9a-zA-Z]+))?"
+                           "(@(?P<modifier>[[:ascii:]]+))?$",
+                           0, 0, &error);
+         if (re == NULL) {

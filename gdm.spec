@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -98,6 +98,9 @@ Patch13: gdm-system-keyboard.patch
 
 Patch19: gdm-2.26.1-multistack.patch
 
+# fixed upstream, rh 502778•
+Patch22: gdm-2.26.0-fix-lang-regex.patch•
+
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
 
@@ -141,6 +144,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch13 -p1 -b .system-keyboard
 
 %patch19 -p1 -b .multistack
+%patch22 -p1 -b .fix-lang-regex
 
 %patch99 -p1 -b .fedora-logo
 
@@ -382,6 +386,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Jun 03 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-5
+- Fix language parsing code (bug 502778)
+
 * Mon Apr 27 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.26.1-4
 - Don't drop schemas translations from po files
 
