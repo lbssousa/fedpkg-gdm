@@ -8,7 +8,7 @@
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
 %define nss_version 3.11.1
-%define consolekit_version 0.2.7
+%define consolekit_version 0.3.0-9
 %define hal_version 0.5.9
 %define fontconfig_version 2.6.0
 %define _default_patch_fuzz 999
@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.1
-Release: 5%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -46,7 +46,6 @@ Requires: xorg-x11-xkb-utils
 Requires: xorg-x11-xinit
 Requires: hal >= %{hal_version}
 Requires: ConsoleKit >= %{consolekit_version}
-Requires: PolicyKit-authentication-agent
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
 Requires: gnome-session
@@ -79,7 +78,6 @@ BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
 BuildRequires: ConsoleKit
-BuildRequires: PolicyKit-gnome-devel >= %{polkit_version}
 BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
@@ -97,6 +95,9 @@ Patch3: gdm-2.23.92-save-root-window.patch
 Patch13: gdm-system-keyboard.patch
 
 Patch19: gdm-2.26.1-multistack.patch
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=498361
+Patch20: polkit1.patch
 
 # fixed upstream, rh 502778
 Patch22: gdm-2.26.0-fix-lang-regex.patch
@@ -144,6 +145,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch13 -p1 -b .system-keyboard
 
 %patch19 -p1 -b .multistack
+%patch20 -p1 -b .polkit1
 %patch22 -p1 -b .fix-lang-regex
 
 %patch99 -p1 -b .fedora-logo
@@ -386,6 +388,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue May 12 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.26.1-8
+- Port to PolicyKit 1
+
 * Wed Jun 03 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-5
 - Fix language parsing code (bug 502778)
 
