@@ -388,7 +388,7 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
-* Tue May 12 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.26.1-8
+* Tue Jun  9 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.26.1-8
 - Port to PolicyKit 1
 
 * Wed Jun 03 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-5
