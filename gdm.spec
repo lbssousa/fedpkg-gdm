@@ -82,7 +82,7 @@ BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
-BuildRequires: libxklavier-devel
+BuildRequires: libxklavier-devel >= 4.0
 
 Provides: service(graphical-login)
 
@@ -101,6 +101,8 @@ Patch20: polkit1.patch
 
 # fixed upstream, rh 502778
 Patch22: gdm-2.26.0-fix-lang-regex.patch
+
+Patch35: xklavier4.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -147,6 +149,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch19 -p1 -b .multistack
 %patch20 -p1 -b .polkit1
 %patch22 -p1 -b .fix-lang-regex
+%patch35 -p1 -b .xklavier4
 
 %patch99 -p1 -b .fedora-logo
 
