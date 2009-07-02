@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.26.1
-Release: 12%{?dist}
+Release: 13%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -42,7 +42,7 @@ Requires: pam >= 0:%{pam_version}
 Requires: /sbin/nologin
 Requires: system-logos
 Requires: xorg-x11-server-utils
-Requires: xorg-x11-xkb-utils
+Requires: setxkbmap
 Requires: xorg-x11-xinit
 Requires: hal >= %{hal_version}
 Requires: ConsoleKit >= %{consolekit_version}
@@ -391,6 +391,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Jul 02 2009 Adam Jackson <ajax@redhat.com> 1:2.26.1-13
+- Requires: xorg-x11-xkb-utils -> Requires: setxkbmap
+
 * Wed Jul 01 2009 Ray Strode <rstrode@redhat.com> - 1:2.26.1-12
 - Drop defunct arch conditional buildrequires
 
