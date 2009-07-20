@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.26.1
-Release: 13%{?dist}
+Version: 2.27.4
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -31,6 +31,7 @@ Source6: gdm-smartcard-16.png
 Source7: gdm-smartcard-48.png
 Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
+Source10: polkit-gnome-authentication-agent-1.desktop
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Prereq: /usr/sbin/useradd
@@ -49,6 +50,7 @@ Requires: ConsoleKit >= %{consolekit_version}
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
 Requires: gnome-session
+Requires: polkit-gnome
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires: plymouth-gdm-hooks
@@ -94,15 +96,7 @@ Patch3: gdm-2.23.92-save-root-window.patch
 # should probably be changed to get the system layout from the X server
 Patch13: gdm-system-keyboard.patch
 
-Patch19: gdm-2.26.1-multistack.patch
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=498361
-Patch20: polkit1.patch
-
-# fixed upstream, rh 502778
-Patch22: gdm-2.26.0-fix-lang-regex.patch
-
-Patch35: xklavier4.patch
+Patch19: gdm-2.27.4-multistack.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -147,9 +141,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch13 -p1 -b .system-keyboard
 
 %patch19 -p1 -b .multistack
-%patch20 -p1 -b .polkit1
-%patch22 -p1 -b .fix-lang-regex
-%patch35 -p1 -b .xklavier4
 
 %patch99 -p1 -b .fedora-logo
 
@@ -210,6 +201,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow
+
+# temporarily manually copy this
+cp -f %{SOURCE10} $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow/polkit-gnome-authentication-agent-1.desktop
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
@@ -391,6 +385,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Jul 20 2009 Ray Strode <rstrode@redhat.com> 1:2.27.4-1
+- Update to 2.27.4
+
 * Thu Jul 02 2009 Adam Jackson <ajax@redhat.com> 1:2.26.1-13
 - Requires: xorg-x11-xkb-utils -> Requires: setxkbmap
 
