@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.27.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -385,6 +385,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Jul 24 2009 Ray Strode <rstrode@redhat.com> 1:2.27.4-3
+- Fix delay during login
+
 * Mon Jul 20 2009 Ray Strode <rstrode@redhat.com> 1:2.27.4-2
 - Use correct multi-stack patch
 
