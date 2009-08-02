@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.27.4
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -163,7 +163,12 @@ cp -f %{SOURCE9} gui/simple-greeter/plugins/fingerprint/icons/48x48/gdm-fingerpr
 	   --disable-scrollkeeper  \
 	   --with-console-kit      \
 	   --with-selinux
-make
+
+# drop unneeded direct library deps with --as-needed
+# libtool doesn't make this easy, so we do it the hard way
+sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' -e 's/    if test "$export_dynamic" = yes && test -n "$export_dynamic_flag_spec"; then/      func_append compile_command " -Wl,-O1,--as-needed"\n      func_append finalize_command " -Wl,-O1,--as-needed"\n\0/' libtool
+
+make %{?_smp_mflags}
 
 # strip unneeded translations from .mo files
 # ideally intltool (ha!) would do that for us
@@ -385,6 +390,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Sat Aug  1 2009 Matthias Clasen <mclasen@redhat.com> 1:2.27.4-4
+- Drop unneeded direct deps
+
 * Fri Jul 24 2009 Ray Strode <rstrode@redhat.com> 1:2.27.4-3
 - Fix delay during login
 
