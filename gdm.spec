@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.27.4
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -122,7 +122,7 @@ Requires:  fprintd-pam
 
 %description
 GDM provides the graphical login screen, shown shortly after boot up,
-log out, and when user switching.
+log out, and when user-switching.
 
 %description user-switch-applet
 The GDM user switcher applet provides a mechanism for changing among
@@ -390,6 +390,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Aug 06 2009 Ray Strode <rstrode@redhat.com> 1:2.27.4-5
+- rebuild
+
 * Sat Aug  1 2009 Matthias Clasen <mclasen@redhat.com> 1:2.27.4-4
 - Drop unneeded direct deps
 
