@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.27.4
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -54,6 +54,7 @@ Requires: polkit-gnome
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires: plymouth-gdm-hooks
+Requires: pulseaudio-gdm-hooks
 # We need 1.0.4-5 since it lets us use "localhost" in auth cookies
 Requires: libXau >= 1.0.4-4
 Requires(post): scrollkeeper
@@ -390,6 +391,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Aug 19 2009 Lennart Poettering <lpoetter@redhat.com> 1:2.27.4-6
+- Add pulseaudio-gdm-hooks to dependencies
+
 * Thu Aug 06 2009 Ray Strode <rstrode@redhat.com> 1:2.27.4-5
 - rebuild
 
