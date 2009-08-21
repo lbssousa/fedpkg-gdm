@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.27.4
-Release: 6%{?dist}
+Release: 7%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -391,6 +391,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Aug 21 2009 Tomas Mraz <tmraz@redhat.com> - 1:2.27.4-7
+- rebuilt with new audit
+
 * Wed Aug 19 2009 Lennart Poettering <lpoetter@redhat.com> 1:2.27.4-6
 - Add pulseaudio-gdm-hooks to dependencies
 
