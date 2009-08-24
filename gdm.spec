@@ -59,6 +59,7 @@ Requires: pulseaudio-gdm-hooks
 Requires: libXau >= 1.0.4-4
 Requires(post): scrollkeeper
 Requires(postun): scrollkeeper
+BuildRequires: pkgconfig(libcanberra-gtk)
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk2-devel >= 0:%{gtk2_version}
