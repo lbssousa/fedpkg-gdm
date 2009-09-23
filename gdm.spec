@@ -15,13 +15,13 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.27.90
-Release: 2%{?dist}
+Version: 2.28.0
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
-Source: http://download.gnome.org/sources/gdm/2.27/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.28/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdm-password.pam
@@ -392,6 +392,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Sep 23 2009 Matthias Clasen <mclasen@redhat.com> 1:2.28.0-1
+- Update to 2.28.0
+
 * Sat Aug 29 2009 Caolán McNamara <caolanm@redhat.com> 1:2.27.90-2
 - rebuild with new audit
 
