@@ -98,7 +98,7 @@ Patch3: gdm-2.23.92-save-root-window.patch
 # should probably be changed to get the system layout from the X server
 Patch13: gdm-system-keyboard.patch
 
-Patch19: gdm-2.27.4-multistack.patch
+Patch19: gdm-multistack.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
