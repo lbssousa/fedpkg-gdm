@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.28.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -99,6 +99,7 @@ Patch3: gdm-2.23.92-save-root-window.patch
 Patch13: gdm-system-keyboard.patch
 
 Patch19: gdm-multistack.patch
+Patch20: 0001-Fix-gdm_slave_get_timed_login_details.patch
 
 # Fedora-specific
 Patch99: gdm-2.23.1-fedora-logo.patch
@@ -143,6 +144,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch13 -p1 -b .system-keyboard
 
 %patch19 -p1 -b .multistack
+%patch20 -p1 -b .autologin
 
 %patch99 -p1 -b .fedora-logo
 
@@ -392,6 +394,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Sep 25 2009 Ray Strode <rstrode@redhat.com> 1:2.28.0-2
+- Fix autologin
+
 * Wed Sep 23 2009 Matthias Clasen <mclasen@redhat.com> 1:2.28.0-1
 - Update to 2.28.0
 
