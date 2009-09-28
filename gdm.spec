@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.28.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -378,6 +378,7 @@ fi
 %attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
+%attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
 
 %files user-switch-applet
 %defattr(-, root, root)
@@ -399,6 +400,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Sep 28 2009 Ray Strode <rstrode@redhat.com> - 1:2.28.0-4
+- Add cache dir to package manifest
+
 * Mon Sep 28 2009 Richard Hughes  <rhughes@redhat.com> - 1:2.28.0-3
 - Add a patch to use DeviceKit-power rather than the removed methods in
   gnome-power-manager.
