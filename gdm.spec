@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.28.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -87,12 +87,16 @@ BuildRequires: check-devel
 BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel >= 4.0
+BuildRequires: DeviceKit-power-devel >= 008
 
 Provides: service(graphical-login)
 
 Requires: audit-libs >= %{libauditver}
 Patch2: gdm-2.26.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
+
+# https://bugzilla.gnome.org/show_bug.cgi?id=596569
+Patch4: gdm-2.28.0-use-devicekit-power.patch
 
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
@@ -141,6 +145,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %setup -q
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
+%patch4 -p1 -b .use-devicekit-power
 %patch13 -p1 -b .system-keyboard
 
 %patch19 -p1 -b .multistack
@@ -394,6 +399,10 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Sep 28 2009 Richard Hughes  <rhughes@redhat.com> - 1:2.28.0-3
+- Add a patch to use DeviceKit-power rather than the removed methods in
+  gnome-power-manager.
+
 * Fri Sep 25 2009 Ray Strode <rstrode@redhat.com> 1:2.28.0-2
 - Fix autologin
 
