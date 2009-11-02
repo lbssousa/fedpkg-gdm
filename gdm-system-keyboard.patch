@@ -1,17 +1,22 @@
-diff -up gdm-2.25.2/configure.ac.system-keyboard gdm-2.25.2/configure.ac
---- gdm-2.25.2/configure.ac.system-keyboard	2009-02-24 22:51:00.058815966 -0500
-+++ gdm-2.25.2/configure.ac	2009-02-24 22:51:00.154816109 -0500
-@@ -69,6 +69,7 @@ AC_SUBST(COMMON_LIBS)
- PKG_CHECK_MODULES(DAEMON,
+#
+# Description: Get default keyboard layout from hal
+# Ubuntu: https://bugs.launchpad.net/bugs/395103
+# Fedora: http://cvs.fedoraproject.org/viewvc//devel/gdm/gdm-system-keyboard.patch?view=markup
+#
+diff -Nur -x '*.orig' -x '*~' gdm-2.28.0/configure.ac gdm-2.28.0.new/configure.ac
+--- gdm-2.28.0/configure.ac	2009-09-21 22:06:40.000000000 +0200
++++ gdm-2.28.0.new/configure.ac	2009-10-01 12:35:50.345762314 +0200
+@@ -70,6 +70,7 @@
          dbus-glib-1 >= $DBUS_GLIB_REQUIRED_VERSION
          gobject-2.0 >= $GLIB_REQUIRED_VERSION
-+	hal
+         gio-2.0 >= $GLIB_REQUIRED_VERSION
++        hal
  )
  AC_SUBST(DAEMON_CFLAGS)
  AC_SUBST(DAEMON_LIBS)
-diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemon/gdm-session-direct.c
---- gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard	2008-08-26 15:04:00.000000000 -0400
-+++ gdm-2.25.2/daemon/gdm-session-direct.c	2009-02-24 22:55:02.656566009 -0500
+diff -Nur -x '*.orig' -x '*~' gdm-2.28.0/daemon/gdm-session-direct.c gdm-2.28.0.new/daemon/gdm-session-direct.c
+--- gdm-2.28.0/daemon/gdm-session-direct.c	2009-09-21 22:05:27.000000000 +0200
++++ gdm-2.28.0.new/daemon/gdm-session-direct.c	2009-10-01 12:34:43.000000000 +0200
 @@ -45,6 +45,8 @@
  #include <dbus/dbus-glib.h>
  #include <dbus/dbus-glib-lowlevel.h>
@@ -21,7 +26,7 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemo
  #include "gdm-session-direct.h"
  #include "gdm-session.h"
  #include "gdm-session-private.h"
-@@ -595,14 +597,66 @@ get_default_language_name (GdmSessionDir
+@@ -598,14 +600,87 @@
      return setlocale (LC_MESSAGES, NULL);
  }
  
@@ -33,6 +38,7 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemo
 +    char **devices;
 +    int n_devices;
 +    char *layout;
++    char *variant;
 +    char *result;
 +
 +    result = NULL;
@@ -60,8 +66,27 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemo
 +                                                        "input.xkb.layout",
 +                                                        NULL);
 +        }
-+       result = g_strdup (layout);
-+       libhal_free_string (layout);
++	if (!layout)
++	    goto out;
++
++        variant = libhal_device_get_property_string (ctx,
++                                                    devices[0],
++                                                    "input.x11_options.XkbVariant",
++                                                    NULL);
++        if (!variant) {
++            variant = libhal_device_get_property_string (ctx,
++                                                        devices[0],
++                                                        "input.xkb.variant",
++                                                        NULL);
++        }
++
++	if (variant != NULL && variant[0] != '\0') {
++	    result = g_strdup_printf("%s\t%s", layout, variant);
++	    libhal_free_string (variant);
++	} else {
++	    result = g_strdup (layout);
++	}
++	libhal_free_string (layout);
 +    }
 +
 +    libhal_free_string_array (devices);
@@ -74,6 +99,7 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemo
 +        result = g_strdup ("us");
 +    }
 +
++    g_debug ("GdmSessionDirect: System default keyboard layout: '%s'", result);
 +    return result;
 +}
 +
@@ -82,7 +108,7 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemo
  {
 -    if (session->priv->saved_layout != NULL) {
 -                return session->priv->saved_layout;
-+    if (session->priv->saved_layout == NULL) {
++    if (!session->priv->saved_layout) {
 +        session->priv->saved_layout = get_system_default_layout (session);
      }
  
@@ -91,16 +117,3 @@ diff -up gdm-2.25.2/daemon/gdm-session-direct.c.system-keyboard gdm-2.25.2/daemo
  }
  
  static char *
-diff -up gdm-2.25.2/daemon/gdm-session-settings.c.system-keyboard gdm-2.25.2/daemon/gdm-session-settings.c
---- gdm-2.25.2/daemon/gdm-session-settings.c.system-keyboard	2008-08-26 15:04:00.000000000 -0400
-+++ gdm-2.25.2/daemon/gdm-session-settings.c	2009-02-24 22:51:00.158815919 -0500
-@@ -149,8 +149,7 @@ gdm_session_settings_set_layout_name (Gd
- {
-         g_return_if_fail (GDM_IS_SESSION_SETTINGS (settings));
- 
--        if (settings->priv->layout_name == NULL ||
--            strcmp (settings->priv->layout_name, layout_name) != 0) {
-+        if (g_strcmp0 (settings->priv->layout_name, layout_name) != 0) {
-                 settings->priv->layout_name = g_strdup (layout_name);
-                 g_object_notify (G_OBJECT (settings), "layout-name");
-         }

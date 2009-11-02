@@ -1,0 +1,1586 @@
+From f304eec1bf7dd80e255092b3cdaade10827fd320 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 22 Oct 2009 22:02:51 -0400
+Subject: [PATCH 1/4] Update na-tray to latest upstream code
+
+It's a copy and paste from the panel.
+---
+ gui/simple-greeter/libnotificationarea/Makefile.am |    2 +
+ gui/simple-greeter/libnotificationarea/fixedtip.c  |    1 +
+ .../libnotificationarea/na-tray-child.c            |  430 ++++++++++++++++++++
+ .../libnotificationarea/na-tray-child.h            |   68 +++
+ .../libnotificationarea/na-tray-manager.c          |  264 +++++--------
+ .../libnotificationarea/na-tray-manager.h          |   15 +-
+ gui/simple-greeter/libnotificationarea/na-tray.c   |   76 +++-
+ gui/simple-greeter/libnotificationarea/na-tray.h   |    3 +-
+ gui/simple-greeter/libnotificationarea/testtray.c  |    2 +-
+ 9 files changed, 674 insertions(+), 187 deletions(-)
+ create mode 100644 gui/simple-greeter/libnotificationarea/na-tray-child.c
+ create mode 100644 gui/simple-greeter/libnotificationarea/na-tray-child.h
+
+diff --git a/gui/simple-greeter/libnotificationarea/Makefile.am b/gui/simple-greeter/libnotificationarea/Makefile.am
+index e3a6a1f..4009aaf 100644
+--- a/gui/simple-greeter/libnotificationarea/Makefile.am
++++ b/gui/simple-greeter/libnotificationarea/Makefile.am
+@@ -29,6 +29,8 @@ libnotificationarea_la_SOURCES =		\
+ 	obox.h					\
+ 	na-tray.c				\
+ 	na-tray.h				\
++	na-tray-child.c				\
++	na-tray-child.h				\
+ 	na-tray-manager.c			\
+ 	na-tray-manager.h			\
+ 	na-marshal.c				\
+diff --git a/gui/simple-greeter/libnotificationarea/fixedtip.c b/gui/simple-greeter/libnotificationarea/fixedtip.c
+index cc90e26..53ac923 100644
+--- a/gui/simple-greeter/libnotificationarea/fixedtip.c
++++ b/gui/simple-greeter/libnotificationarea/fixedtip.c
+@@ -81,6 +81,7 @@ na_fixed_tip_class_init (NaFixedTipClass *class)
+   g_type_class_add_private (class, sizeof (NaFixedTipPrivate));
+ }
+ 
++/* Did you already see this code? Yes, it's gtk_tooltips_ force_window() ;-) */
+ static void
+ na_fixed_tip_init (NaFixedTip *fixedtip)
+ {
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-child.c b/gui/simple-greeter/libnotificationarea/na-tray-child.c
+new file mode 100644
+index 0000000..c7e3f61
+--- /dev/null
++++ b/gui/simple-greeter/libnotificationarea/na-tray-child.c
+@@ -0,0 +1,430 @@
++/* na-tray-child.c
++ * Copyright (C) 2002 Anders Carlsson <andersca@gnu.org>
++ * Copyright (C) 2003-2006 Vincent Untz
++ * Copyright (C) 2008 Red Hat, Inc.
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#include <config.h>
++#include <string.h>
++
++#include "na-tray-child.h"
++
++#include <glib/gi18n.h>
++#include <gdk/gdk.h>
++#include <gdk/gdkx.h>
++#include <X11/Xatom.h>
++
++G_DEFINE_TYPE (NaTrayChild, na_tray_child, GTK_TYPE_SOCKET)
++
++static void
++na_tray_child_finalize (GObject *object)
++{
++  G_OBJECT_CLASS (na_tray_child_parent_class)->finalize (object);
++}
++
++static void
++na_tray_child_realize (GtkWidget *widget)
++{
++  NaTrayChild *child = NA_TRAY_CHILD (widget);
++  GdkVisual *visual = gtk_widget_get_visual (widget);
++
++  GTK_WIDGET_CLASS (na_tray_child_parent_class)->realize (widget);
++
++  if (child->has_alpha)
++    {
++      /* We have real transparency with an ARGB visual and the Composite
++       * extension. */
++
++      /* Set a transparent background */
++      GdkColor transparent = { 0, 0, 0, 0 }; /* only pixel=0 matters */
++      gdk_window_set_background (widget->window, &transparent);
++      gdk_window_set_composited (widget->window, TRUE);
++
++      child->parent_relative_bg = FALSE;
++    }
++  else if (visual == gdk_drawable_get_visual (GDK_DRAWABLE (gdk_window_get_parent (widget->window))))
++    {
++      /* Otherwise, if the visual matches the visual of the parent window, we
++       * can use a parent-relative background and fake transparency. */
++      gdk_window_set_back_pixmap (widget->window, NULL, TRUE);
++
++      child->parent_relative_bg = TRUE;
++    }
++  else
++    {
++      /* Nothing to do; the icon will sit on top of an ugly gray box */
++      child->parent_relative_bg = FALSE;
++    }
++
++  gdk_window_set_composited (widget->window, child->composited);
++
++  gtk_widget_set_app_paintable (GTK_WIDGET (child),
++                                child->parent_relative_bg || child->has_alpha);
++
++  /* Double-buffering will interfere with the parent-relative-background fake
++   * transparency, since the double-buffer code doesn't know how to fill in the
++   * background of the double-buffer correctly.
++   */
++  gtk_widget_set_double_buffered (GTK_WIDGET (child),
++                                  child->parent_relative_bg);
++}
++
++static void
++na_tray_child_style_set (GtkWidget *widget,
++                         GtkStyle  *previous_style)
++{
++  /* The default handler resets the background according to the new style.
++   * We either use a transparent background or a parent-relative background
++   * and ignore the style background. So, just don't chain up.
++   */
++}
++
++#if 0
++/* This is adapted from code that was commented out in na-tray-manager.c; the
++ * code in na-tray-manager.c wouldn't have worked reliably, this will. So maybe
++ * it can be reenabled. On other hand, things seem to be working fine without
++ * it.
++ *
++ * If reenabling, you need to hook it up in na_tray_child_class_init().
++ */
++static void
++na_tray_child_size_request (GtkWidget      *widget,
++                            GtkRequisition *request)
++{
++  GTK_WIDGET_CLASS (na_tray_child_parent_class)->size_request (widget, request);
++
++  /*
++   * Make sure the icons have a meaningful size ..
++   */ 
++  if ((request->width < 16) || (request->height < 16))
++    {
++      gint nw = MAX (24, request->width);
++      gint nh = MAX (24, request->height);
++      g_warning ("Tray icon has requested a size of (%ix%i), resizing to (%ix%i)", 
++                 req.width, req.height, nw, nh);
++      request->width = nw;
++      request->height = nh;
++    }
++}
++#endif
++
++static void
++na_tray_child_size_allocate (GtkWidget      *widget,
++                             GtkAllocation  *allocation)
++{
++  NaTrayChild *child = NA_TRAY_CHILD (widget);
++
++  gboolean moved = allocation->x != widget->allocation.x ||
++                   allocation->y != widget->allocation.y;
++  gboolean resized = allocation->width != widget->allocation.width ||
++                     allocation->height != widget->allocation.height;
++
++  /* When we are allocating the widget while mapped we need special handling
++   * for both real and fake transparency.
++   *
++   * Real transparency: we need to invalidate and trigger a redraw of the old
++   *   and new areas. (GDK really should handle this for us, but doesn't as of
++   *   GTK+-2.14)
++   *
++   * Fake transparency: if the widget moved, we need to force the contents to
++   *   be redrawn with the new offset for the parent-relative background.
++   */
++  if ((moved || resized) && GTK_WIDGET_MAPPED (widget))
++    {
++      if (na_tray_child_has_alpha (child))
++        gdk_window_invalidate_rect (gdk_window_get_parent (widget->window),
++                                    &widget->allocation, FALSE);
++    }
++
++  GTK_WIDGET_CLASS (na_tray_child_parent_class)->size_allocate (widget,
++                                                                allocation);
++
++  if ((moved || resized) && GTK_WIDGET_MAPPED (widget))
++    {
++      if (na_tray_child_has_alpha (NA_TRAY_CHILD (widget)))
++        gdk_window_invalidate_rect (gdk_window_get_parent (widget->window),
++                                    &widget->allocation, FALSE);
++      else if (moved && child->parent_relative_bg)
++        na_tray_child_force_redraw (child);
++    }
++}
++
++/* The plug window should completely occupy the area of the child, so we won't
++ * get an expose event. But in case we do (the plug unmaps itself, say), this
++ * expose handler draws with real or fake transparency.
++ */
++static gboolean
++na_tray_child_expose_event (GtkWidget      *widget,
++                            GdkEventExpose *event)
++{
++  NaTrayChild *child = NA_TRAY_CHILD (widget);
++
++  if (na_tray_child_has_alpha (child))
++    {
++      /* Clear to transparent */
++      cairo_t *cr = gdk_cairo_create (widget->window);
++      cairo_set_source_rgba (cr, 0, 0, 0, 0);
++      cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
++      gdk_cairo_region (cr, event->region);
++      cairo_fill (cr);
++      cairo_destroy (cr);
++    }
++  else if (child->parent_relative_bg)
++    {
++      /* Clear to parent-relative pixmap */
++      gdk_window_clear_area (widget->window,
++                             event->area.x, event->area.y,
++                             event->area.width, event->area.height);
++    }
++
++  return FALSE;
++}
++
++static void
++na_tray_child_init (NaTrayChild *child)
++{
++}
++
++static void
++na_tray_child_class_init (NaTrayChildClass *klass)
++{
++  GObjectClass *gobject_class;
++  GtkWidgetClass *widget_class;
++
++  gobject_class = (GObjectClass *)klass;
++  widget_class = (GtkWidgetClass *)klass;
++
++  gobject_class->finalize = na_tray_child_finalize;
++  widget_class->style_set = na_tray_child_style_set;
++  widget_class->realize = na_tray_child_realize;
++  widget_class->size_allocate = na_tray_child_size_allocate;
++  widget_class->expose_event = na_tray_child_expose_event;
++}
++
++GtkWidget *
++na_tray_child_new (GdkScreen *screen,
++                   Window     icon_window)
++{
++  XWindowAttributes window_attributes;
++  Display *xdisplay;
++  NaTrayChild *child;
++  GdkVisual *visual;
++  gboolean visual_has_alpha;
++  GdkColormap *colormap;
++  gboolean new_colormap;
++  int result;
++
++  g_return_val_if_fail (GDK_IS_SCREEN (screen), NULL);
++  g_return_val_if_fail (icon_window != None, NULL);
++
++  xdisplay = GDK_SCREEN_XDISPLAY (screen);
++
++  /* We need to determine the visual of the window we are embedding and create
++   * the socket in the same visual.
++   */
++
++  gdk_error_trap_push ();
++  result = XGetWindowAttributes (xdisplay, icon_window,
++                                 &window_attributes);
++  gdk_error_trap_pop ();
++
++  if (!result) /* Window already gone */
++    return NULL;
++
++  visual = gdk_x11_screen_lookup_visual (screen,
++                                         window_attributes.visual->visualid);
++  if (!visual) /* Icon window is on another screen? */
++    return NULL;
++
++  new_colormap = FALSE;
++
++  if (visual == gdk_screen_get_rgb_visual (screen))
++    colormap = gdk_screen_get_rgb_colormap (screen);
++  else if (visual == gdk_screen_get_rgba_visual (screen))
++    colormap = gdk_screen_get_rgba_colormap (screen);
++  else if (visual == gdk_screen_get_system_visual (screen))
++    colormap = gdk_screen_get_system_colormap (screen);
++  else
++    {
++      colormap = gdk_colormap_new (visual, FALSE);
++      new_colormap = TRUE;
++    }
++
++  child = g_object_new (NA_TYPE_TRAY_CHILD, NULL);
++  child->icon_window = icon_window;
++
++  gtk_widget_set_colormap (GTK_WIDGET (child), colormap);
++
++  /* We have alpha if the visual has something other than red, green,
++   * and blue */
++  visual_has_alpha = visual->red_prec + visual->blue_prec + visual->green_prec < visual->depth;
++  child->has_alpha = (visual_has_alpha &&
++                      gdk_display_supports_composite (gdk_screen_get_display (screen)));
++
++  child->composited = child->has_alpha;
++
++  if (new_colormap)
++    g_object_unref (colormap);
++
++  return GTK_WIDGET (child);
++}
++
++char *
++na_tray_child_get_title (NaTrayChild *child)
++{
++  char *retval = NULL;
++  GdkDisplay *display;
++  Atom utf8_string, atom, type;
++  int result;
++  int format;
++  gulong nitems;
++  gulong bytes_after;
++  gchar *val;
++
++  g_return_val_if_fail (NA_IS_TRAY_CHILD (child), NULL);
++
++  display = gtk_widget_get_display (GTK_WIDGET (child));
++
++  utf8_string = gdk_x11_get_xatom_by_name_for_display (display, "UTF8_STRING");
++  atom = gdk_x11_get_xatom_by_name_for_display (display, "_NET_WM_NAME");
++
++  gdk_error_trap_push ();
++
++  result = XGetWindowProperty (GDK_DISPLAY_XDISPLAY (display),
++                               child->icon_window,
++                               atom,
++                               0, G_MAXLONG,
++                               False, utf8_string,
++                               &type, &format, &nitems,
++                               &bytes_after, (guchar **)&val);
++  
++  if (gdk_error_trap_pop () || result != Success)
++    return NULL;
++
++  if (type != utf8_string ||
++      format != 8 ||
++      nitems == 0)
++    {
++      if (val)
++        XFree (val);
++      return NULL;
++    }
++
++  if (!g_utf8_validate (val, nitems, NULL))
++    {
++      XFree (val);
++      return NULL;
++    }
++
++  retval = g_strndup (val, nitems);
++
++  XFree (val);
++
++  return retval;
++}
++
++/**
++ * na_tray_child_has_alpha;
++ * @child: a #NaTrayChild
++ *
++ * Checks if the child has an ARGB visual and real alpha transparence.
++ * (as opposed to faked alpha transparency with an parent-relative
++ * background)
++ *
++ * Return value: %TRUE if the child has an alpha transparency
++ */
++gboolean
++na_tray_child_has_alpha (NaTrayChild *child)
++{
++  g_return_val_if_fail (NA_IS_TRAY_CHILD (child), FALSE);
++
++  return child->has_alpha;
++}
++
++/**
++ * na_tray_child_set_composited;
++ * @child: a #NaTrayChild
++ * @composited: %TRUE if the child's window should be redirected
++ *
++ * Sets whether the #GdkWindow of the child should be set redirected
++ * using gdk_window_set_composited(). By default this is based off of
++ * na_tray_child_has_alpha(), but it may be useful to override it in
++ * certain circumstances; for example, if the #NaTrayChild is added
++ * to a parent window and that parent window is composited against the
++ * background.
++ */
++void
++na_tray_child_set_composited (NaTrayChild *child,
++                              gboolean     composited)
++{
++  g_return_if_fail (NA_IS_TRAY_CHILD (child));
++
++  if (child->composited == composited)
++    return;
++
++  child->composited = composited;
++  if (GTK_WIDGET_REALIZED (child))
++    gdk_window_set_composited (GTK_WIDGET (child)->window, composited);
++}
++
++/* If we are faking transparency with a window-relative background, force a
++ * redraw of the icon. This should be called if the background changes or if
++ * the child is shifted with respect to the background.
++ */
++void
++na_tray_child_force_redraw (NaTrayChild *child)
++{
++  GtkWidget *widget = GTK_WIDGET (child);
++
++  if (GTK_WIDGET_MAPPED (child) && child->parent_relative_bg)
++    {
++#if 1
++      /* Sending an ExposeEvent might cause redraw problems if the
++       * icon is expecting the server to clear-to-background before
++       * the redraw. It should be ok for GtkStatusIcon or EggTrayIcon.
++       */
++      Display *xdisplay = GDK_DISPLAY_XDISPLAY (gtk_widget_get_display (widget));
++      XEvent xev;
++
++      xev.xexpose.type = Expose;
++      xev.xexpose.window = GDK_WINDOW_XWINDOW (GTK_SOCKET (child)->plug_window);
++      xev.xexpose.x = 0;
++      xev.xexpose.y = 0;
++      xev.xexpose.width = widget->allocation.width;
++      xev.xexpose.height = widget->allocation.height;
++      xev.xexpose.count = 0;
++
++      gdk_error_trap_push ();
++      XSendEvent (GDK_DISPLAY_XDISPLAY (gtk_widget_get_display (widget)),
++                  xev.xexpose.window,
++                  False, ExposureMask,
++                  &xev);
++      /* We have to sync to reliably catch errors from the XSendEvent(),
++       * since that is asynchronous.
++       */
++      XSync (xdisplay, False);
++      gdk_error_trap_pop ();
++#else
++      /* Hiding and showing is the safe way to do it, but can result in more
++       * flickering.
++       */
++      gdk_window_hide (widget->window);
++      gdk_window_show (widget->window);
++#endif
++    }
++}
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-child.h b/gui/simple-greeter/libnotificationarea/na-tray-child.h
+new file mode 100644
+index 0000000..c174abe
+--- /dev/null
++++ b/gui/simple-greeter/libnotificationarea/na-tray-child.h
+@@ -0,0 +1,68 @@
++/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*- */
++/* na-tray-child.h
++ * Copyright (C) 2002 Anders Carlsson <andersca@gnu.org>
++ * Copyright (C) 2003-2006 Vincent Untz
++ * Copyright (C) 2008 Red Hat, Inc.
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __NA_TRAY_CHILD_H__
++#define __NA_TRAY_CHILD_H__
++
++#include <gtk/gtk.h>
++#include <gdk/gdkx.h>
++
++G_BEGIN_DECLS
++
++#define NA_TYPE_TRAY_CHILD		(na_tray_child_get_type ())
++#define NA_TRAY_CHILD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), NA_TYPE_TRAY_CHILD, NaTrayChild))
++#define NA_TRAY_CHILD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), NA_TYPE_TRAY_CHILD, NaTrayChildClass))
++#define NA_IS_TRAY_CHILD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), NA_TYPE_TRAY_CHILD))
++#define NA_IS_TRAY_CHILD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), NA_TYPE_TRAY_CHILD))
++#define NA_TRAY_CHILD_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), NA_TYPE_TRAY_CHILD, NaTrayChildClass))
++
++typedef struct _NaTrayChild	  NaTrayChild;
++typedef struct _NaTrayChildClass  NaTrayChildClass;
++typedef struct _NaTrayChildChild  NaTrayChildChild;
++
++struct _NaTrayChild
++{
++  GtkSocket parent_instance;
++  Window icon_window;
++  guint has_alpha : 1;
++  guint composited : 1;
++  guint parent_relative_bg : 1;
++};
++
++struct _NaTrayChildClass
++{
++  GtkSocketClass parent_class;
++};
++
++GType           na_tray_child_get_type        (void);
++
++GtkWidget      *na_tray_child_new            (GdkScreen   *screen,
++                                              Window       icon_window);
++char           *na_tray_child_get_title      (NaTrayChild *child);
++gboolean        na_tray_child_has_alpha      (NaTrayChild *child);
++void            na_tray_child_set_composited (NaTrayChild *child,
++                                              gboolean     composited);
++void            na_tray_child_force_redraw   (NaTrayChild *child);
++
++G_END_DECLS
++
++#endif /* __NA_TRAY_CHILD_H__ */
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-manager.c b/gui/simple-greeter/libnotificationarea/na-tray-manager.c
+index 4842a91..1bf54f1 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray-manager.c
++++ b/gui/simple-greeter/libnotificationarea/na-tray-manager.c
+@@ -252,120 +252,61 @@ static gboolean
+ na_tray_manager_plug_removed (GtkSocket       *socket,
+ 			      NaTrayManager   *manager)
+ {
+-  Window *window;
++  NaTrayChild *child = NA_TRAY_CHILD (socket);
+ 
+-  window = g_object_get_data (G_OBJECT (socket), "na-tray-child-window");
+-
+-  g_hash_table_remove (manager->socket_table, GINT_TO_POINTER (*window));
+-  g_object_set_data (G_OBJECT (socket), "na-tray-child-window",
+-		     NULL);
+-  
+-  g_signal_emit (manager, manager_signals[TRAY_ICON_REMOVED], 0, socket);
++  g_hash_table_remove (manager->socket_table,
++                       GINT_TO_POINTER (child->icon_window));
++  g_signal_emit (manager, manager_signals[TRAY_ICON_REMOVED], 0, child);
+ 
+   /* This destroys the socket. */
+   return FALSE;
+ }
+ 
+ static void
+-na_tray_manager_make_socket_transparent (GtkWidget *widget,
+-                                         gpointer   user_data)
++na_tray_manager_handle_dock_request (NaTrayManager       *manager,
++				     XClientMessageEvent *xevent)
+ {
+-  if (GTK_WIDGET_NO_WINDOW (widget))
+-    return;
++  Window icon_window = xevent->data.l[2];
++  GtkWidget *child;
+ 
+-  gdk_window_set_back_pixmap (widget->window, NULL, TRUE);
+-}
+-
+-static gboolean
+-na_tray_manager_socket_exposed (GtkWidget      *widget,
+-                                GdkEventExpose *event,
+-                                gpointer        user_data)
+-{
+-  gdk_window_clear_area (widget->window,
+-                         event->area.x, event->area.y,
+-                         event->area.width, event->area.height);
+-  return FALSE;
+-}
++  if (g_hash_table_lookup (manager->socket_table,
++                           GINT_TO_POINTER (icon_window)))
++    {
++      /* We already got this notification earlier, ignore this one */
++      return;
++    }
+ 
+-static void
+-na_tray_manager_socket_style_set (GtkWidget *widget,
+-                                  GtkStyle  *previous_style,
+-                                  gpointer   user_data)
+-{
+-  if (widget->window == NULL)
++  child = na_tray_child_new (manager->screen, icon_window);
++  if (child == NULL) /* already gone or other error */
+     return;
+ 
+-  na_tray_manager_make_socket_transparent (widget, user_data);
+-}
++  g_signal_emit (manager, manager_signals[TRAY_ICON_ADDED], 0,
++		 child);
+ 
+-static void
+-na_tray_manager_handle_dock_request (NaTrayManager       *manager,
+-				     XClientMessageEvent *xevent)
+-{
+-  GtkWidget *socket;
+-  Window *window;
+-  GtkRequisition req;
++  /* If the child wasn't attached, then destroy it */
+ 
+-  if (g_hash_table_lookup (manager->socket_table, GINT_TO_POINTER (xevent->data.l[2])))
++  if (!GTK_IS_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (child))))
+     {
+-      /* We already got this notification earlier, ignore this one */
++      gtk_widget_destroy (child);
+       return;
+     }
+-  
+-  socket = gtk_socket_new ();
+-
+-  gtk_widget_set_app_paintable (socket, TRUE);
+-  //FIXME: need to find a theme where this (and expose event) is needed
+-  gtk_widget_set_double_buffered (socket, FALSE);
+-  g_signal_connect (socket, "realize",
+-                    G_CALLBACK (na_tray_manager_make_socket_transparent), NULL);
+-  g_signal_connect (socket, "expose_event",
+-                    G_CALLBACK (na_tray_manager_socket_exposed), NULL);
+-  g_signal_connect_after (socket, "style_set",
+-                          G_CALLBACK (na_tray_manager_socket_style_set), NULL);
+-  
+-  /* We need to set the child window here
+-   * so that the client can call _get functions
+-   * in the signal handler
+-   */
+-  window = g_new (Window, 1);
+-  *window = xevent->data.l[2];
+-      
+-  g_object_set_data_full (G_OBJECT (socket),
+-			  "na-tray-child-window",
+-			  window, g_free);
+-  g_signal_emit (manager, manager_signals[TRAY_ICON_ADDED], 0,
+-		 socket);
+ 
+-  /* Add the socket only if it's been attached */
+-  if (GTK_IS_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (socket))))
++  g_signal_connect (child, "plug_removed",
++		    G_CALLBACK (na_tray_manager_plug_removed), manager);
++
++  gtk_socket_add_id (GTK_SOCKET (child), icon_window);
++
++  if (!GTK_SOCKET (child)->plug_window)
+     {
+-      g_signal_connect (socket, "plug_removed",
+-			G_CALLBACK (na_tray_manager_plug_removed), manager);
+-      
+-      gtk_socket_add_id (GTK_SOCKET (socket), *window);
+-
+-      g_hash_table_insert (manager->socket_table, GINT_TO_POINTER (*window), socket);
+-
+-      /*
+-       * Make sure the icons have a meaningfull size ...
+-       */ 
+-      req.width = req.height = 1;
+-      gtk_widget_size_request (socket, &req);
+-      /*
+-      if ((req.width < 16) || (req.height < 16))
+-      {
+-          gint nw = MAX (24, req.width);
+-          gint nh = MAX (24, req.height);
+-          g_warning (_("tray icon has requested a size of (%i x %i), resizing to (%i x %i)"), 
+-                      req.width, req.height, nw, nh);
+-          gtk_widget_set_size_request(icon, nw,  nh);
+-      }
+-      */
+-      gtk_widget_show(socket);
++      /* Embedding failed, we won't get a plug-removed signal */
++      g_signal_emit (manager, manager_signals[TRAY_ICON_REMOVED], 0, child);
++      gtk_widget_destroy (child);
++      return;
+     }
+-  else
+-    gtk_widget_destroy (socket);
++
++  g_hash_table_insert (manager->socket_table,
++                       GINT_TO_POINTER (icon_window), child);
++  gtk_widget_show (child);
+ }
+ 
+ static void
+@@ -445,13 +386,13 @@ na_tray_manager_handle_begin_message (NaTrayManager       *manager,
+   /* Check if the same message is already in the queue and remove it if so */
+   for (p = manager->messages; p; p = p->next)
+     {
+-      PendingMessage *message = p->data;
++      PendingMessage *pmsg = p->data;
+ 
+-      if (xevent->window == message->window &&
+-	  xevent->data.l[4] == message->id)
++      if (xevent->window == pmsg->window &&
++	  xevent->data.l[4] == pmsg->id)
+ 	{
+ 	  /* Hmm, we found it, now remove it */
+-	  pending_message_free (message);
++	  pending_message_free (pmsg);
+ 	  manager->messages = g_list_remove_link (manager->messages, p);
+           g_list_free_1 (p);
+ 	  break;
+@@ -660,6 +601,58 @@ na_tray_manager_set_orientation_property (NaTrayManager *manager)
+ #endif
+ }
+ 
++static void
++na_tray_manager_set_visual_property (NaTrayManager *manager)
++{
++#ifdef GDK_WINDOWING_X11
++  GdkDisplay *display;
++  Visual     *xvisual;
++  Atom        visual_atom;
++  gulong      data[1];
++
++  if (!manager->invisible || !manager->invisible->window)
++    return;
++
++  /* The visual property is a hint to the tray icons as to what visual they
++   * should use for their windows. If the X server has RGBA colormaps, then
++   * we tell the tray icons to use a RGBA colormap and we'll composite the
++   * icon onto its parents with real transparency. Otherwise, we just tell
++   * the icon to use our colormap, and we'll do some hacks with parent
++   * relative backgrounds to simulate transparency.
++   */
++
++  display = gtk_widget_get_display (manager->invisible);
++  visual_atom = gdk_x11_get_xatom_by_name_for_display (display,
++						       "_NET_SYSTEM_TRAY_VISUAL");
++
++  if (gdk_screen_get_rgba_visual (manager->screen) != NULL &&
++      gdk_display_supports_composite (display))
++    {
++      xvisual = GDK_VISUAL_XVISUAL (gdk_screen_get_rgba_visual (manager->screen));
++    }
++  else
++    {
++      /* We actually want the visual of the tray where the icons will
++       * be embedded. In almost all cases, this will be the same as the visual
++       * of the screen.
++       */
++      GdkColormap *colormap;
++
++      colormap = gdk_screen_get_default_colormap (manager->screen);
++      xvisual = GDK_VISUAL_XVISUAL (gdk_colormap_get_visual (colormap));
++    }
++
++  data[0] = XVisualIDFromVisual (xvisual);
++
++  XChangeProperty (GDK_DISPLAY_XDISPLAY (display),
++                   GDK_WINDOW_XWINDOW (manager->invisible->window),
++                   visual_atom,
++                   XA_VISUALID, 32,
++                   PropModeReplace,
++                   (guchar *) &data, 1);
++#endif
++}
++
+ #ifdef GDK_WINDOWING_X11
+ 
+ static gboolean
+@@ -682,6 +675,9 @@ na_tray_manager_manage_screen_x11 (NaTrayManager *manager,
+   if (na_tray_manager_check_running_screen_x11 (screen))
+     return FALSE;
+ #endif
++  
++  manager->screen = screen;
++
+   display = gdk_screen_get_display (screen);
+   xscreen = GDK_SCREEN_XSCREEN (screen);
+   
+@@ -696,7 +692,11 @@ na_tray_manager_manage_screen_x11 (NaTrayManager *manager,
+   manager->selection_atom = gdk_atom_intern (selection_atom_name, FALSE);
+   g_free (selection_atom_name);
+ 
++  manager->invisible = invisible;
++  g_object_ref (G_OBJECT (manager->invisible));
++
+   na_tray_manager_set_orientation_property (manager);
++  na_tray_manager_set_visual_property (manager);
+   
+   timestamp = gdk_x11_get_server_time (invisible->window);
+ 
+@@ -728,9 +728,6 @@ na_tray_manager_manage_screen_x11 (NaTrayManager *manager,
+ 		  RootWindowOfScreen (xscreen),
+ 		  False, StructureNotifyMask, (XEvent *)&xev);
+ 
+-      manager->invisible = invisible;
+-      g_object_ref (G_OBJECT (manager->invisible));
+-      
+       opcode_atom = gdk_atom_intern ("_NET_SYSTEM_TRAY_OPCODE", FALSE);
+       manager->opcode_atom = gdk_x11_atom_to_xatom_for_display (display,
+                                                                 opcode_atom);
+@@ -761,6 +758,10 @@ na_tray_manager_manage_screen_x11 (NaTrayManager *manager,
+   else
+     {
+       gtk_widget_destroy (invisible);
++      g_object_unref (invisible);
++      manager->invisible = NULL;
++
++      manager->screen = NULL;
+  
+       return FALSE;
+     }
+@@ -819,67 +820,6 @@ na_tray_manager_check_running (GdkScreen *screen)
+ #endif
+ }
+ 
+-char *
+-na_tray_manager_get_child_title (NaTrayManager      *manager,
+-				 NaTrayManagerChild *child)
+-{
+-  char *retval = NULL;
+-#ifdef GDK_WINDOWING_X11
+-  GdkDisplay *display;
+-  Window *child_window;
+-  Atom utf8_string, atom, type;
+-  int result;
+-  int format;
+-  gulong nitems;
+-  gulong bytes_after;
+-  gchar *val;
+-
+-  g_return_val_if_fail (NA_IS_TRAY_MANAGER (manager), NULL);
+-  g_return_val_if_fail (GTK_IS_SOCKET (child), NULL);
+-  
+-  display = gdk_screen_get_display (manager->screen);
+-
+-  child_window = g_object_get_data (G_OBJECT (child),
+-				    "na-tray-child-window");
+-
+-  utf8_string = gdk_x11_get_xatom_by_name_for_display (display, "UTF8_STRING");
+-  atom = gdk_x11_get_xatom_by_name_for_display (display, "_NET_WM_NAME");
+-
+-  gdk_error_trap_push ();
+-
+-  result = XGetWindowProperty (GDK_DISPLAY_XDISPLAY (display),
+-			       *child_window,
+-			       atom,
+-			       0, G_MAXLONG,
+-			       False, utf8_string,
+-			       &type, &format, &nitems,
+-			       &bytes_after, (guchar **)&val);
+-  
+-  if (gdk_error_trap_pop () || result != Success)
+-    return NULL;
+-
+-  if (type != utf8_string ||
+-      format != 8 ||
+-      nitems == 0)
+-    {
+-      if (val)
+-	XFree (val);
+-      return NULL;
+-    }
+-
+-  if (!g_utf8_validate (val, nitems, NULL))
+-    {
+-      XFree (val);
+-      return NULL;
+-    }
+-
+-  retval = g_strndup (val, nitems);
+-
+-  XFree (val);
+-#endif
+-  return retval;
+-}
+-
+ void
+ na_tray_manager_set_orientation (NaTrayManager  *manager,
+ 				 GtkOrientation  orientation)
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-manager.h b/gui/simple-greeter/libnotificationarea/na-tray-manager.h
+index a1781a7..f325453 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray-manager.h
++++ b/gui/simple-greeter/libnotificationarea/na-tray-manager.h
+@@ -24,10 +24,12 @@
+ #ifndef __NA_TRAY_MANAGER_H__
+ #define __NA_TRAY_MANAGER_H__
+ 
+-#include <gtk/gtk.h>
+ #ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
+ #endif
++#include <gtk/gtk.h>
++
++#include "na-tray-child.h"
+ 
+ G_BEGIN_DECLS
+ 
+@@ -40,7 +42,6 @@ G_BEGIN_DECLS
+ 	
+ typedef struct _NaTrayManager	    NaTrayManager;
+ typedef struct _NaTrayManagerClass  NaTrayManagerClass;
+-typedef struct _NaTrayManagerChild  NaTrayManagerChild;
+ 
+ struct _NaTrayManager
+ {
+@@ -64,18 +65,18 @@ struct _NaTrayManagerClass
+   GObjectClass parent_class;
+ 
+   void (* tray_icon_added)   (NaTrayManager      *manager,
+-			      NaTrayManagerChild *child);
++			      NaTrayChild        *child);
+   void (* tray_icon_removed) (NaTrayManager      *manager,
+-			      NaTrayManagerChild *child);
++			      NaTrayChild        *child);
+ 
+   void (* message_sent)      (NaTrayManager      *manager,
+-			      NaTrayManagerChild *child,
++			      NaTrayChild        *child,
+ 			      const gchar        *message,
+ 			      glong               id,
+ 			      glong               timeout);
+   
+   void (* message_cancelled) (NaTrayManager      *manager,
+-			      NaTrayManagerChild *child,
++			      NaTrayChild        *child,
+ 			      glong               id);
+ 
+   void (* lost_selection)    (NaTrayManager      *manager);
+@@ -87,8 +88,6 @@ gboolean        na_tray_manager_check_running   (GdkScreen          *screen);
+ NaTrayManager  *na_tray_manager_new             (void);
+ gboolean        na_tray_manager_manage_screen   (NaTrayManager      *manager,
+ 						 GdkScreen          *screen);
+-char           *na_tray_manager_get_child_title (NaTrayManager      *manager,
+-						 NaTrayManagerChild *child);
+ void            na_tray_manager_set_orientation (NaTrayManager      *manager,
+ 						 GtkOrientation      orientation);
+ GtkOrientation  na_tray_manager_get_orientation (NaTrayManager      *manager);
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray.c b/gui/simple-greeter/libnotificationarea/na-tray.c
+index 7192717..051a811 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray.c
++++ b/gui/simple-greeter/libnotificationarea/na-tray.c
+@@ -12,7 +12,7 @@
+  * WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * General Public License for more details.
+- *
++ * 
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+@@ -26,7 +26,6 @@
+ 
+ #include "na-tray-manager.h"
+ #include "fixedtip.h"
+-#include "obox.h"
+ 
+ #include "na-tray.h"
+ 
+@@ -83,6 +82,27 @@ static TraysScreen *trays_screens = NULL;
+ 
+ static void icon_tip_show_next (IconTip *icontip);
+ 
++/* NaBox, an instantiable GtkBox */
++
++typedef GtkBox      NaBox;
++typedef GtkBoxClass NaBoxClass;
++
++static GType na_box_get_type (void);
++
++G_DEFINE_TYPE (NaBox, na_box, GTK_TYPE_BOX)
++
++static void
++na_box_init (NaBox *box)
++{
++}
++
++static void
++na_box_class_init (NaBoxClass *klass)
++{
++}
++
++/* NaTray */
++
+ G_DEFINE_TYPE (NaTray, na_tray, GTK_TYPE_BIN)
+ 
+ static NaTray *
+@@ -115,7 +135,6 @@ tray_added (NaTrayManager *manager,
+   gtk_box_pack_end (GTK_BOX (priv->box), icon, FALSE, FALSE, 0);
+ 
+   gtk_widget_show (icon);
+-  na_tray_force_redraw (tray);
+ }
+ 
+ static void
+@@ -131,8 +150,6 @@ tray_removed (NaTrayManager *manager,
+ 
+   g_assert (tray->priv->trays_screen == trays_screen);
+ 
+-  na_tray_force_redraw (tray);
+-
+   g_hash_table_remove (trays_screen->icon_table, icon);
+   /* this will also destroy the tip associated to this icon */
+   g_hash_table_remove (trays_screen->tip_table, icon);
+@@ -247,8 +264,9 @@ icon_tip_show_next (IconTip *icontip)
+   icontip->id = buffer->id;
+ 
+   if (buffer->timeout > 0)
+-    icontip->source_id = g_timeout_add (buffer->timeout * 1000,
+-                                        icon_tip_show_next_timeout, icontip);
++    icontip->source_id = g_timeout_add_seconds (buffer->timeout,
++                                                icon_tip_show_next_timeout,
++                                                icontip);
+ 
+   icon_tip_buffer_free (buffer, NULL);
+ }
+@@ -375,7 +393,7 @@ update_size_and_orientation (NaTray *tray)
+ {
+   NaTrayPrivate *priv = tray->priv;
+ 
+-  na_obox_set_orientation (NA_OBOX (priv->box), priv->orientation);
++  gtk_orientable_set_orientation (GTK_ORIENTABLE (priv->box), priv->orientation);
+ 
+   /* This only happens when setting the property during object construction */
+   if (!priv->trays_screen)
+@@ -399,8 +417,38 @@ update_size_and_orientation (NaTray *tray)
+       gtk_widget_set_size_request (priv->box, -1, MIN_BOX_SIZE);
+       break;
+     }
++}
+ 
+-  na_tray_force_redraw (tray);
++/* Children with alpha channels have been set to be composited by calling
++ * gdk_window_set_composited(). We need to paint these children ourselves.
++ */
++static void
++na_tray_expose_icon (GtkWidget *widget,
++		     gpointer   data)
++{
++  cairo_t *cr = data;
++
++  if (na_tray_child_has_alpha (NA_TRAY_CHILD (widget)))
++    {
++      gdk_cairo_set_source_pixmap (cr, widget->window,
++				   widget->allocation.x,
++				   widget->allocation.y);
++      cairo_paint (cr);
++    }
++}
++
++static void
++na_tray_expose_box (GtkWidget      *box,
++		    GdkEventExpose *event)
++{
++  cairo_t *cr = gdk_cairo_create (box->window);
++
++  gdk_cairo_region (cr, event->region);
++  cairo_clip (cr);
++
++  gtk_container_foreach (GTK_CONTAINER (box), na_tray_expose_icon, cr);
++
++  cairo_destroy (cr);
+ }
+ 
+ static void
+@@ -417,7 +465,9 @@ na_tray_init (NaTray *tray)
+   gtk_container_add (GTK_CONTAINER (tray), priv->frame);
+   gtk_widget_show (priv->frame);
+ 
+-  priv->box = na_obox_new ();
++  priv->box = g_object_new (na_box_get_type (), NULL);
++  g_signal_connect (priv->box, "expose-event",
++		    G_CALLBACK (na_tray_expose_box), tray);
+   gtk_box_set_spacing (GTK_BOX (priv->box), ICON_SPACING);
+   gtk_container_add (GTK_CONTAINER (priv->frame), priv->box);
+   gtk_widget_show (priv->box);
+@@ -658,9 +708,9 @@ idle_redraw_cb (NaTray *tray)
+ {
+   NaTrayPrivate *priv = tray->priv;
+ 
++  gtk_container_foreach (GTK_CONTAINER (priv->box), (GtkCallback)na_tray_child_force_redraw, tray);
++  
+   priv->idle_redraw_id = 0;
+-  gtk_widget_hide (priv->box);
+-  gtk_widget_show (priv->box);
+ 
+   return FALSE;
+ }
+@@ -671,8 +721,6 @@ na_tray_force_redraw (NaTray *tray)
+   NaTrayPrivate *priv = tray->priv;
+ 
+   /* Force the icons to redraw their backgrounds.
+-   * gtk_widget_queue_draw() doesn't work across process boundaries,
+-   * so we do this instead.
+    */
+   if (priv->idle_redraw_id == 0)
+     priv->idle_redraw_id = g_idle_add ((GSourceFunc) idle_redraw_cb, tray);
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray.h b/gui/simple-greeter/libnotificationarea/na-tray.h
+index f67062b..57baddd 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray.h
++++ b/gui/simple-greeter/libnotificationarea/na-tray.h
+@@ -24,10 +24,10 @@
+ #ifndef __NA_TRAY_H__
+ #define __NA_TRAY_H__
+ 
+-#include <gtk/gtk.h>
+ #ifdef GDK_WINDOWING_X11
+ #include <gdk/gdkx.h>
+ #endif
++#include <gtk/gtk.h>
+ 
+ G_BEGIN_DECLS
+ 
+@@ -41,7 +41,6 @@ G_BEGIN_DECLS
+ typedef struct _NaTray		NaTray;
+ typedef struct _NaTrayPrivate	NaTrayPrivate;
+ typedef struct _NaTrayClass	NaTrayClass;
+-typedef struct _NaTrayChild	NaTrayChild;
+ 
+ struct _NaTray
+ {
+diff --git a/gui/simple-greeter/libnotificationarea/testtray.c b/gui/simple-greeter/libnotificationarea/testtray.c
+index 42d3732..c0300b6 100644
+--- a/gui/simple-greeter/libnotificationarea/testtray.c
++++ b/gui/simple-greeter/libnotificationarea/testtray.c
+@@ -66,7 +66,7 @@ static void
+ tray_added_cb (GtkContainer *box, GtkWidget *icon, TrayData *data)
+ {
+   g_print ("[Screen %u tray %p] Child %p added to tray: \"%s\"\n",
+-	   data->screen_num, data->tray, icon, "XXX");//na_tray_manager_get_child_title (manager, icon));
++	   data->screen_num, data->tray, icon, "XXX");//na_tray_child_get_title (icon));
+ 
+   update_child_count (data);
+ }
+-- 
+1.6.5.rc2
+
+
+From b2bd208cd0057e25b0aac380d519376b243537e0 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 22 Oct 2009 22:07:52 -0400
+Subject: [PATCH 2/4] Add ordering patch to na-tray
+
+This makes sure system utilities come up in the right order.
+---
+ .../libnotificationarea/na-tray-child.c            |   81 ++++++++++++++++++
+ .../libnotificationarea/na-tray-child.h            |    5 +-
+ gui/simple-greeter/libnotificationarea/na-tray.c   |   89 +++++++++++++++++++-
+ 3 files changed, 172 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-child.c b/gui/simple-greeter/libnotificationarea/na-tray-child.c
+index c7e3f61..98769bd 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray-child.c
++++ b/gui/simple-greeter/libnotificationarea/na-tray-child.c
+@@ -428,3 +428,84 @@ na_tray_child_force_redraw (NaTrayChild *child)
+ #endif
+     }
+ }
++
++
++/* from libwnck xutils.c */
++static char *
++latin1_to_utf8 (const char *latin1)
++{
++  GString *str;
++  const char *p;
++
++  str = g_string_new (NULL);
++
++  p = latin1;
++  while (*p)
++    {
++      g_string_append_unichar (str, (gunichar) *p);
++      ++p;
++    }
++
++  return g_string_free (str, FALSE);
++}
++
++/* derived from libwnck xutils.c */
++static void
++_get_wmclass (Display *xdisplay,
++              Window   xwindow,
++              char   **res_class,
++              char   **res_name)
++{
++  XClassHint ch;
++  char *retval;
++
++  gdk_error_trap_push ();
++
++  ch.res_name = NULL;
++  ch.res_class = NULL;
++
++  XGetClassHint (xdisplay, xwindow, &ch);
++
++  gdk_error_trap_pop ();
++
++  retval = NULL;
++
++  if (res_class)
++    *res_class = NULL;
++
++  if (res_name)
++    *res_name = NULL;
++
++  if (ch.res_name)
++    {
++      if (res_name)
++        *res_name = latin1_to_utf8 (ch.res_name);
++
++      XFree (ch.res_name);
++    }
++
++  if (ch.res_class)
++    {
++      if (res_class)
++        *res_class = latin1_to_utf8 (ch.res_class);
++
++      XFree (ch.res_class);
++    }
++}
++
++void
++na_tray_child_get_wm_class (NaTrayChild *child,
++                            char **res_name,
++                            char **res_class)
++{
++  GdkDisplay *display;
++
++  g_return_if_fail (NA_IS_TRAY_CHILD (child));
++
++  display = gtk_widget_get_display (GTK_WIDGET (child));
++
++  _get_wmclass (GDK_DISPLAY_XDISPLAY (display),
++                child->icon_window,
++                res_class,
++                res_name);
++}
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-child.h b/gui/simple-greeter/libnotificationarea/na-tray-child.h
+index c174abe..ff036a7 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray-child.h
++++ b/gui/simple-greeter/libnotificationarea/na-tray-child.h
+@@ -61,7 +61,10 @@ char           *na_tray_child_get_title      (NaTrayChild *child);
+ gboolean        na_tray_child_has_alpha      (NaTrayChild *child);
+ void            na_tray_child_set_composited (NaTrayChild *child,
+                                               gboolean     composited);
+-void            na_tray_child_force_redraw   (NaTrayChild *child);
++void            na_tray_child_force_redraw   (NaTrayChild  *child);
++void            na_tray_child_get_wm_class   (NaTrayChild  *child,
++					      char        **res_name,
++			     		      char        **res_class);
+ 
+ G_END_DECLS
+ 
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray.c b/gui/simple-greeter/libnotificationarea/na-tray.c
+index 051a811..3bd1258 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray.c
++++ b/gui/simple-greeter/libnotificationarea/na-tray.c
+@@ -114,6 +114,51 @@ get_tray (TraysScreen *trays_screen)
+   return trays_screen->all_trays->data;
+ }
+ 
++const char *roles[] = {
++  "keyboard",
++  "volume",
++  "bluetooth",
++  "network",
++  "battery",
++  NULL
++};
++
++const char *wmclass_roles[] = {
++  "Bluetooth-applet", "bluetooth",
++  "Gnome-volume-control-applet", "volume",
++  "Nm-applet", "network",
++  "Gnome-power-manager", "battery",
++  NULL,
++};
++
++static const char *
++find_role (const char *wmclass)
++{
++  int i;
++
++  for (i = 0; wmclass_roles[i]; i += 2)
++    {
++      if (strcmp (wmclass, wmclass_roles[i]) == 0)
++        return wmclass_roles[i + 1];
++    }
++
++  return NULL;
++}
++
++static int
++find_role_pos (const char *role)
++{
++  int i;
++
++  for (i = 0; roles[i]; i++)
++    {
++      if (strcmp (role, roles[i]) == 0)
++        break;
++    }
++
++  return i + 1;
++}
++
+ static void
+ tray_added (NaTrayManager *manager,
+             GtkWidget     *icon,
+@@ -121,6 +166,11 @@ tray_added (NaTrayManager *manager,
+ {
+   NaTray *tray;
+   NaTrayPrivate *priv;
++  GList *l, *children;
++  int position;
++  char *class_a;
++  const char *role;
++  int role_position;
+ 
+   tray = get_tray (trays_screen);
+   if (tray == NULL)
+@@ -129,10 +179,45 @@ tray_added (NaTrayManager *manager,
+   priv = tray->priv;
+ 
+   g_assert (priv->trays_screen == trays_screen);
+-  
++
+   g_hash_table_insert (trays_screen->icon_table, icon, tray);
+ 
+-  gtk_box_pack_end (GTK_BOX (priv->box), icon, FALSE, FALSE, 0);
++  position = 0;
++
++  class_a = NULL;
++  na_tray_child_get_wm_class (NA_TRAY_CHILD (icon), NULL, &class_a);
++  if (!class_a)
++    goto insert;
++
++  role = find_role (class_a);
++  g_free (class_a);
++  if (!role)
++    goto insert;
++
++  role_position = find_role_pos (role);
++  g_object_set_data (G_OBJECT (icon), "role-position", GINT_TO_POINTER (role_position));
++
++  children = gtk_container_get_children (GTK_CONTAINER (priv->box));
++  for (l = g_list_last (children); l; l = l->prev)
++    {
++      GtkWidget *child = l->data;
++      gint rp;
++
++      rp = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (child), "role-position"));
++      if (rp == 0 || rp < role_position)
++        {
++          position = g_list_index (children, child) + 1;
++          break;
++        }
++    }
++  g_list_free (children);
++
++  if (position < 0)
++    position = 0;
++
++insert:
++  gtk_box_pack_start (GTK_BOX (priv->box), icon, FALSE, FALSE, 0);
++  gtk_box_reorder_child (GTK_BOX (priv->box), icon, position);
+ 
+   gtk_widget_show (icon);
+ }
+-- 
+1.6.5.rc2
+
+
+From ab7c74cca138c404338ebaf3ee3c1e3f6e92f083 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 22 Oct 2009 22:08:18 -0400
+Subject: [PATCH 3/4] Add the ability to have padding between icons in tray
+
+---
+ .../libnotificationarea/na-tray-manager.c          |   41 ++++++++++++++++++++
+ .../libnotificationarea/na-tray-manager.h          |    3 +
+ gui/simple-greeter/libnotificationarea/na-tray.c   |   12 ++++++
+ gui/simple-greeter/libnotificationarea/na-tray.h   |    2 +
+ 4 files changed, 58 insertions(+), 0 deletions(-)
+
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-manager.c b/gui/simple-greeter/libnotificationarea/na-tray-manager.c
+index 1bf54f1..d49c646 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray-manager.c
++++ b/gui/simple-greeter/libnotificationarea/na-tray-manager.c
+@@ -653,6 +653,32 @@ na_tray_manager_set_visual_property (NaTrayManager *manager)
+ #endif
+ }
+ 
++static void
++na_tray_manager_set_padding_property (NaTrayManager *manager)
++{
++#ifdef GDK_WINDOWING_X11
++  GdkDisplay *display;
++  Atom        orientation_atom;
++  gulong      data[1];
++
++  if (!manager->invisible || !manager->invisible->window)
++    return;
++
++  display = gtk_widget_get_display (manager->invisible);
++  orientation_atom = gdk_x11_get_xatom_by_name_for_display (display,
++                                                            "_NET_SYSTEM_TRAY_PADDING");
++
++  data[0] = manager->padding;
++
++  XChangeProperty (GDK_DISPLAY_XDISPLAY (display),
++		   GDK_WINDOW_XWINDOW (manager->invisible->window),
++                   orientation_atom,
++		   XA_CARDINAL, 32,
++		   PropModeReplace,
++		   (guchar *) &data, 1);
++#endif
++}
++
+ #ifdef GDK_WINDOWING_X11
+ 
+ static gboolean
+@@ -697,6 +723,7 @@ na_tray_manager_manage_screen_x11 (NaTrayManager *manager,
+ 
+   na_tray_manager_set_orientation_property (manager);
+   na_tray_manager_set_visual_property (manager);
++  na_tray_manager_set_padding_property (manager);
+   
+   timestamp = gdk_x11_get_server_time (invisible->window);
+ 
+@@ -836,6 +863,20 @@ na_tray_manager_set_orientation (NaTrayManager  *manager,
+     }
+ }
+ 
++void
++na_tray_manager_set_padding (NaTrayManager *manager,
++                             gint           padding)
++{
++  g_return_if_fail (NA_IS_TRAY_MANAGER (manager));
++
++  if (manager->padding != padding)
++    {
++      manager->padding = padding;
++
++      na_tray_manager_set_padding_property (manager);
++    }
++}
++
+ GtkOrientation
+ na_tray_manager_get_orientation (NaTrayManager *manager)
+ {
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray-manager.h b/gui/simple-greeter/libnotificationarea/na-tray-manager.h
+index f325453..e93882e 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray-manager.h
++++ b/gui/simple-greeter/libnotificationarea/na-tray-manager.h
+@@ -55,6 +55,7 @@ struct _NaTrayManager
+   GtkWidget *invisible;
+   GdkScreen *screen;
+   GtkOrientation orientation;
++  gint padding;
+ 
+   GList *messages;
+   GHashTable *socket_table;
+@@ -91,6 +92,8 @@ gboolean        na_tray_manager_manage_screen   (NaTrayManager      *manager,
+ void            na_tray_manager_set_orientation (NaTrayManager      *manager,
+ 						 GtkOrientation      orientation);
+ GtkOrientation  na_tray_manager_get_orientation (NaTrayManager      *manager);
++void            na_tray_manager_set_padding      (NaTrayManager      *manager,
++						  gint                padding);
+ 
+ G_END_DECLS
+ 
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray.c b/gui/simple-greeter/libnotificationarea/na-tray.c
+index 3bd1258..40845c1 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray.c
++++ b/gui/simple-greeter/libnotificationarea/na-tray.c
+@@ -599,6 +599,8 @@ na_tray_constructor (GType type,
+         {
+           trays_screens [screen_number].tray_manager = tray_manager;
+ 
++          na_tray_manager_set_padding (tray_manager, 0);
++
+           g_signal_connect (tray_manager, "tray_icon_added",
+                             G_CALLBACK (tray_added),
+                             &trays_screens [screen_number]);
+@@ -801,6 +803,16 @@ idle_redraw_cb (NaTray *tray)
+ }
+ 
+ void
++na_tray_set_padding (NaTray *tray,
++                     gint    padding)
++{
++  NaTrayPrivate *priv = tray->priv;
++
++  if (get_tray (priv->trays_screen) == tray)
++    na_tray_manager_set_padding (priv->trays_screen->tray_manager, padding);
++}
++
++void
+ na_tray_force_redraw (NaTray *tray)
+ {
+   NaTrayPrivate *priv = tray->priv;
+diff --git a/gui/simple-greeter/libnotificationarea/na-tray.h b/gui/simple-greeter/libnotificationarea/na-tray.h
+index 57baddd..1ead20f 100644
+--- a/gui/simple-greeter/libnotificationarea/na-tray.h
++++ b/gui/simple-greeter/libnotificationarea/na-tray.h
+@@ -60,6 +60,8 @@ NaTray         *na_tray_new_for_screen  (GdkScreen     *screen,
+ void            na_tray_set_orientation	(NaTray        *tray,
+ 					 GtkOrientation orientation);
+ GtkOrientation  na_tray_get_orientation (NaTray        *tray);
++void            na_tray_set_padding     (NaTray        *tray,
++                                         gint           padding);
+ void		na_tray_force_redraw	(NaTray        *tray);
+ 
+ G_END_DECLS
+-- 
+1.6.5.rc2
+
+
+From 050879701489074492a35b0427f0ac7cf21ebf82 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 22 Oct 2009 22:13:58 -0400
+Subject: [PATCH 4/4] Read padding from notification area applet and use it.
+
+---
+ gui/simple-greeter/gdm-greeter-panel.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-greeter-panel.c b/gui/simple-greeter/gdm-greeter-panel.c
+index 03c4122..43b91d5 100644
+--- a/gui/simple-greeter/gdm-greeter-panel.c
++++ b/gui/simple-greeter/gdm-greeter-panel.c
+@@ -65,6 +65,7 @@
+ #define GPM_DBUS_INTERFACE "org.freedesktop.PowerManagement"
+ 
+ #define KEY_DISABLE_RESTART_BUTTONS "/apps/gdm/simple-greeter/disable_restart_buttons"
++#define KEY_NOTIFICATION_AREA_PADDING "/apps/notification_area_applet/prefs/padding"
+ 
+ #define GDM_GREETER_PANEL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GDM_TYPE_GREETER_PANEL, GdmGreeterPanelPrivate))
+ 
+@@ -824,6 +825,7 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+ {
+         NaTray    *tray;
+         GtkWidget *spacer;
++        int padding;
+ 
+         gdm_profile_start (NULL);
+ 
+@@ -955,6 +957,9 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+ 
+         tray = na_tray_new_for_screen (gtk_window_get_screen (GTK_WINDOW (panel)),
+                                        GTK_ORIENTATION_HORIZONTAL);
++
++        padding = gconf_client_get_int (panel->priv->client, KEY_NOTIFICATION_AREA_PADDING, NULL);
++        na_tray_set_padding (tray, padding);
+         gtk_box_pack_end (GTK_BOX (panel->priv->hbox), GTK_WIDGET (tray), FALSE, FALSE, 6);
+         gtk_widget_show (GTK_WIDGET (tray));
+         gdm_greeter_panel_hide_user_options (panel);
+-- 
+1.6.5.rc2
+

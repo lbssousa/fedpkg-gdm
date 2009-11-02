@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.28.0
-Release: 5%{?dist}
+Version: 2.28.1
+Release: 20%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -95,17 +95,24 @@ Requires: audit-libs >= %{libauditver}
 Patch2: gdm-2.26.0-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
 
-# https://bugzilla.gnome.org/show_bug.cgi?id=596569
-Patch4: gdm-2.28.0-use-devicekit-power.patch
-
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
+# https://bugzilla.gnome.org/show_bug.cgi?id=572765
 Patch13: gdm-system-keyboard.patch
 
-Patch19: gdm-multistack.patch
-Patch20: 0001-Fix-gdm_slave_get_timed_login_details.patch
+Patch20: gdm-2.28.1-move-shutdown-functions.patch
+Patch21: fix-clock.patch
+Patch22: fix-timer.patch
+Patch23: fix-na-tray.patch
+Patch24: fix-computer-info.patch
+Patch25: fix-run-dir-permissions.patch
+Patch26: make-user-list-animation-smoother.patch
+Patch27: 0001-Don-t-show-lock-screen-option-if-locked-down.patch
 
+Patch96: gdm-multistack.patch
 # Fedora-specific
+Patch97: gdm-bubble-location.patch
+Patch98: tray-padding.patch
 Patch99: gdm-2.23.1-fedora-logo.patch
 
 %package user-switch-applet
@@ -145,12 +152,20 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %setup -q
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
-%patch4 -p1 -b .use-devicekit-power
 %patch13 -p1 -b .system-keyboard
 
-%patch19 -p1 -b .multistack
-%patch20 -p1 -b .autologin
+%patch20 -p1 -b .move-shutdown-functions
+%patch21 -p1 -b .fix-clock
+%patch22 -p1 -b .fix-timer
+%patch23 -p1 -b .fix-na-tray
+%patch24 -p1 -b .fix-computer-info
+%patch25 -p1 -b .fix-run-dir-permission
+%patch26 -p1 -b .make-user-list-animation-smoother
+%patch27 -p1 -b .dont-show-lock-screen-if-locked-down
 
+%patch96 -p1 -b .multistack
+%patch97 -p1 -b .bubble-location
+%patch98 -p1 -b .tray-padding
 %patch99 -p1 -b .fedora-logo
 
 autoreconf -i -f
@@ -218,6 +233,8 @@ mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow
 
 # temporarily manually copy this
 cp -f %{SOURCE10} $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow/polkit-gnome-authentication-agent-1.desktop
+
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/gdm/greeter
 
 rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
@@ -372,10 +389,12 @@ fi
 %config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/spool/gdm
+%dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
 %attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
 %attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
+%attr(1755, gdm, gdm) %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 %attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
@@ -400,8 +419,87 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
-* Wed Oct 07 2009 Ray Strode <rstrode@redhat.com> - 1:2.28.0-5
-- Fix xguest
+* Sat Oct 31 2009 Matthias Clasen <mclasen@redhat.com> 2.28.1-20
+- Don't show 'Lock Screen' in the user switcher if locked down
+
+* Sat Oct 31 2009 Matthias Clasen <mclasen@redhat.com> 2.28.1-18
+- Actually set up statusicon padding
+
+* Fri Oct 30 2009 Ray Strode <rstrode@redhat.com> 2.28.1-17
+- Make the user list slide animation smoother
+
+* Thu Oct 29 2009 Ray Strode <rstrode@redhat.com> 2.28.1-16
+- Shrink autologin timer
+- Make language dialog not double spaced
+
+* Thu Oct 29 2009 Ray Strode <rstrode@redhat.com> 2.28.1-15
+- Don't show fingerprint task button unless fingerprint is
+  enabled
+- Don't show smartcard task button and list item unless
+  pcscd is running.
+
+* Wed Oct 28 2009 Ray Strode <rstrode@redhat.com> 2.28.1-14
+- Don't show image on login button
+
+* Wed Oct 28 2009 Ray Strode <rstrode@redhat.com> 2.28.1-13
+- Fix double free during user switching (might address
+  bug 512944)
+
+* Tue Oct 27 2009 Ray Strode <rstrode@redhat.com> 2.28.1-12
+- One more go at bug 527920
+
+* Tue Oct 27 2009 Ray Strode <rstrode@redhat.com> 2.28.1-11
+- Tighten permissions on /var/run/gdm (bug 531063)
+
+* Mon Oct 26 2009 Ray Strode <rstrode@redhat.com> 2.28.1-10
+- Position shutdown menu properly on multihead machines
+
+* Fri Oct 23 2009 Ray Strode <rstrode@redhat.com> 2.28.1-9
+- Don't show hostname by default if it's localhost
+
+* Fri Oct 23 2009 Ray Strode <rstrode@redhat.com> 2.28.1-8
+- Attempt to fix crash some users see.
+- Clean up rebase
+
+* Fri Oct 23 2009 Ray Strode <rstrode@redhat.com> 2.28.1-7
+- Show Other user even when there are no other users
+  (bug 527920)
+
+* Fri Oct 23 2009 Ray Strode <rstrode@redhat.com> 2.28.1-6
+- Properly read default keyboard layout (bug 530452)
+
+* Fri Oct 23 2009 Ray Strode <rstrode@redhat.com> 2.28.1-5
+- Remove tool tip from login button
+
+* Thu Oct 22 2009 Ray Strode <rstrode@redhat.com> 2.28.1-4
+- Fix autologin window spasms
+- Fix autologin timer animation
+- Make autologin and multistack play better together
+- Add padding to notification tray
+
+* Wed Oct 21 2009 Ray Strode <rstrode@redhat.com> 2.28.1-3
+- Move date from panel to clock tooltip
+
+* Tue Oct 20 2009 Ray Strode <rstrode@redhat.com> 2.28.1-2
+- Move shutdown functions to panel from login window
+
+* Tue Oct 20 2009 Ray Strode <rstrode@redhat.com> 2.28.1-1
+- Update to 2.28.1
+
+* Fri Oct 09 2009 Ray Strode <rstrode@redhat.com> 2.28.0-9
+- Fix Other... user.
+
+* Fri Oct  9 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.28.0-8
+- Move bubbles to the lower right on the login screen
+
+* Wed Oct 07 2009 Ray Strode <rstrode@redhat.com> - 1:2.28.0-7
+- Fix gdm-password / xguest interaction (bug 524421)
+
+* Mon Oct  5 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.28.4-6
+- Fix the autostart file for at-spi-registryd
+
+* Thu Oct  1 2009 Matthias Clasen <mclasen@redhat.com> - 1:2.28.4-5
+- Handle keyboard layout variants
 
 * Mon Sep 28 2009 Ray Strode <rstrode@redhat.com> - 1:2.28.0-4
 - Add cache dir to package manifest

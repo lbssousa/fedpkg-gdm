@@ -1,0 +1,1326 @@
+commit 7b3be6884096a2d21af3c6c26090641c16988b15
+Merge: f0a0955 4c20614
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Tue Oct 20 17:56:09 2009 -0400
+
+    Move Shutdown functions to panel instead of login window
+    
+    Robert Ancell gives a good rationale for the move:
+    "In GDM 2.28/master on startup the user is presented with a window
+    containing:
+    - A list of users to log in as with the first user selected
+    - Two buttons, restart and shutdown, below the user list
+    
+    Since the first user is selected, users who are unfamiliar/not paying
+    close attention sometimes click on the shutdown button as this is placed
+    where the default action (in this case login) is conventionally placed
+    (the lower right hand corner of the window).  The penalty of making this
+    mistake is for the computer to shut down immediately with no chance of
+    aborting this mistake.
+    
+    An additional mistake users can make is to miss clicking on their user
+    and then click on the shutdown button (as this button is replaced with
+    the login button after selecting a user).
+    
+    Recommended behaviour:
+    
+    Move the shutdown actions (shutdown, sleep, hibernate, restart) to a
+    menu on the GDM panel.
+    
+    The shutdown buttons do not need to be prominently located as:
+    - They are used less frequently than the login buttons (normal operation
+      is to shutdown from within your session).
+    - Most hardware has a dedicated power button that performs the same
+      action
+    - It is better to have them in a location where they are less likely to
+      be accidentally activated"
+    
+    (see https://bugs.gnome.org/596151)
+
+From e53b45310bc0b83ab14fdfde1cac6e6ea22d82b7 Mon Sep 17 00:00:00 2001
+From: Robert Ancell <robert.ancell@canonical.com>
+Date: Thu, 24 Sep 2009 15:51:10 +1000
+Subject: [PATCH 1/3] Move shutdown buttons to menu in panel (Bug #596151)
+
+---
+ gui/simple-greeter/Makefile.am                    |    2 +-
+ gui/simple-greeter/gdm-greeter-login-window.c     |  294 ---------------------
+ gui/simple-greeter/gdm-greeter-login-window.glade |  194 --------------
+ gui/simple-greeter/gdm-greeter-panel.c            |  263 ++++++++++++++++++-
+ gui/simple-greeter/gdm-greeter-panel.h            |    3 +-
+ gui/simple-greeter/gdm-greeter-session.c          |    4 +-
+ gui/simple-greeter/test-greeter-panel.c           |    2 +-
+ 7 files changed, 267 insertions(+), 495 deletions(-)
+
+diff --git a/gui/simple-greeter/Makefile.am b/gui/simple-greeter/Makefile.am
+index 4c06bc3..519e652 100644
+--- a/gui/simple-greeter/Makefile.am
++++ b/gui/simple-greeter/Makefile.am
+@@ -92,7 +92,6 @@ test_greeter_login_window_LDADD =	\
+ 	libgdmuser.la			\
+ 	$(COMMON_LIBS)			\
+ 	$(SIMPLE_GREETER_LIBS)		\
+-	$(DEVKIT_POWER_LIBS)		\
+ 	$(RBAC_LIBS)			\
+ 	$(NULL)
+ 
+@@ -144,6 +143,7 @@ test_greeter_panel_LDADD =	\
+ 	$(GTK_LIBS)			\
+ 	$(GCONF_LIBS)			\
+ 	$(LIBXKLAVIER_LIBS)		\
++	$(DEVKIT_POWER_LIBS)		\
+ 	$(NULL)
+ 
+ test_remote_login_window_SOURCES = 	\
+diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
+index 10a5132..9a29a2e 100644
+--- a/gui/simple-greeter/gdm-greeter-login-window.c
++++ b/gui/simple-greeter/gdm-greeter-login-window.c
+@@ -34,11 +34,6 @@
+ #include <errno.h>
+ #include <pwd.h>
+ 
+-#ifdef ENABLE_RBAC_SHUTDOWN
+-#include <auth_attr.h>
+-#include <secdb.h>
+-#endif
+-
+ #include <glib.h>
+ #include <glib/gi18n.h>
+ #include <glib/gstdio.h>
+@@ -56,10 +51,6 @@
+ #include <dbus/dbus-glib.h>
+ #include <dbus/dbus-glib-lowlevel.h>
+ 
+-#ifdef HAVE_DEVICEKIT_POWER
+-#include <devkit-power-gobject/devicekit-power.h>
+-#endif
+-
+ #include "gdm-settings-client.h"
+ #include "gdm-settings-keys.h"
+ #include "gdm-profile.h"
+@@ -90,7 +81,6 @@
+ #define KEY_BANNER_MESSAGE_TEXT     KEY_GREETER_DIR "/banner_message_text"
+ #define KEY_BANNER_MESSAGE_TEXT_NOCHOOSER     KEY_GREETER_DIR "/banner_message_text_nochooser"
+ #define KEY_LOGO                    KEY_GREETER_DIR "/logo_icon_name"
+-#define KEY_DISABLE_RESTART_BUTTONS KEY_GREETER_DIR "/disable_restart_buttons"
+ #define GDM_GREETER_LOGIN_WINDOW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GDM_TYPE_GREETER_LOGIN_WINDOW, GdmGreeterLoginWindowPrivate))
+ 
+ enum {
+@@ -125,8 +115,6 @@ struct GdmGreeterLoginWindowPrivate
+         char            *timed_login_username;
+         guint            timed_login_timeout_id;
+ 
+-        guint            sensitize_power_buttons_timeout_id;
+-
+         guint            login_button_handler_id;
+         guint            start_session_handler_id;
+ };
+@@ -353,37 +341,6 @@ sensitize_widget (GdmGreeterLoginWindow *login_window,
+         }
+ }
+ 
+-static gboolean
+-get_show_restart_buttons (GdmGreeterLoginWindow *login_window)
+-{
+-        gboolean     show;
+-        GError      *error;
+-
+-        error = NULL;
+-        show = ! gconf_client_get_bool (login_window->priv->client, KEY_DISABLE_RESTART_BUTTONS, &error);
+-        if (error != NULL) {
+-                g_debug ("GdmGreeterLoginWindow: unable to get disable-restart-buttons configuration: %s", error->message);
+-                g_error_free (error);
+-        }
+-
+-#ifdef ENABLE_RBAC_SHUTDOWN
+-        {
+-                char *username;
+-
+-                username = g_get_user_name ();
+-                if (username == NULL || !chkauthattr (RBAC_SHUTDOWN_KEY, username)) {
+-                        show = FALSE;
+-                        g_debug ("GdmGreeterLoginWindow: Not showing stop/restart buttons for user %s due to RBAC key %s",
+-                                 username, RBAC_SHUTDOWN_KEY);
+-                } else {
+-                        g_debug ("GdmGreeterLoginWindow: Showing stop/restart buttons for user %s due to RBAC key %s",
+-                                 username, RBAC_SHUTDOWN_KEY);
+-                }
+-        }
+-#endif
+-        return show;
+-}
+-
+ static void
+ on_login_button_clicked_answer_query (GtkButton             *button,
+                                       GdmGreeterLoginWindow *login_window)
+@@ -477,61 +434,6 @@ adjust_other_login_visibility(GdmGreeterLoginWindow *login_window)
+         }
+ }
+ 
+-#ifdef HAVE_DEVICEKIT_POWER
+-static gboolean
+-can_suspend (GdmGreeterLoginWindow *login_window)
+-{
+-        gboolean ret;
+-        DkpClient *dkp_client;
+-
+-        /* use DeviceKit-power to get data */
+-        dkp_client = dkp_client_new ();
+-        g_object_get (dkp_client,
+-                      "can-suspend", &ret,
+-                      NULL);
+-        g_object_unref (dkp_client);
+-        return ret;
+-}
+-#endif
+-
+-static void
+-remove_sensitize_power_buttons_timeout (GdmGreeterLoginWindow *login_window)
+-{
+-        if (login_window->priv->sensitize_power_buttons_timeout_id > 0) {
+-                g_source_remove (login_window->priv->sensitize_power_buttons_timeout_id);
+-                login_window->priv->sensitize_power_buttons_timeout_id = 0;
+-        }
+-}
+-
+-static gboolean
+-sensitize_power_buttons_timeout (GdmGreeterLoginWindow *login_window)
+-{
+-        switch (login_window->priv->dialog_mode) {
+-        case MODE_SELECTION:
+-                sensitize_widget (login_window, "shutdown-button", TRUE);
+-                sensitize_widget (login_window, "restart-button", TRUE);
+-                sensitize_widget (login_window, "suspend-button", TRUE);
+-                sensitize_widget (login_window, "disconnect-button", TRUE);
+-                break;
+-        case MODE_AUTHENTICATION:
+-                break;
+-        default:
+-                g_assert_not_reached ();
+-        }
+-
+-        login_window->priv->sensitize_power_buttons_timeout_id = 0;
+-        return FALSE;
+-}
+-
+-static void
+-add_sensitize_power_buttons_timeout (GdmGreeterLoginWindow *login_window)
+-{
+-        remove_sensitize_power_buttons_timeout (login_window);
+-        login_window->priv->sensitize_power_buttons_timeout_id = g_timeout_add_seconds (1,
+-                                                                                   (GSourceFunc)sensitize_power_buttons_timeout,
+-                                                                                   login_window);
+-}
+-
+ static void
+ switch_mode (GdmGreeterLoginWindow *login_window,
+              int                    number)
+@@ -539,16 +441,6 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+         const char *default_name;
+         GtkWidget  *user_chooser;
+         GtkWidget  *box;
+-        gboolean    show_restart_buttons;
+-        gboolean    show_suspend_button;
+-
+-        show_restart_buttons = get_show_restart_buttons (login_window);
+-
+-#ifdef HAVE_DEVICEKIT_POWER
+-        show_suspend_button = can_suspend (login_window);
+-#else
+-        show_suspend_button = FALSE;
+-#endif
+ 
+         /* we want to run this even if we're supposed to
+            be in the mode already so that we reset everything
+@@ -557,38 +449,20 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+ 
+         default_name = NULL;
+ 
+-        remove_sensitize_power_buttons_timeout (login_window);
+-
+         switch (number) {
+         case MODE_SELECTION:
+                 set_log_in_button_mode (login_window, LOGIN_BUTTON_HIDDEN);
+ 
+                 show_widget (login_window, "cancel-button", FALSE);
+ 
+-                show_widget (login_window, "shutdown-button",
+-                             login_window->priv->display_is_local && show_restart_buttons);
+-                show_widget (login_window, "restart-button",
+-                             login_window->priv->display_is_local && show_restart_buttons);
+-                show_widget (login_window, "suspend-button",
+-                             login_window->priv->display_is_local && show_restart_buttons && show_suspend_button);
+-                show_widget (login_window, "disconnect-button",
+-                             ! login_window->priv->display_is_local);
+-
+                 show_widget (login_window, "auth-input-box", FALSE);
+ 
+-                add_sensitize_power_buttons_timeout (login_window);
+-                sensitize_widget (login_window, "shutdown-button", FALSE);
+-                sensitize_widget (login_window, "restart-button", FALSE);
+-                sensitize_widget (login_window, "suspend-button", FALSE);
+                 sensitize_widget (login_window, "disconnect-button", FALSE);
+ 
+                 default_name = NULL;
+                 break;
+         case MODE_AUTHENTICATION:
+                 show_widget (login_window, "cancel-button", TRUE);
+-                show_widget (login_window, "shutdown-button", FALSE);
+-                show_widget (login_window, "restart-button", FALSE);
+-                show_widget (login_window, "suspend-button", FALSE);
+                 show_widget (login_window, "disconnect-button", FALSE);
+                 default_name = "log-in-button";
+                 break;
+@@ -629,32 +503,6 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+ }
+ 
+ static void
+-do_disconnect (GdmGreeterLoginWindow *login_window)
+-{
+-        gtk_main_quit ();
+-}
+-
+-#ifdef HAVE_DEVICEKIT_POWER
+-static void
+-do_suspend (GdmGreeterLoginWindow *login_window)
+-{
+-        gboolean ret;
+-        DkpClient *dkp_client;
+-        GError *error = NULL;
+-
+-        /* use DeviceKit-power to get data */
+-        dkp_client = dkp_client_new ();
+-        ret = dkp_client_suspend (dkp_client, &error);
+-        if (!ret) {
+-                g_warning ("Couldn't suspend: %s", error->message);
+-                g_error_free (error);
+-                return;
+-        }
+-        g_object_unref (dkp_client);
+-}
+-#endif
+-
+-static void
+ delete_entry_text (GtkWidget *entry)
+ {
+         const char *typed_text;
+@@ -968,16 +816,6 @@ gdm_greeter_login_window_get_property (GObject    *object,
+ }
+ 
+ static void
+-suspend_button_clicked (GtkButton             *button,
+-                        GdmGreeterLoginWindow *login_window)
+-{
+-#ifdef HAVE_DEVICEKIT_POWER
+-        do_suspend (login_window);
+-#endif
+-}
+-
+-
+-static void
+ cancel_button_clicked (GtkButton             *button,
+                        GdmGreeterLoginWindow *login_window)
+ {
+@@ -985,125 +823,6 @@ cancel_button_clicked (GtkButton             *button,
+ }
+ 
+ static void
+-disconnect_button_clicked (GtkButton             *button,
+-                           GdmGreeterLoginWindow *login_window)
+-{
+-        do_disconnect (login_window);
+-}
+-
+-static gboolean
+-try_system_stop (DBusGConnection *connection,
+-                 GError         **error)
+-{
+-        DBusGProxy      *proxy;
+-        gboolean         res;
+-
+-        g_debug ("GdmGreeterLoginWindow: trying to stop system");
+-
+-        proxy = dbus_g_proxy_new_for_name (connection,
+-                                           CK_NAME,
+-                                           CK_MANAGER_PATH,
+-                                           CK_MANAGER_INTERFACE);
+-        res = dbus_g_proxy_call_with_timeout (proxy,
+-                                              "Stop",
+-                                              INT_MAX,
+-                                              error,
+-                                              /* parameters: */
+-                                              G_TYPE_INVALID,
+-                                              /* return values: */
+-                                              G_TYPE_INVALID);
+-        return res;
+-}
+-
+-static gboolean
+-try_system_restart (DBusGConnection *connection,
+-                    GError         **error)
+-{
+-        DBusGProxy      *proxy;
+-        gboolean         res;
+-
+-        g_debug ("GdmGreeterLoginWindow: trying to restart system");
+-
+-        proxy = dbus_g_proxy_new_for_name (connection,
+-                                           CK_NAME,
+-                                           CK_MANAGER_PATH,
+-                                           CK_MANAGER_INTERFACE);
+-        res = dbus_g_proxy_call_with_timeout (proxy,
+-                                              "Restart",
+-                                              INT_MAX,
+-                                              error,
+-                                              /* parameters: */
+-                                              G_TYPE_INVALID,
+-                                              /* return values: */
+-                                              G_TYPE_INVALID);
+-        return res;
+-}
+-
+-static void
+-do_system_restart (GdmGreeterLoginWindow *login_window)
+-{
+-        gboolean         res;
+-        GError          *error;
+-        DBusGConnection *connection;
+-
+-        error = NULL;
+-        connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+-        if (connection == NULL) {
+-                g_warning ("Unable to get system bus connection: %s", error->message);
+-                g_error_free (error);
+-                return;
+-        }
+-
+-        res = try_system_restart (connection, &error);
+-        if (!res) {
+-                g_debug ("GdmGreeterLoginWindow: unable to restart system: %s: %s",
+-                         dbus_g_error_get_name (error),
+-                         error->message);
+-		g_error_free (error);
+-        }
+-}
+-
+-static void
+-do_system_stop (GdmGreeterLoginWindow *login_window)
+-{
+-        gboolean         res;
+-        GError          *error;
+-        DBusGConnection *connection;
+-
+-        error = NULL;
+-        connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+-        if (connection == NULL) {
+-                g_warning ("Unable to get system bus connection: %s", error->message);
+-                g_error_free (error);
+-                return;
+-        }
+-
+-        res = try_system_stop (connection, &error);
+-        if (!res) {
+-                g_debug ("GdmGreeterLoginWindow: unable to stop system: %s: %s",
+-                         dbus_g_error_get_name (error),
+-                         error->message);
+-                g_error_free (error);
+-        }
+-}
+-
+-static void
+-restart_button_clicked (GtkButton             *button,
+-                        GdmGreeterLoginWindow *login_window)
+-{
+-        g_debug ("GdmGreeterLoginWindow: restart button clicked");
+-        do_system_restart (login_window);
+-}
+-
+-static void
+-shutdown_button_clicked (GtkButton             *button,
+-                         GdmGreeterLoginWindow *login_window)
+-{
+-        g_debug ("GdmGreeterLoginWindow: stop button clicked");
+-        do_system_stop (login_window);
+-}
+-
+-static void
+ on_user_chooser_visibility_changed (GdmGreeterLoginWindow *login_window)
+ {
+         update_banner_message (login_window);
+@@ -1400,20 +1119,9 @@ load_theme (GdmGreeterLoginWindow *login_window)
+         login_window->priv->auth_banner_label = glade_xml_get_widget (login_window->priv->xml, "auth-banner-label");
+         /*make_label_small_italic (login_window->priv->auth_banner_label);*/
+ 
+-        button = glade_xml_get_widget (login_window->priv->xml, "suspend-button");
+-        g_signal_connect (button, "clicked", G_CALLBACK (suspend_button_clicked), login_window);
+-
+         button = glade_xml_get_widget (login_window->priv->xml, "cancel-button");
+         g_signal_connect (button, "clicked", G_CALLBACK (cancel_button_clicked), login_window);
+ 
+-        button = glade_xml_get_widget (login_window->priv->xml, "disconnect-button");
+-        g_signal_connect (button, "clicked", G_CALLBACK (disconnect_button_clicked), login_window);
+-
+-        button = glade_xml_get_widget (login_window->priv->xml, "restart-button");
+-        g_signal_connect (button, "clicked", G_CALLBACK (restart_button_clicked), login_window);
+-        button = glade_xml_get_widget (login_window->priv->xml, "shutdown-button");
+-        g_signal_connect (button, "clicked", G_CALLBACK (shutdown_button_clicked), login_window);
+-
+         entry = glade_xml_get_widget (login_window->priv->xml, "auth-prompt-entry");
+         /* Only change the invisible character if it '*' otherwise assume it is OK */
+         if ('*' == gtk_entry_get_invisible_char (GTK_ENTRY (entry))) {
+@@ -1780,8 +1488,6 @@ gdm_greeter_login_window_finalize (GObject *object)
+                 g_object_unref (login_window->priv->client);
+         }
+ 
+-        remove_sensitize_power_buttons_timeout (login_window);
+-
+         G_OBJECT_CLASS (gdm_greeter_login_window_parent_class)->finalize (object);
+ }
+ 
+diff --git a/gui/simple-greeter/gdm-greeter-login-window.glade b/gui/simple-greeter/gdm-greeter-login-window.glade
+index d972c82..7c6e94b 100644
+--- a/gui/simple-greeter/gdm-greeter-login-window.glade
++++ b/gui/simple-greeter/gdm-greeter-login-window.glade
+@@ -337,200 +337,6 @@
+ 		  <property name="spacing">6</property>
+ 
+ 		  <child>
+-		    <widget class="GtkButton" id="disconnect-button">
+-		      <property name="visible">True</property>
+-		      <property name="can_focus">True</property>
+-		      <property name="label">gtk-disconnect</property>
+-		      <property name="use_stock">True</property>
+-		      <property name="relief">GTK_RELIEF_NORMAL</property>
+-		      <property name="focus_on_click">True</property>
+-		    </widget>
+-		  </child>
+-
+-		  <child>
+-		    <widget class="GtkButton" id="suspend-button">
+-		      <property name="visible">True</property>
+-		      <property name="can_default">True</property>
+-		      <property name="has_default">True</property>
+-		      <property name="can_focus">True</property>
+-		      <property name="relief">GTK_RELIEF_NORMAL</property>
+-		      <property name="focus_on_click">True</property>
+-
+-		      <child>
+-			<widget class="GtkHBox" id="hbox3">
+-			  <property name="visible">True</property>
+-			  <property name="homogeneous">False</property>
+-			  <property name="spacing">0</property>
+-
+-			  <child>
+-			    <widget class="GtkImage" id="image9">
+-			      <property name="visible">True</property>
+-			      <property name="icon_name">media-playback-pause</property>
+-			      <property name="pixel_size">16</property>
+-			      <property name="xalign">0.5</property>
+-			      <property name="yalign">0.5</property>
+-			      <property name="xpad">0</property>
+-			      <property name="ypad">0</property>
+-			    </widget>
+-			    <packing>
+-			      <property name="padding">0</property>
+-			      <property name="expand">True</property>
+-			      <property name="fill">True</property>
+-			    </packing>
+-			  </child>
+-
+-			  <child>
+-			    <widget class="GtkLabel" id="label4">
+-			      <property name="visible">True</property>
+-			      <property name="label" translatable="yes">Suspend</property>
+-			      <property name="use_underline">False</property>
+-			      <property name="use_markup">False</property>
+-			      <property name="justify">GTK_JUSTIFY_LEFT</property>
+-			      <property name="wrap">False</property>
+-			      <property name="selectable">False</property>
+-			      <property name="xalign">0</property>
+-			      <property name="yalign">0.5</property>
+-			      <property name="xpad">0</property>
+-			      <property name="ypad">0</property>
+-			      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-			      <property name="width_chars">-1</property>
+-			      <property name="single_line_mode">False</property>
+-			      <property name="angle">0</property>
+-			    </widget>
+-			    <packing>
+-			      <property name="padding">0</property>
+-			      <property name="expand">True</property>
+-			      <property name="fill">True</property>
+-			    </packing>
+-			  </child>
+-			</widget>
+-		      </child>
+-		    </widget>
+-		  </child>
+-
+-		  <child>
+-		    <widget class="GtkButton" id="restart-button">
+-		      <property name="visible">True</property>
+-		      <property name="can_default">True</property>
+-		      <property name="has_default">True</property>
+-		      <property name="can_focus">True</property>
+-		      <property name="relief">GTK_RELIEF_NORMAL</property>
+-		      <property name="focus_on_click">True</property>
+-
+-		      <child>
+-			<widget class="GtkHBox" id="hbox1">
+-			  <property name="visible">True</property>
+-			  <property name="homogeneous">False</property>
+-			  <property name="spacing">0</property>
+-
+-			  <child>
+-			    <widget class="GtkImage" id="image7">
+-			      <property name="visible">True</property>
+-			      <property name="icon_name">view-refresh</property>
+-			      <property name="pixel_size">16</property>
+-			      <property name="xalign">0.5</property>
+-			      <property name="yalign">0.5</property>
+-			      <property name="xpad">0</property>
+-			      <property name="ypad">0</property>
+-			    </widget>
+-			    <packing>
+-			      <property name="padding">0</property>
+-			      <property name="expand">True</property>
+-			      <property name="fill">True</property>
+-			    </packing>
+-			  </child>
+-
+-			  <child>
+-			    <widget class="GtkLabel" id="label2">
+-			      <property name="visible">True</property>
+-			      <property name="label" translatable="yes">Restart</property>
+-			      <property name="use_underline">False</property>
+-			      <property name="use_markup">False</property>
+-			      <property name="justify">GTK_JUSTIFY_LEFT</property>
+-			      <property name="wrap">False</property>
+-			      <property name="selectable">False</property>
+-			      <property name="xalign">0</property>
+-			      <property name="yalign">0.5</property>
+-			      <property name="xpad">0</property>
+-			      <property name="ypad">0</property>
+-			      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-			      <property name="width_chars">-1</property>
+-			      <property name="single_line_mode">False</property>
+-			      <property name="angle">0</property>
+-			    </widget>
+-			    <packing>
+-			      <property name="padding">0</property>
+-			      <property name="expand">True</property>
+-			      <property name="fill">True</property>
+-			    </packing>
+-			  </child>
+-			</widget>
+-		      </child>
+-		    </widget>
+-		  </child>
+-
+-		  <child>
+-		    <widget class="GtkButton" id="shutdown-button">
+-		      <property name="visible">True</property>
+-		      <property name="can_default">True</property>
+-		      <property name="has_default">True</property>
+-		      <property name="can_focus">True</property>
+-		      <property name="relief">GTK_RELIEF_NORMAL</property>
+-		      <property name="focus_on_click">True</property>
+-
+-		      <child>
+-			<widget class="GtkHBox" id="hbox4">
+-			  <property name="visible">True</property>
+-			  <property name="homogeneous">False</property>
+-			  <property name="spacing">0</property>
+-
+-			  <child>
+-			    <widget class="GtkImage" id="image5">
+-			      <property name="visible">True</property>
+-			      <property name="icon_name">system-shutdown</property>
+-			      <property name="pixel_size">16</property>
+-			      <property name="xalign">0.5</property>
+-			      <property name="yalign">0.5</property>
+-			      <property name="xpad">0</property>
+-			      <property name="ypad">0</property>
+-			    </widget>
+-			    <packing>
+-			      <property name="padding">0</property>
+-			      <property name="expand">True</property>
+-			      <property name="fill">True</property>
+-			    </packing>
+-			  </child>
+-
+-			  <child>
+-			    <widget class="GtkLabel" id="label10">
+-			      <property name="visible">True</property>
+-			      <property name="label" translatable="yes">Shut Down</property>
+-			      <property name="use_underline">False</property>
+-			      <property name="use_markup">False</property>
+-			      <property name="justify">GTK_JUSTIFY_LEFT</property>
+-			      <property name="wrap">False</property>
+-			      <property name="selectable">False</property>
+-			      <property name="xalign">0.5</property>
+-			      <property name="yalign">0.5</property>
+-			      <property name="xpad">0</property>
+-			      <property name="ypad">0</property>
+-			      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
+-			      <property name="width_chars">-1</property>
+-			      <property name="single_line_mode">False</property>
+-			      <property name="angle">0</property>
+-			    </widget>
+-			    <packing>
+-			      <property name="padding">0</property>
+-			      <property name="expand">True</property>
+-			      <property name="fill">True</property>
+-			    </packing>
+-			  </child>
+-			</widget>
+-		      </child>
+-		    </widget>
+-		  </child>
+-
+-		  <child>
+ 		    <widget class="GtkButton" id="cancel-button">
+ 		      <property name="visible">True</property>
+ 		      <property name="can_focus">True</property>
+diff --git a/gui/simple-greeter/gdm-greeter-panel.c b/gui/simple-greeter/gdm-greeter-panel.c
+index dbdef29..dd0cb32 100644
+--- a/gui/simple-greeter/gdm-greeter-panel.c
++++ b/gui/simple-greeter/gdm-greeter-panel.c
+@@ -27,12 +27,22 @@
+ #include <unistd.h>
+ #include <string.h>
+ 
++#ifdef ENABLE_RBAC_SHUTDOWN
++#include <auth_attr.h>
++#include <secdb.h>
++#endif
++
+ #include <glib.h>
+ #include <glib/gi18n.h>
+ #include <glib-object.h>
+ #include <gtk/gtk.h>
+ 
+ #include <gconf/gconf-client.h>
++#include <dbus/dbus-glib.h>
++
++#ifdef HAVE_DEVICEKIT_POWER
++#include <devkit-power-gobject/devicekit-power.h>
++#endif
+ 
+ #include "gdm-languages.h"
+ #include "gdm-layouts.h"
+@@ -46,6 +56,16 @@
+ 
+ #include "na-tray.h"
+ 
++#define CK_NAME              "org.freedesktop.ConsoleKit"
++#define CK_MANAGER_PATH      "/org/freedesktop/ConsoleKit/Manager"
++#define CK_MANAGER_INTERFACE "org.freedesktop.ConsoleKit.Manager"
++
++#define GPM_DBUS_NAME      "org.freedesktop.PowerManagement"
++#define GPM_DBUS_PATH      "/org/freedesktop/PowerManagement"
++#define GPM_DBUS_INTERFACE "org.freedesktop.PowerManagement"
++
++#define KEY_DISABLE_RESTART_BUTTONS "/apps/gdm/simple-greeter/disable_restart_buttons"
++
+ #define GDM_GREETER_PANEL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GDM_TYPE_GREETER_PANEL, GdmGreeterPanelPrivate))
+ 
+ struct GdmGreeterPanelPrivate
+@@ -66,11 +86,15 @@ struct GdmGreeterPanelPrivate
+ 
+         char                   *default_session_name;
+         char                   *default_language_name;
++
++        GConfClient            *client;
++        guint                   display_is_local : 1;
+ };
+ 
+ enum {
+         PROP_0,
+-        PROP_MONITOR
++        PROP_MONITOR,
++        PROP_DISPLAY_IS_LOCAL
+ };
+ 
+ enum {
+@@ -107,6 +131,13 @@ gdm_greeter_panel_set_monitor (GdmGreeterPanel *panel,
+ }
+ 
+ static void
++_gdm_greeter_panel_set_display_is_local (GdmGreeterPanel       *panel,
++                                         gboolean               is)
++{
++        panel->priv->display_is_local = is;
++}
++
++static void
+ gdm_greeter_panel_set_property (GObject        *object,
+                                 guint           prop_id,
+                                 const GValue   *value,
+@@ -120,6 +151,9 @@ gdm_greeter_panel_set_property (GObject        *object,
+         case PROP_MONITOR:
+                 gdm_greeter_panel_set_monitor (self, g_value_get_int (value));
+                 break;
++        case PROP_DISPLAY_IS_LOCAL:
++                _gdm_greeter_panel_set_display_is_local (self, g_value_get_boolean (value));
++                break;
+         default:
+                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                 break;
+@@ -140,6 +174,9 @@ gdm_greeter_panel_get_property (GObject        *object,
+         case PROP_MONITOR:
+                 g_value_set_int (value, self->priv->monitor);
+                 break;
++        case PROP_DISPLAY_IS_LOCAL:
++                g_value_set_boolean (value, self->priv->display_is_local);
++                break;
+         default:
+                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                 break;
+@@ -477,6 +514,13 @@ gdm_greeter_panel_class_init (GdmGreeterPanelClass *klass)
+                                                            G_MAXINT,
+                                                            0,
+                                                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
++        g_object_class_install_property (object_class,
++                                         PROP_DISPLAY_IS_LOCAL,
++                                         g_param_spec_boolean ("display-is-local",
++                                                               "display is local",
++                                                               "display is local",
++                                                               FALSE,
++                                                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+ 
+         g_type_class_add_private (klass, sizeof (GdmGreeterPanelPrivate));
+ }
+@@ -563,11 +607,185 @@ on_animation_tick (GdmGreeterPanel *panel,
+         gtk_widget_queue_resize (GTK_WIDGET (panel));
+ }
+ 
++static gboolean
++try_system_stop (DBusGConnection *connection,
++                 GError         **error)
++{
++        DBusGProxy      *proxy;
++        gboolean         res;
++
++        g_debug ("GdmGreeterPanel: trying to stop system");
++
++        proxy = dbus_g_proxy_new_for_name (connection,
++                                           CK_NAME,
++                                           CK_MANAGER_PATH,
++                                           CK_MANAGER_INTERFACE);
++        res = dbus_g_proxy_call_with_timeout (proxy,
++                                              "Stop",
++                                              INT_MAX,
++                                              error,
++                                              /* parameters: */
++                                              G_TYPE_INVALID,
++                                              /* return values: */
++                                              G_TYPE_INVALID);
++        return res;
++}
++
++static gboolean
++try_system_restart (DBusGConnection *connection,
++                    GError         **error)
++{
++        DBusGProxy      *proxy;
++        gboolean         res;
++
++        g_debug ("GdmGreeterPanel: trying to restart system");
++
++        proxy = dbus_g_proxy_new_for_name (connection,
++                                           CK_NAME,
++                                           CK_MANAGER_PATH,
++                                           CK_MANAGER_INTERFACE);
++        res = dbus_g_proxy_call_with_timeout (proxy,
++                                              "Restart",
++                                              INT_MAX,
++                                              error,
++                                              /* parameters: */
++                                              G_TYPE_INVALID,
++                                              /* return values: */
++                                              G_TYPE_INVALID);
++        return res;
++}
++
++static gboolean
++can_suspend (void)
++{
++        gboolean ret = FALSE;
++
++#ifdef HAVE_DEVICEKIT_POWER
++        DkpClient *dkp_client;
++
++        /* use DeviceKit-power to get data */
++        dkp_client = dkp_client_new ();
++        g_object_get (dkp_client,
++                      "can-suspend", &ret,
++                      NULL);
++        g_object_unref (dkp_client);
++#endif
++
++        return ret;
++}
++
++static void
++do_system_suspend (void)
++{
++#ifdef HAVE_DEVICEKIT_POWER
++        gboolean ret;
++        DkpClient *dkp_client;
++        GError *error = NULL;
++
++        /* use DeviceKit-power to get data */
++        dkp_client = dkp_client_new ();
++        ret = dkp_client_suspend (dkp_client, &error);
++        if (!ret) {
++                g_warning ("Couldn't suspend: %s", error->message);
++                g_error_free (error);
++                return;
++        }
++        g_object_unref (dkp_client);
++#endif
++}
++
++static void
++do_system_restart (void)
++{
++        gboolean         res;
++        GError          *error;
++        DBusGConnection *connection;
++
++        error = NULL;
++        connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
++        if (connection == NULL) {
++                g_warning ("Unable to get system bus connection: %s", error->message);
++                g_error_free (error);
++                return;
++        }
++
++        res = try_system_restart (connection, &error);
++        if (!res) {
++                g_debug ("GdmGreeterPanel: unable to restart system: %s: %s",
++                         dbus_g_error_get_name (error),
++                         error->message);
++                g_error_free (error);
++        }
++}
++
++static void
++do_system_stop (void)
++{
++        gboolean         res;
++        GError          *error;
++        DBusGConnection *connection;
++
++        error = NULL;
++        connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
++        if (connection == NULL) {
++                g_warning ("Unable to get system bus connection: %s", error->message);
++                g_error_free (error);
++                return;
++        }
++
++        res = try_system_stop (connection, &error);
++        if (!res) {
++                g_debug ("GdmGreeterPanel: unable to stop system: %s: %s",
++                         dbus_g_error_get_name (error),
++                         error->message);
++                g_error_free (error);
++        }
++}
++
++static void
++do_disconnect (void)
++{
++        gtk_main_quit ();
++}
++
++static gboolean
++get_show_restart_buttons (GdmGreeterPanel *panel)
++{
++        gboolean     show;
++        GError      *error;
++
++        error = NULL;
++        show = ! gconf_client_get_bool (panel->priv->client, KEY_DISABLE_RESTART_BUTTONS, &error);
++        if (error != NULL) {
++                g_debug ("GdmGreeterPanel: unable to get disable-restart-buttons configuration: %s", error->message);
++                g_error_free (error);
++        }
++
++#ifdef ENABLE_RBAC_SHUTDOWN
++        {
++                char *username;
++
++                username = g_get_user_name ();
++                if (username == NULL || !chkauthattr (RBAC_SHUTDOWN_KEY, username)) {
++                        show = FALSE;
++                        g_debug ("GdmGreeterPanel: Not showing stop/restart buttons for user %s due to RBAC key %s",
++                                 username, RBAC_SHUTDOWN_KEY);
++                } else {
++                        g_debug ("GdmGreeterPanel: Showing stop/restart buttons for user %s due to RBAC key %s",
++                                 username, RBAC_SHUTDOWN_KEY);
++                }
++        }
++#endif
++        return show;
++}
++
+ static void
+ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+ {
+         NaTray    *tray;
+         GtkWidget *spacer;
++        GtkWidget *shutdown_menu;
++        GtkWidget *menu, *menu_item;
+ 
+         gdm_profile_start (NULL);
+ 
+@@ -603,6 +821,8 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+         spacer = gtk_label_new ("");
+         gtk_box_pack_start (GTK_BOX (panel->priv->option_hbox), spacer, TRUE, TRUE, 6);
+         gtk_widget_show (spacer);
++    
++        panel->priv->client = gconf_client_get_default ();
+ 
+         gdm_profile_start ("creating option widget");
+         panel->priv->language_option_widget = gdm_language_option_widget_new ();
+@@ -642,6 +862,42 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+                 gtk_widget_show (panel->priv->hostname_label);
+         }
+ 
++        if (panel->priv->display_is_local || get_show_restart_buttons (panel)) {
++                shutdown_menu = gtk_menu_bar_new ();
++
++                menu_item = gtk_image_menu_item_new ();
++                menu = gtk_menu_new ();
++                gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), menu);
++                gtk_image_menu_item_set_always_show_image (GTK_IMAGE_MENU_ITEM (menu_item), TRUE);
++                gtk_menu_item_set_label (GTK_MENU_ITEM (menu_item), "");
++                gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item),
++                                               gtk_image_new_from_icon_name ("system-shutdown", GTK_ICON_SIZE_BUTTON));
++                gtk_menu_shell_append (GTK_MENU_SHELL (shutdown_menu), menu_item);
++
++                if (panel->priv->display_is_local) {
++                        menu_item = gtk_menu_item_new_with_label ("Disconnect");
++                        g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_disconnect), NULL);
++                        gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                } else {
++                        if (can_suspend ()) {
++                                menu_item = gtk_menu_item_new_with_label ("Suspend");
++                                g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_suspend), NULL);
++                                gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                        }
++
++                        menu_item = gtk_menu_item_new_with_label ("Restart");
++                        g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_restart), NULL);
++                        gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++
++                        menu_item = gtk_menu_item_new_with_label ("Shut Down");
++                        g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_stop), NULL);
++                        gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                }
++
++                gtk_box_pack_end (GTK_BOX (panel->priv->hbox), GTK_WIDGET (shutdown_menu), FALSE, FALSE, 0);
++                gtk_widget_show_all (GTK_WIDGET (shutdown_menu));
++        }
++
+         panel->priv->clock = gdm_clock_widget_new ();
+         gtk_box_pack_end (GTK_BOX (panel->priv->hbox),
+                             GTK_WIDGET (panel->priv->clock), FALSE, FALSE, 6);
+@@ -651,7 +907,6 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+                                        GTK_ORIENTATION_HORIZONTAL);
+         gtk_box_pack_end (GTK_BOX (panel->priv->hbox), GTK_WIDGET (tray), FALSE, FALSE, 6);
+         gtk_widget_show (GTK_WIDGET (tray));
+-
+         gdm_greeter_panel_hide_user_options (panel);
+ 
+         panel->priv->progress = 0.0;
+@@ -684,13 +939,15 @@ gdm_greeter_panel_finalize (GObject *object)
+ 
+ GtkWidget *
+ gdm_greeter_panel_new (GdkScreen *screen,
+-                       int        monitor)
++                       int        monitor,
++                       gboolean   is_local)
+ {
+         GObject *object;
+ 
+         object = g_object_new (GDM_TYPE_GREETER_PANEL,
+                                "screen", screen,
+                                "monitor", monitor,
++                               "display-is-local", is_local,                               
+                                NULL);
+ 
+         return GTK_WIDGET (object);
+diff --git a/gui/simple-greeter/gdm-greeter-panel.h b/gui/simple-greeter/gdm-greeter-panel.h
+index 1e637f5..625c80d 100644
+--- a/gui/simple-greeter/gdm-greeter-panel.h
++++ b/gui/simple-greeter/gdm-greeter-panel.h
+@@ -60,7 +60,8 @@ typedef struct
+ GType                  gdm_greeter_panel_get_type                       (void);
+ 
+ GtkWidget            * gdm_greeter_panel_new                            (GdkScreen *screen,
+-                                                                         int        monitor);
++                                                                         int        monitor,
++                                                                         gboolean   is_local);
+ 
+ void                   gdm_greeter_panel_show_user_options              (GdmGreeterPanel *panel);
+ void                   gdm_greeter_panel_hide_user_options              (GdmGreeterPanel *panel);
+diff --git a/gui/simple-greeter/gdm-greeter-session.c b/gui/simple-greeter/gdm-greeter-session.c
+index 167b693..e7d206a 100644
+--- a/gui/simple-greeter/gdm-greeter-session.c
++++ b/gui/simple-greeter/gdm-greeter-session.c
+@@ -332,13 +332,15 @@ toggle_panel (GdmGreeterSession *session,
+                 GdkScreen  *screen;
+                 int         monitor;
+                 int         x, y;
++                gboolean    is_local;
+ 
+                 display = gdk_display_get_default ();
+                 gdk_display_get_pointer (display, &screen, &x, &y, NULL);
+ 
+                 monitor = get_tallest_monitor_at_point (screen, x, y);
+ 
+-                session->priv->panel = gdm_greeter_panel_new (screen, monitor);
++                is_local = gdm_greeter_client_get_display_is_local (session->priv->client);
++                session->priv->panel = gdm_greeter_panel_new (screen, monitor, is_local);
+ 
+                 g_signal_connect_swapped (session->priv->panel,
+                                           "language-selected",
+diff --git a/gui/simple-greeter/test-greeter-panel.c b/gui/simple-greeter/test-greeter-panel.c
+index 80ef0a9..86adae3 100644
+--- a/gui/simple-greeter/test-greeter-panel.c
++++ b/gui/simple-greeter/test-greeter-panel.c
+@@ -53,7 +53,7 @@ main (int argc, char *argv[])
+         gdk_display_get_pointer (display, &screen, &x, &y, NULL);
+         monitor = gdk_screen_get_monitor_at_point (screen, x, y);
+ 
+-        panel = gdm_greeter_panel_new (screen, monitor);
++        panel = gdm_greeter_panel_new (screen, monitor, TRUE);
+         gdm_greeter_panel_show_user_options (GDM_GREETER_PANEL (panel));
+ 
+         gtk_widget_show (panel);
+-- 
+1.6.5.rc2
+
+
+From 4ee17e4732cbdc4c91e93da732de6849c4f95a86 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 20 Oct 2009 17:06:58 -0400
+Subject: [PATCH 2/3] Use button instead of menu bar
+
+The menu bar isn't a great fit for the panel
+---
+ gui/simple-greeter/gdm-greeter-panel.c |   81 +++++++++++++++++++++++++-------
+ 1 files changed, 64 insertions(+), 17 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-greeter-panel.c b/gui/simple-greeter/gdm-greeter-panel.c
+index dd0cb32..d5dd820 100644
+--- a/gui/simple-greeter/gdm-greeter-panel.c
++++ b/gui/simple-greeter/gdm-greeter-panel.c
+@@ -77,6 +77,8 @@ struct GdmGreeterPanelPrivate
+         GtkWidget              *option_hbox;
+         GtkWidget              *hostname_label;
+         GtkWidget              *clock;
++        GtkWidget              *shutdown_button;
++        GtkWidget              *shutdown_menu;
+         GtkWidget              *language_option_widget;
+         GtkWidget              *layout_option_widget;
+         GtkWidget              *session_option_widget;
+@@ -780,12 +782,48 @@ get_show_restart_buttons (GdmGreeterPanel *panel)
+ }
+ 
+ static void
++position_shutdown_menu (GtkMenu         *menu,
++                        int             *x,
++                        int             *y,
++                        gboolean        *push_in,
++                        GdmGreeterPanel *panel)
++{
++        GtkRequisition menu_requisition;
++
++        *push_in = TRUE;
++
++        *x = panel->priv->shutdown_button->allocation.x;
++        gtk_window_get_position (GTK_WINDOW (panel), NULL, y);
++
++        gtk_widget_size_request (GTK_WIDGET (menu), &menu_requisition);
++
++        *y -= menu_requisition.height;
++}
++
++static void
++on_shutdown_button_toggled (GdmGreeterPanel *panel)
++{
++        if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (panel->priv->shutdown_button))) {
++                gtk_menu_popup (GTK_MENU (panel->priv->shutdown_menu), NULL, NULL,
++                                (GtkMenuPositionFunc) position_shutdown_menu,
++                                panel, 0, 0);
++        } else {
++                gtk_menu_popdown (GTK_MENU (panel->priv->shutdown_menu));
++        }
++}
++
++static void
++on_shutdown_menu_deactivate (GdmGreeterPanel *panel)
++{
++        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (panel->priv->shutdown_button),
++                                      FALSE);
++}
++
++static void
+ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+ {
+         NaTray    *tray;
+         GtkWidget *spacer;
+-        GtkWidget *shutdown_menu;
+-        GtkWidget *menu, *menu_item;
+ 
+         gdm_profile_start (NULL);
+ 
+@@ -863,39 +901,48 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+         }
+ 
+         if (panel->priv->display_is_local || get_show_restart_buttons (panel)) {
+-                shutdown_menu = gtk_menu_bar_new ();
++                GtkWidget *menu_item;
++                GtkWidget *image;
++
++                panel->priv->shutdown_button = gtk_toggle_button_new ();
++                gtk_button_set_relief (GTK_BUTTON (panel->priv->shutdown_button),
++                                       GTK_RELIEF_NONE);
++
++                panel->priv->shutdown_menu = gtk_menu_new ();
++                gtk_menu_attach_to_widget (GTK_MENU (panel->priv->shutdown_menu),
++                                           panel->priv->shutdown_button, NULL);
++                g_signal_connect_swapped (panel->priv->shutdown_button, "toggled",
++                                          G_CALLBACK (on_shutdown_button_toggled), panel);
++                g_signal_connect_swapped (panel->priv->shutdown_menu, "deactivate",
++                                          G_CALLBACK (on_shutdown_menu_deactivate), panel);
+ 
+-                menu_item = gtk_image_menu_item_new ();
+-                menu = gtk_menu_new ();
+-                gtk_menu_item_set_submenu (GTK_MENU_ITEM (menu_item), menu);
+-                gtk_image_menu_item_set_always_show_image (GTK_IMAGE_MENU_ITEM (menu_item), TRUE);
+-                gtk_menu_item_set_label (GTK_MENU_ITEM (menu_item), "");
+-                gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item),
+-                                               gtk_image_new_from_icon_name ("system-shutdown", GTK_ICON_SIZE_BUTTON));
+-                gtk_menu_shell_append (GTK_MENU_SHELL (shutdown_menu), menu_item);
++                image = gtk_image_new_from_icon_name ("system-shutdown", GTK_ICON_SIZE_BUTTON);
++                gtk_widget_show (image);
++                gtk_container_add (GTK_CONTAINER (panel->priv->shutdown_button), image);
+ 
+                 if (panel->priv->display_is_local) {
+                         menu_item = gtk_menu_item_new_with_label ("Disconnect");
+                         g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_disconnect), NULL);
+-                        gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                        gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+                 } else {
+                         if (can_suspend ()) {
+                                 menu_item = gtk_menu_item_new_with_label ("Suspend");
+                                 g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_suspend), NULL);
+-                                gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                                gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+                         }
+ 
+                         menu_item = gtk_menu_item_new_with_label ("Restart");
+                         g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_restart), NULL);
+-                        gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                        gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+ 
+                         menu_item = gtk_menu_item_new_with_label ("Shut Down");
+                         g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_stop), NULL);
+-                        gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
++                        gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+                 }
+ 
+-                gtk_box_pack_end (GTK_BOX (panel->priv->hbox), GTK_WIDGET (shutdown_menu), FALSE, FALSE, 0);
+-                gtk_widget_show_all (GTK_WIDGET (shutdown_menu));
++                gtk_box_pack_end (GTK_BOX (panel->priv->hbox), GTK_WIDGET (panel->priv->shutdown_button), FALSE, FALSE, 0);
++                gtk_widget_show_all (panel->priv->shutdown_menu);
++                gtk_widget_show_all (GTK_WIDGET (panel->priv->shutdown_button));
+         }
+ 
+         panel->priv->clock = gdm_clock_widget_new ();
+-- 
+1.6.5.rc2
+
+
+From 4c206142ddb22315d9beb42eae9d868f449bdf11 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 20 Oct 2009 17:23:15 -0400
+Subject: [PATCH 3/3] Mark Shutdown, Restart, and Suspend for translation
+
+---
+ gui/simple-greeter/gdm-greeter-panel.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-greeter-panel.c b/gui/simple-greeter/gdm-greeter-panel.c
+index d5dd820..016f636 100644
+--- a/gui/simple-greeter/gdm-greeter-panel.c
++++ b/gui/simple-greeter/gdm-greeter-panel.c
+@@ -926,16 +926,16 @@ gdm_greeter_panel_init (GdmGreeterPanel *panel)
+                         gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+                 } else {
+                         if (can_suspend ()) {
+-                                menu_item = gtk_menu_item_new_with_label ("Suspend");
++                                menu_item = gtk_menu_item_new_with_label (_("Suspend"));
+                                 g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_suspend), NULL);
+                                 gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+                         }
+ 
+-                        menu_item = gtk_menu_item_new_with_label ("Restart");
++                        menu_item = gtk_menu_item_new_with_label (_("Restart"));
+                         g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_restart), NULL);
+                         gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+ 
+-                        menu_item = gtk_menu_item_new_with_label ("Shut Down");
++                        menu_item = gtk_menu_item_new_with_label (_("Shut Down"));
+                         g_signal_connect (G_OBJECT (menu_item), "activate", G_CALLBACK (do_system_stop), NULL);
+                         gtk_menu_shell_append (GTK_MENU_SHELL (panel->priv->shutdown_menu), menu_item);
+                 }
+-- 
+1.6.5.rc2
+
+From 7fbb5c0dec8aa42b1d8985c6f62be02c035175da Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 26 Oct 2009 15:00:43 -0400
+Subject: [PATCH] Position shutdown menu better in multi-monitor displays
+
+---
+ gui/simple-greeter/gdm-greeter-panel.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-greeter-panel.c b/gui/simple-greeter/gdm-greeter-panel.c
+index 43b91d5..caade7a 100644
+--- a/gui/simple-greeter/gdm-greeter-panel.c
++++ b/gui/simple-greeter/gdm-greeter-panel.c
+@@ -790,10 +790,21 @@ position_shutdown_menu (GtkMenu         *menu,
+                         GdmGreeterPanel *panel)
+ {
+         GtkRequisition menu_requisition;
++        GdkScreen *screen;
++        int monitor;
+ 
+         *push_in = TRUE;
+ 
+-        *x = panel->priv->shutdown_button->allocation.x;
++        screen = gtk_widget_get_screen (GTK_WIDGET (panel));
++        monitor = gdk_screen_get_monitor_at_window (screen, GTK_WIDGET (panel)->window);
++        gtk_menu_set_monitor (menu, monitor);
++
++        gtk_widget_translate_coordinates (GTK_WIDGET (panel->priv->shutdown_button),
++                                          GTK_WIDGET (panel),
++                                          panel->priv->shutdown_button->allocation.x,
++                                          panel->priv->shutdown_button->allocation.y,
++                                          x, y);
++
+         gtk_window_get_position (GTK_WINDOW (panel), NULL, y);
+ 
+         gtk_widget_size_request (GTK_WIDGET (menu), &menu_requisition);
+-- 
+1.6.5.1
+

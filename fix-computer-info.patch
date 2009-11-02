@@ -1,0 +1,104 @@
+From 18bf08d14ed77db00a17e74c5ce04c812ef251af Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 26 Oct 2009 10:45:49 -0400
+Subject: [PATCH 1/2] Use gethostname instead of g_get_host_name in greeter
+
+The latter is unreliable when the hostname changes at runtime.
+---
+ gui/simple-greeter/gdm-greeter-login-window.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
+index 9a29a2e..9d75b8c 100644
+--- a/gui/simple-greeter/gdm-greeter-login-window.c
++++ b/gui/simple-greeter/gdm-greeter-login-window.c
+@@ -996,7 +996,11 @@ create_computer_info (GdmGreeterLoginWindow *login_window)
+ 
+         label = glade_xml_get_widget (login_window->priv->xml, "computer-info-name-label");
+         if (label != NULL) {
+-                gtk_label_set_text (GTK_LABEL (label), g_get_host_name ());
++                char localhost[HOST_NAME_MAX + 1] = "";•
++
++                if (gethostname (localhost, HOST_NAME_MAX) == 0) {•
++                        gtk_label_set_text (GTK_LABEL (label), localhost);
++                }
+         }
+ 
+         label = glade_xml_get_widget (login_window->priv->xml, "computer-info-version-label");
+-- 
+1.6.5.1
+
+
+From 03e01936f5c11580a1485c492355eb0a468ea0f6 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 26 Oct 2009 10:53:25 -0400
+Subject: [PATCH 2/2] Don't bother showing hostname if it's not unique
+
+The advantage of showing hostname by default is it is a
+unique identifier for people who have multiple machines.
+
+If it only says "localhost" or "localhost.localdomain"
+that advantage is mitigated, and it's probably better to
+show OS release.
+---
+ gui/simple-greeter/gdm-greeter-login-window.c |   27 +++++++++++++++++++-----
+ 1 files changed, 21 insertions(+), 6 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
+index 9d75b8c..8de74df 100644
+--- a/gui/simple-greeter/gdm-greeter-login-window.c
++++ b/gui/simple-greeter/gdm-greeter-login-window.c
+@@ -887,10 +887,8 @@ on_user_unchosen (GdmUserChooserWidget  *user_chooser,
+         do_cancel (login_window);
+ }
+ 
+-static gboolean
+-on_computer_info_label_button_press (GtkWidget             *widget,
+-                                     GdkEventButton        *event,
+-                                     GdmGreeterLoginWindow *login_window)
++static void
++rotate_computer_info (GdmGreeterLoginWindow *login_window)
+ {
+         GtkWidget *notebook;
+         int        current_page;
+@@ -907,6 +905,14 @@ on_computer_info_label_button_press (GtkWidget             *widget,
+                 gtk_notebook_set_current_page (GTK_NOTEBOOK (notebook), 0);
+         }
+ 
++}
++
++static gboolean
++on_computer_info_label_button_press (GtkWidget             *widget,
++                                     GdkEventButton        *event,
++                                     GdmGreeterLoginWindow *login_window)
++{
++        rotate_computer_info (login_window);
+         return FALSE;
+ }
+ 
+@@ -996,11 +1002,20 @@ create_computer_info (GdmGreeterLoginWindow *login_window)
+ 
+         label = glade_xml_get_widget (login_window->priv->xml, "computer-info-name-label");
+         if (label != NULL) {
+-                char localhost[HOST_NAME_MAX + 1] = "";•
++                char localhost[HOST_NAME_MAX + 1] = "";
+ 
+-                if (gethostname (localhost, HOST_NAME_MAX) == 0) {•
++                if (gethostname (localhost, HOST_NAME_MAX) == 0) {
+                         gtk_label_set_text (GTK_LABEL (label), localhost);
+                 }
++
++                /* If this isn't actually unique identifier for the computer, then
++                 * don't bother showing it by default.
++                 */
++                if (strcmp (localhost, "localhost") == 0 ||
++                    strcmp (localhost, "localhost.localdomain") == 0) {
++
++                    rotate_computer_info (login_window);
++                }
+         }
+ 
+         label = glade_xml_get_widget (login_window->priv->xml, "computer-info-version-label");
+-- 
+1.6.5.1
+

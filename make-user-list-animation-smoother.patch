@@ -1,0 +1,408 @@
+From 7980049944d064e803522aca8241256a62e90925 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 30 Oct 2009 11:18:13 -0400
+Subject: [PATCH 1/6] Fix typo in chooser grow code
+
+---
+ gui/simple-greeter/gdm-chooser-widget.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-chooser-widget.c b/gui/simple-greeter/gdm-chooser-widget.c
+index cbd5072..9347eee 100644
+--- a/gui/simple-greeter/gdm-chooser-widget.c
++++ b/gui/simple-greeter/gdm-chooser-widget.c
+@@ -894,7 +894,7 @@ start_grow_animation (GdmChooserWidget *widget)
+                 height = get_height_of_screen (widget);
+         }
+         gdm_scrollable_widget_slide_to_height (GDM_SCROLLABLE_WIDGET (widget->priv->scrollable_widget),
+-                                               widget->priv->height_when_grown,
++                                               height,
+                                                (GdmScrollableWidgetSlideStepFunc)
+                                                on_grow_animation_step, widget,
+                                                (GdmScrollableWidgetSlideDoneFunc)
+-- 
+1.6.5.1
+
+
+From e2cde131a24e2933588bed8c741ca14bb007c6eb Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 30 Oct 2009 12:13:32 -0400
+Subject: [PATCH 2/6] Don't start grow animation until chooser is loaded
+
+This makes it smoother when first starting up
+---
+ gui/simple-greeter/gdm-chooser-widget.c |   37 ++----------------------------
+ 1 files changed, 3 insertions(+), 34 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-chooser-widget.c b/gui/simple-greeter/gdm-chooser-widget.c
+index 9347eee..1147104 100644
+--- a/gui/simple-greeter/gdm-chooser-widget.c
++++ b/gui/simple-greeter/gdm-chooser-widget.c
+@@ -92,7 +92,6 @@ struct GdmChooserWidgetPrivate
+ 
+         guint32                  should_hide_inactive_items : 1;
+         guint32                  emit_activated_after_resize_animation : 1;
+-        guint32                  was_fully_grown : 1;
+ 
+         GdmChooserWidgetPosition separator_position;
+         GdmChooserWidgetState    state;
+@@ -807,29 +806,12 @@ on_grow_animation_complete (GdmScrollableWidget *scrollable_widget,
+ {
+         g_assert (widget->priv->state == GDM_CHOOSER_WIDGET_STATE_GROWING);
+         widget->priv->state = GDM_CHOOSER_WIDGET_STATE_GROWN;
+-        widget->priv->was_fully_grown = TRUE;
+         gtk_tree_view_set_enable_search (GTK_TREE_VIEW (widget->priv->items_view), TRUE);
+ 
+         _grab_focus (GTK_WIDGET (widget));
+ }
+ 
+ static int
+-get_height_of_screen (GdmChooserWidget *widget)
+-{
+-        GdkScreen    *screen;
+-        GdkRectangle  area;
+-        int           monitor;
+-
+-        screen = gtk_widget_get_screen (GTK_WIDGET (widget));
+-
+-        monitor = gdk_screen_get_monitor_at_window (screen,
+-                                                    gdk_screen_get_root_window (screen));
+-        gdk_screen_get_monitor_geometry (screen, monitor, &area);
+-
+-        return area.height;
+-}
+-
+-static int
+ get_number_of_on_screen_rows (GdmChooserWidget *widget)
+ {
+         GtkTreePath *start_path;
+@@ -876,7 +858,6 @@ start_grow_animation (GdmChooserWidget *widget)
+ {
+         int number_of_visible_rows;
+         int number_of_rows;
+-        int height;
+ 
+         number_of_visible_rows = gtk_tree_model_iter_n_children (GTK_TREE_MODEL (widget->priv->model_sorter), NULL);
+         number_of_rows = gtk_tree_model_iter_n_children (GTK_TREE_MODEL (widget->priv->list_store), NULL);
+@@ -888,13 +869,8 @@ start_grow_animation (GdmChooserWidget *widget)
+ 
+         set_inactive_items_visible (widget, TRUE);
+ 
+-        if (widget->priv->was_fully_grown) {
+-                height = widget->priv->height_when_grown;
+-        } else {
+-                height = get_height_of_screen (widget);
+-        }
+         gdm_scrollable_widget_slide_to_height (GDM_SCROLLABLE_WIDGET (widget->priv->scrollable_widget),
+-                                               height,
++                                               widget->priv->height_when_grown,
+                                                (GdmScrollableWidgetSlideStepFunc)
+                                                on_grow_animation_step, widget,
+                                                (GdmScrollableWidgetSlideDoneFunc)
+@@ -912,7 +888,6 @@ skip_resize_animation (GdmChooserWidget *widget)
+                 set_inactive_items_visible (GDM_CHOOSER_WIDGET (widget), TRUE);
+                 gtk_tree_view_set_enable_search (GTK_TREE_VIEW (widget->priv->items_view), TRUE);
+                 widget->priv->state = GDM_CHOOSER_WIDGET_STATE_GROWN;
+-                widget->priv->was_fully_grown = FALSE;
+                 _grab_focus (GTK_WIDGET (widget));
+         }
+ }
+@@ -922,7 +897,6 @@ gdm_chooser_widget_grow (GdmChooserWidget *widget)
+ {
+         if (widget->priv->state == GDM_CHOOSER_WIDGET_STATE_SHRINKING) {
+                 gdm_scrollable_widget_stop_sliding (GDM_SCROLLABLE_WIDGET (widget->priv->scrollable_widget));
+-                widget->priv->was_fully_grown = FALSE;
+         }
+ 
+         gtk_alignment_set (GTK_ALIGNMENT (widget->priv->frame_alignment),
+@@ -1233,9 +1207,7 @@ gdm_chooser_widget_size_allocate (GtkWidget     *widget,
+         chooser_widget = GDM_CHOOSER_WIDGET (widget);
+ 
+         if (chooser_widget->priv->state == GDM_CHOOSER_WIDGET_STATE_GROWN) {
+-                if (chooser_widget->priv->was_fully_grown) {
+-                        chooser_widget->priv->height_when_grown = allocation->height;
+-                }
++                chooser_widget->priv->height_when_grown = allocation->height;
+         }
+ }
+ 
+@@ -1801,8 +1773,6 @@ gdm_chooser_widget_init (GdmChooserWidget *widget)
+          */
+         GTK_WIDGET_SET_FLAGS (widget, GTK_CAN_FOCUS);
+ 
+-        widget->priv->height_when_grown = get_height_of_screen (widget);
+-
+         gtk_alignment_set_padding (GTK_ALIGNMENT (widget), 0, 0, 0, 0);
+ 
+         add_frame (widget);
+@@ -1935,9 +1905,7 @@ gdm_chooser_widget_init (GdmChooserWidget *widget)
+                                   gtk_tree_row_reference_free);
+ 
+         add_separator (widget);
+-
+         queue_column_visibility_update (widget);
+-        gdm_chooser_widget_grow (widget);
+ }
+ 
+ static void
+@@ -2544,5 +2512,6 @@ gdm_chooser_widget_propagate_pending_key_events (GdmChooserWidget *widget)
+ void
+ gdm_chooser_widget_loaded (GdmChooserWidget *widget)
+ {
++        gdm_chooser_widget_grow (widget);
+         g_signal_emit (widget, signals[LOADED], 0);
+ }
+-- 
+1.6.5.1
+
+
+From 3f707bba808b3484be7380a11aebfadb2bc98ab6 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 30 Oct 2009 14:41:54 -0400
+Subject: [PATCH 3/6] Hide user list frame when list is empty.
+
+---
+ gui/simple-greeter/gdm-chooser-widget.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-chooser-widget.c b/gui/simple-greeter/gdm-chooser-widget.c
+index 1147104..4124195 100644
+--- a/gui/simple-greeter/gdm-chooser-widget.c
++++ b/gui/simple-greeter/gdm-chooser-widget.c
+@@ -600,9 +600,9 @@ static void
+ update_chooser_visibility (GdmChooserWidget *widget)
+ {
+         if (gdm_chooser_widget_get_number_of_items (widget) > 0) {
+-                gtk_widget_show (widget->priv->scrollable_widget);
++                gtk_widget_show (widget->priv->frame);
+         } else {
+-                gtk_widget_hide (widget->priv->scrollable_widget);
++                gtk_widget_hide (widget->priv->frame);
+         }
+         g_object_notify (G_OBJECT (widget), "list-visible");
+ }
+-- 
+1.6.5.1
+
+
+From 6197ec180d369899bf4b87c5e8adaed62ed3fdeb Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 30 Oct 2009 14:52:04 -0400
+Subject: [PATCH 4/6] Dynamically slide destination from step function
+
+This lets us add items or swift directions while the animation is going.
+---
+ gui/simple-greeter/gdm-chooser-widget.c    |   10 +++++-----
+ gui/simple-greeter/gdm-scrollable-widget.c |   19 ++++++++++++++++++-
+ gui/simple-greeter/gdm-scrollable-widget.h |    1 +
+ 3 files changed, 24 insertions(+), 6 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-chooser-widget.c b/gui/simple-greeter/gdm-chooser-widget.c
+index 4124195..4df03a6 100644
+--- a/gui/simple-greeter/gdm-chooser-widget.c
++++ b/gui/simple-greeter/gdm-chooser-widget.c
+@@ -97,7 +97,6 @@ struct GdmChooserWidgetPrivate
+         GdmChooserWidgetState    state;
+ 
+         double                   active_row_normalized_position;
+-        int                      height_when_grown;
+ };
+ 
+ enum {
+@@ -552,6 +551,7 @@ set_frame_text (GdmChooserWidget *widget,
+ static void
+ on_shrink_animation_step (GdmScrollableWidget *scrollable_widget,
+                           double               progress,
++                          int                 *new_height,
+                           GdmChooserWidget    *widget)
+ {
+         GtkTreePath   *active_row_path;
+@@ -839,6 +839,7 @@ get_number_of_on_screen_rows (GdmChooserWidget *widget)
+ static void
+ on_grow_animation_step (GdmScrollableWidget *scrollable_widget,
+                         double               progress,
++                        int                 *new_height,
+                         GdmChooserWidget    *widget)
+ {
+         int number_of_visible_rows;
+@@ -851,6 +852,8 @@ on_grow_animation_step (GdmScrollableWidget *scrollable_widget,
+                 gdm_scrollable_widget_stop_sliding (scrollable_widget);
+                 return;
+         }
++
++        *new_height = GTK_BIN (scrollable_widget)->child->requisition.height;
+ }
+ 
+ static void
+@@ -870,7 +873,7 @@ start_grow_animation (GdmChooserWidget *widget)
+         set_inactive_items_visible (widget, TRUE);
+ 
+         gdm_scrollable_widget_slide_to_height (GDM_SCROLLABLE_WIDGET (widget->priv->scrollable_widget),
+-                                               widget->priv->height_when_grown,
++                                               GTK_BIN (widget->priv->scrollable_widget)->child->requisition.height,
+                                                (GdmScrollableWidgetSlideStepFunc)
+                                                on_grow_animation_step, widget,
+                                                (GdmScrollableWidgetSlideDoneFunc)
+@@ -1206,9 +1209,6 @@ gdm_chooser_widget_size_allocate (GtkWidget     *widget,
+ 
+         chooser_widget = GDM_CHOOSER_WIDGET (widget);
+ 
+-        if (chooser_widget->priv->state == GDM_CHOOSER_WIDGET_STATE_GROWN) {
+-                chooser_widget->priv->height_when_grown = allocation->height;
+-        }
+ }
+ 
+ static gboolean
+diff --git a/gui/simple-greeter/gdm-scrollable-widget.c b/gui/simple-greeter/gdm-scrollable-widget.c
+index 2c0407d..6d9dc83 100644
+--- a/gui/simple-greeter/gdm-scrollable-widget.c
++++ b/gui/simple-greeter/gdm-scrollable-widget.c
+@@ -132,9 +132,26 @@ on_animation_tick (GdmScrollableWidgetAnimation *animation,
+         gtk_widget_set_size_request (animation->widget, width, height);
+ 
+         if (animation->step_func != NULL) {
++                GdmTimer *timer;
++
++                height = animation->desired_height;
++
++                height -= animation->widget->style->ythickness * 2;
++                height -= GTK_CONTAINER (animation->widget)->border_width * 2;
++
++                timer = g_object_ref (animation->timer);
+                 animation->step_func (GDM_SCROLLABLE_WIDGET (animation->widget),
+                                       progress,
++                                      &height,
+                                       animation->step_func_user_data);
++
++                if (gdm_timer_is_started (timer)) {
++                        height += animation->widget->style->ythickness * 2;
++                        height += GTK_CONTAINER (animation->widget)->border_width * 2;
++
++                        animation->desired_height = height;
++                }
++                g_object_unref (timer);
+         }
+ }
+ 
+@@ -708,7 +725,7 @@ gdm_scrollable_widget_slide_to_height (GdmScrollableWidget *scrollable_widget,
+ 
+         if (!input_redirected || gdm_scrollable_widget_animations_are_disabled (scrollable_widget)) {
+                 if (step_func != NULL) {
+-                        step_func (scrollable_widget, 0.0, step_user_data);
++                        step_func (scrollable_widget, 0.0, &height, step_user_data);
+                 }
+ 
+                 if (done_func != NULL) {
+diff --git a/gui/simple-greeter/gdm-scrollable-widget.h b/gui/simple-greeter/gdm-scrollable-widget.h
+index 9b8877e..2241cb1 100644
+--- a/gui/simple-greeter/gdm-scrollable-widget.h
++++ b/gui/simple-greeter/gdm-scrollable-widget.h
+@@ -40,6 +40,7 @@ typedef struct GdmScrollableWidget GdmScrollableWidget;
+ typedef struct GdmScrollableWidgetPrivate GdmScrollableWidgetPrivate;
+ typedef void (* GdmScrollableWidgetSlideStepFunc) (GdmScrollableWidget *scrollable_widget,
+                                                    double               progress,
++                                                   int                 *new_height,
+                                                    gpointer            *user_data);
+ typedef void (* GdmScrollableWidgetSlideDoneFunc) (GdmScrollableWidget *scrollable_widget,
+                                                    gpointer            *user_data);
+-- 
+1.6.5.1
+
+
+From a31d6dd70213fd3ab8572da2923b99fcbe5449a6 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 30 Oct 2009 14:47:45 -0400
+Subject: [PATCH 5/6] Drop checks for growing too far
+
+We're now very exact about where to grow so we don't need it.
+---
+ gui/simple-greeter/gdm-chooser-widget.c |   16 ----------------
+ 1 files changed, 0 insertions(+), 16 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-chooser-widget.c b/gui/simple-greeter/gdm-chooser-widget.c
+index 4df03a6..6c29d23 100644
+--- a/gui/simple-greeter/gdm-chooser-widget.c
++++ b/gui/simple-greeter/gdm-chooser-widget.c
+@@ -848,28 +848,12 @@ on_grow_animation_step (GdmScrollableWidget *scrollable_widget,
+         number_of_visible_rows = gtk_tree_model_iter_n_children (GTK_TREE_MODEL (widget->priv->model_sorter), NULL);
+         number_of_on_screen_rows = get_number_of_on_screen_rows (widget);
+ 
+-        if (number_of_on_screen_rows >= number_of_visible_rows) {
+-                gdm_scrollable_widget_stop_sliding (scrollable_widget);
+-                return;
+-        }
+-
+         *new_height = GTK_BIN (scrollable_widget)->child->requisition.height;
+ }
+ 
+ static void
+ start_grow_animation (GdmChooserWidget *widget)
+ {
+-        int number_of_visible_rows;
+-        int number_of_rows;
+-
+-        number_of_visible_rows = gtk_tree_model_iter_n_children (GTK_TREE_MODEL (widget->priv->model_sorter), NULL);
+-        number_of_rows = gtk_tree_model_iter_n_children (GTK_TREE_MODEL (widget->priv->list_store), NULL);
+-
+-        if (number_of_visible_rows >= number_of_rows) {
+-               on_grow_animation_complete (GDM_SCROLLABLE_WIDGET (widget->priv->scrollable_widget), widget);
+-               return;
+-        }
+-
+         set_inactive_items_visible (widget, TRUE);
+ 
+         gdm_scrollable_widget_slide_to_height (GDM_SCROLLABLE_WIDGET (widget->priv->scrollable_widget),
+-- 
+1.6.5.1
+
+
+From f685f9fe038d891026fce69a47a7ab7c3e438d37 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 30 Oct 2009 16:44:29 -0400
+Subject: [PATCH 6/6] Compute needs-scrollbar logic differently
+
+This way is a little clearer to read and seems to work
+around a bug where the scrollbar gets shown briefly at
+the end of an animation.
+---
+ gui/simple-greeter/gdm-scrollable-widget.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-scrollable-widget.c b/gui/simple-greeter/gdm-scrollable-widget.c
+index 6d9dc83..d55013d 100644
+--- a/gui/simple-greeter/gdm-scrollable-widget.c
++++ b/gui/simple-greeter/gdm-scrollable-widget.c
+@@ -252,7 +252,7 @@ gdm_scrollable_widget_animation_stop (GdmScrollableWidgetAnimation *animation)
+ static gboolean
+ gdm_scrollable_widget_needs_scrollbar (GdmScrollableWidget *widget)
+ {
+-        GtkAdjustment *adjustment;
++        gboolean needs_scrollbar;
+ 
+         if (widget->priv->scrollbar == NULL) {
+                 return FALSE;
+@@ -266,9 +266,19 @@ gdm_scrollable_widget_needs_scrollbar (GdmScrollableWidget *widget)
+                 return FALSE;
+         }
+ 
+-        adjustment = gtk_range_get_adjustment (GTK_RANGE (widget->priv->scrollbar));
++        if (GTK_BIN (widget)->child != NULL) {
++                GtkRequisition child_requisition;
++                int available_height;
++
++                gtk_widget_get_child_requisition (GTK_BIN (widget)->child,
++                                                  &child_requisition);
++                available_height = GTK_WIDGET (widget)->allocation.height;
++                needs_scrollbar = child_requisition.height > available_height;
++        } else {
++                needs_scrollbar = FALSE;
++        }
+ 
+-        return adjustment->upper - adjustment->lower > adjustment->page_size;
++        return needs_scrollbar;
+ }
+ 
+ static void
+-- 
+1.6.5.1
+
