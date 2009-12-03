@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.29.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -92,22 +92,13 @@ BuildRequires: DeviceKit-power-devel >= 008
 Provides: service(graphical-login)
 
 Requires: audit-libs >= %{libauditver}
-Patch2: gdm-2.26.0-force-active-vt.patch
+Patch2: gdm-2.29.1-force-active-vt.patch
 Patch3: gdm-2.23.92-save-root-window.patch
 
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
 # https://bugzilla.gnome.org/show_bug.cgi?id=572765
 Patch13: gdm-system-keyboard.patch
-
-Patch20: gdm-2.28.1-move-shutdown-functions.patch
-Patch21: fix-clock.patch
-Patch22: fix-timer.patch
-Patch23: fix-na-tray.patch
-Patch24: fix-computer-info.patch
-Patch25: fix-run-dir-permissions.patch
-Patch26: make-user-list-animation-smoother.patch
-Patch27: 0001-Don-t-show-lock-screen-option-if-locked-down.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -153,16 +144,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch2 -p1 -b .force-active-vt
 %patch3 -p1 -b .save-root-window
 %patch13 -p1 -b .system-keyboard
-
-%patch20 -p1 -b .move-shutdown-functions
-%patch21 -p1 -b .fix-clock
-%patch22 -p1 -b .fix-timer
-%patch23 -p1 -b .fix-na-tray
-%patch24 -p1 -b .fix-computer-info
-%patch25 -p1 -b .fix-run-dir-permission
-%patch26 -p1 -b .make-user-list-animation-smoother
-%patch27 -p1 -b .dont-show-lock-screen-if-locked-down
-
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -419,6 +400,10 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Dec 03 2009 Ray Strode <rstrode@redhat.com> 2.29.1-2
+- Drop upstreamed patches
+- rebase multi-stack patch
+
 * Tue Dec 01 2009 Bastien Nocera <bnocera@redhat.com> 2.29.1-1
 - Update to 2.29.1
 
