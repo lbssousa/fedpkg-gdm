@@ -88,6 +88,7 @@ BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel >= 4.0
 BuildRequires: DeviceKit-power-devel >= 008
+BuildRequires: libXdmcp-devel
 
 Provides: service(graphical-login)
 
