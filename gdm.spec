@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.29.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -93,8 +93,7 @@ BuildRequires: libXdmcp-devel
 Provides: service(graphical-login)
 
 Requires: audit-libs >= %{libauditver}
-Patch2: gdm-2.29.1-force-active-vt.patch
-Patch3: gdm-2.23.92-save-root-window.patch
+Patch2: plymouth.patch
 
 # uses /etc/sysconfig/keyboard and is thus not directly upstreamable
 # should probably be changed to get the system layout from the X server
@@ -142,8 +141,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 
 %prep
 %setup -q
-%patch2 -p1 -b .force-active-vt
-%patch3 -p1 -b .save-root-window
+%patch2 -p1 -b .plymouth
 %patch13 -p1 -b .system-keyboard
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
@@ -370,7 +368,6 @@ fi
 %dir %{_datadir}/gdm/autostart/LoginWindow
 %config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
-%dir %{_localstatedir}/spool/gdm
 %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
@@ -401,6 +398,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Dec 09 2009 Ray Strode <rstrode@redhat.com> 2.29.1-3
+- Update to work better with latest plymouth
+
 * Thu Dec 03 2009 Ray Strode <rstrode@redhat.com> 2.29.1-2
 - Drop upstreamed patches
 - rebase multi-stack patch
