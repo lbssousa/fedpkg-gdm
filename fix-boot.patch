@@ -191,7 +191,7 @@ diff -up gdm-2.29.4/data/Makefile.am.fix-boot gdm-2.29.4/data/Makefile.am
  postlogindir = $(gdmconfdir)/PostLogin
  workingdir = $(GDM_WORKING_DIR)
  xauthdir = $(GDM_XAUTH_DIR)
-+spooldir = $(GDM_SPOOL_DIR)
++spooldir = "/var/spool/gdm"
  screenshotdir = $(GDM_SCREENSHOT_DIR)
  cachedir = $(localstatedir)/cache/gdm
  
