@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.29.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -105,6 +105,7 @@ Patch96: gdm-multistack.patch
 Patch97: gdm-bubble-location.patch
 Patch98: tray-padding.patch
 Patch99: gdm-2.23.1-fedora-logo.patch
+Patch100: fix-boot.patch
 
 %package user-switch-applet
 Summary:   GDM User Switcher Panel Applet
@@ -147,6 +148,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
 %patch99 -p1 -b .fedora-logo
+%patch100 -p1 -b .fix-boot
 
 autoreconf -i -f
 
@@ -201,6 +203,9 @@ rm -rf $RPM_BUILD_ROOT/%{_prefix}/doc
 
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
+
+# and a spool dir
+mkdir -p $RPM_BUILD_ROOT/var/spool/gdm
 
 # remove the gdm Xsession as we're using the xdm one
 rm -f $RPM_BUILD_ROOT%{_sysconfdir}/gdm/Xsession
@@ -368,6 +373,7 @@ fi
 %dir %{_datadir}/gdm/autostart/LoginWindow
 %config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
+%dir %{_localstatedir}/spool/gdm
 %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
@@ -398,6 +404,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Jan 14 2010 Ray Strode <rstrode@redhat.com> 2.29.4-2
+- Fix boot
+
 * Tue Dec 22 2009 Matthias Clasen <mclasen@redhat.com> - 2.29.4-1
 - Update to 2.29.4
 
