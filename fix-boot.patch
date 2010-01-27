@@ -1,6 +1,7 @@
-diff -up gdm-2.29.4/daemon/gdm-simple-slave.c.fix-boot gdm-2.29.4/daemon/gdm-simple-slave.c
---- gdm-2.29.4/daemon/gdm-simple-slave.c.fix-boot	2010-01-14 16:10:58.507800165 -0500
-+++ gdm-2.29.4/daemon/gdm-simple-slave.c	2010-01-14 16:10:58.543800532 -0500
+
+diff -up gdm-2.29.5/daemon/gdm-simple-slave.c.fix-boot gdm-2.29.5/daemon/gdm-simple-slave.c
+--- gdm-2.29.5/daemon/gdm-simple-slave.c.fix-boot	2010-01-26 17:34:33.980834884 -0500
++++ gdm-2.29.5/daemon/gdm-simple-slave.c	2010-01-26 17:34:34.027782630 -0500
 @@ -91,6 +91,7 @@ struct GdmSimpleSlavePrivate
  
  enum {
@@ -9,7 +10,7 @@ diff -up gdm-2.29.4/daemon/gdm-simple-slave.c.fix-boot gdm-2.29.4/daemon/gdm-sim
  };
  
  static void     gdm_simple_slave_class_init     (GdmSimpleSlaveClass *klass);
-@@ -1321,11 +1322,13 @@ gdm_simple_slave_run (GdmSimpleSlave *sl
+@@ -1327,11 +1328,13 @@ gdm_simple_slave_run (GdmSimpleSlave *sl
          char    *display_name;
          char    *auth_file;
          gboolean display_is_local;
@@ -23,7 +24,7 @@ diff -up gdm-2.29.4/daemon/gdm-simple-slave.c.fix-boot gdm-2.29.4/daemon/gdm-sim
                        NULL);
  
          /* if this is local display start a server if one doesn't
-@@ -1363,7 +1366,11 @@ gdm_simple_slave_run (GdmSimpleSlave *sl
+@@ -1369,7 +1372,11 @@ gdm_simple_slave_run (GdmSimpleSlave *sl
                          plymouth_prepare_for_transition (slave);
                          res = gdm_server_start_on_active_vt (slave->priv->server);
                  } else {
@@ -36,7 +37,7 @@ diff -up gdm-2.29.4/daemon/gdm-simple-slave.c.fix-boot gdm-2.29.4/daemon/gdm-sim
                  }
                  if (! res) {
                          g_warning (_("Could not start the X "
-@@ -1515,12 +1522,14 @@ gdm_simple_slave_finalize (GObject *obje
+@@ -1521,12 +1528,14 @@ gdm_simple_slave_finalize (GObject *obje
  }
  
  GdmSlave *
@@ -52,9 +53,9 @@ diff -up gdm-2.29.4/daemon/gdm-simple-slave.c.fix-boot gdm-2.29.4/daemon/gdm-sim
                                 NULL);
  
          return GDM_SLAVE (object);
-diff -up gdm-2.29.4/daemon/gdm-simple-slave.h.fix-boot gdm-2.29.4/daemon/gdm-simple-slave.h
---- gdm-2.29.4/daemon/gdm-simple-slave.h.fix-boot	2009-12-08 10:20:18.000000000 -0500
-+++ gdm-2.29.4/daemon/gdm-simple-slave.h	2010-01-14 16:10:58.543800532 -0500
+diff -up gdm-2.29.5/daemon/gdm-simple-slave.h.fix-boot gdm-2.29.5/daemon/gdm-simple-slave.h
+--- gdm-2.29.5/daemon/gdm-simple-slave.h.fix-boot	2009-12-08 10:20:18.000000000 -0500
++++ gdm-2.29.5/daemon/gdm-simple-slave.h	2010-01-26 17:34:34.027782630 -0500
 @@ -48,7 +48,8 @@ typedef struct
  } GdmSimpleSlaveClass;
  
@@ -65,9 +66,9 @@ diff -up gdm-2.29.4/daemon/gdm-simple-slave.h.fix-boot gdm-2.29.4/daemon/gdm-sim
  
  G_END_DECLS
  
-diff -up gdm-2.29.4/daemon/gdm-slave.c.fix-boot gdm-2.29.4/daemon/gdm-slave.c
---- gdm-2.29.4/daemon/gdm-slave.c.fix-boot	2010-01-14 16:10:58.280770006 -0500
-+++ gdm-2.29.4/daemon/gdm-slave.c	2010-01-14 16:10:58.544770030 -0500
+diff -up gdm-2.29.5/daemon/gdm-slave.c.fix-boot gdm-2.29.5/daemon/gdm-slave.c
+--- gdm-2.29.5/daemon/gdm-slave.c.fix-boot	2010-01-26 17:34:33.777750861 -0500
++++ gdm-2.29.5/daemon/gdm-slave.c	2010-01-26 17:46:49.256752923 -0500
 @@ -84,6 +84,7 @@ struct GdmSlavePrivate
          char            *display_hostname;
          gboolean         display_is_local;
@@ -84,7 +85,7 @@ diff -up gdm-2.29.4/daemon/gdm-slave.c.fix-boot gdm-2.29.4/daemon/gdm-slave.c
          PROP_DISPLAY_SEAT_ID,
          PROP_DISPLAY_X11_AUTHORITY_FILE
  };
-@@ -1404,6 +1406,13 @@ _gdm_slave_set_display_is_local (GdmSlav
+@@ -1402,6 +1404,13 @@ _gdm_slave_set_display_is_local (GdmSlav
  }
  
  static void
@@ -98,7 +99,7 @@ diff -up gdm-2.29.4/daemon/gdm-slave.c.fix-boot gdm-2.29.4/daemon/gdm-slave.c
  gdm_slave_set_property (GObject      *object,
                          guint         prop_id,
                          const GValue *value,
-@@ -1435,6 +1444,9 @@ gdm_slave_set_property (GObject      *ob
+@@ -1433,6 +1442,9 @@ gdm_slave_set_property (GObject      *ob
          case PROP_DISPLAY_IS_LOCAL:
                  _gdm_slave_set_display_is_local (self, g_value_get_boolean (value));
                  break;
@@ -108,7 +109,7 @@ diff -up gdm-2.29.4/daemon/gdm-slave.c.fix-boot gdm-2.29.4/daemon/gdm-slave.c
          default:
                  G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                  break;
-@@ -1473,6 +1485,9 @@ gdm_slave_get_property (GObject    *obje
+@@ -1471,6 +1483,9 @@ gdm_slave_get_property (GObject    *obje
          case PROP_DISPLAY_IS_LOCAL:
                  g_value_set_boolean (value, self->priv->display_is_local);
                  break;
@@ -118,9 +119,24 @@ diff -up gdm-2.29.4/daemon/gdm-slave.c.fix-boot gdm-2.29.4/daemon/gdm-slave.c
          default:
                  G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                  break;
-diff -up gdm-2.29.4/daemon/gdm-static-display.c.fix-boot gdm-2.29.4/daemon/gdm-static-display.c
---- gdm-2.29.4/daemon/gdm-static-display.c.fix-boot	2009-12-17 09:20:42.000000000 -0500
-+++ gdm-2.29.4/daemon/gdm-static-display.c	2010-01-14 16:10:58.545800295 -0500
+@@ -1595,6 +1610,14 @@ gdm_slave_class_init (GdmSlaveClass *kla
+                                                                "display is local",
+                                                                TRUE,
+                                                                G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
++        g_object_class_install_property (object_class,
++                                         PROP_FORCE_ACTIVE_VT,
++                                         g_param_spec_boolean ("force-active-vt",
++                                                               "Force Active VT",
++                                                               "Force display to active VT",
++                                                               TRUE,
++                                                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
++
+ 
+         signals [STOPPED] =
+                 g_signal_new ("stopped",
+diff -up gdm-2.29.5/daemon/gdm-static-display.c.fix-boot gdm-2.29.5/daemon/gdm-static-display.c
+--- gdm-2.29.5/daemon/gdm-static-display.c.fix-boot	2009-12-17 09:20:42.000000000 -0500
++++ gdm-2.29.5/daemon/gdm-static-display.c	2010-01-26 17:34:34.029750726 -0500
 @@ -86,10 +86,27 @@ gdm_static_display_remove_user_authoriza
  }
  
@@ -149,9 +165,9 @@ diff -up gdm-2.29.4/daemon/gdm-static-display.c.fix-boot gdm-2.29.4/daemon/gdm-s
          GDM_DISPLAY_CLASS (gdm_static_display_parent_class)->manage (display);
  
          return TRUE;
-diff -up gdm-2.29.4/daemon/Makefile.am.fix-boot gdm-2.29.4/daemon/Makefile.am
---- gdm-2.29.4/daemon/Makefile.am.fix-boot	2010-01-14 16:16:26.262770051 -0500
-+++ gdm-2.29.4/daemon/Makefile.am	2010-01-14 16:17:35.998771692 -0500
+diff -up gdm-2.29.5/daemon/Makefile.am.fix-boot gdm-2.29.5/daemon/Makefile.am
+--- gdm-2.29.5/daemon/Makefile.am.fix-boot	2010-01-12 15:30:45.000000000 -0500
++++ gdm-2.29.5/daemon/Makefile.am	2010-01-26 17:34:34.029750726 -0500
 @@ -14,6 +14,7 @@ AM_CPPFLAGS = \
  	-DLOGDIR=\"$(logdir)\"				\
  	-DSBINDIR=\"$(sbindir)\"			\
@@ -160,9 +176,9 @@ diff -up gdm-2.29.4/daemon/Makefile.am.fix-boot gdm-2.29.4/daemon/Makefile.am
  	-DGDM_XAUTH_DIR=\"$(GDM_XAUTH_DIR)\"		\
  	-DGDM_SCREENSHOT_DIR=\"$(GDM_SCREENSHOT_DIR)\"		\
  	-DGDM_CACHE_DIR=\""$(localstatedir)/cache/gdm"\"	\
-diff -up gdm-2.29.4/daemon/simple-slave-main.c.fix-boot gdm-2.29.4/daemon/simple-slave-main.c
---- gdm-2.29.4/daemon/simple-slave-main.c.fix-boot	2009-12-21 11:36:30.000000000 -0500
-+++ gdm-2.29.4/daemon/simple-slave-main.c	2010-01-14 16:10:58.545800295 -0500
+diff -up gdm-2.29.5/daemon/simple-slave-main.c.fix-boot gdm-2.29.5/daemon/simple-slave-main.c
+--- gdm-2.29.5/daemon/simple-slave-main.c.fix-boot	2010-01-12 11:36:37.000000000 -0500
++++ gdm-2.29.5/daemon/simple-slave-main.c	2010-01-26 17:34:34.029750726 -0500
 @@ -178,9 +178,11 @@ main (int    argc,
          DBusGConnection  *connection;
          GdmSlave         *slave;
@@ -184,9 +200,9 @@ diff -up gdm-2.29.4/daemon/simple-slave-main.c.fix-boot gdm-2.29.4/daemon/simple
          if (slave == NULL) {
                  goto out;
          }
-diff -up gdm-2.29.4/data/Makefile.am.fix-boot gdm-2.29.4/data/Makefile.am
---- gdm-2.29.4/data/Makefile.am.fix-boot	2009-12-21 11:36:30.000000000 -0500
-+++ gdm-2.29.4/data/Makefile.am	2010-01-14 16:10:58.546769600 -0500
+diff -up gdm-2.29.5/data/Makefile.am.fix-boot gdm-2.29.5/data/Makefile.am
+--- gdm-2.29.5/data/Makefile.am.fix-boot	2010-01-13 09:44:40.000000000 -0500
++++ gdm-2.29.5/data/Makefile.am	2010-01-26 17:34:34.030752200 -0500
 @@ -13,6 +13,7 @@ predir = $(gdmconfdir)/PreSession
  postlogindir = $(gdmconfdir)/PostLogin
  workingdir = $(GDM_WORKING_DIR)
@@ -195,7 +211,7 @@ diff -up gdm-2.29.4/data/Makefile.am.fix-boot gdm-2.29.4/data/Makefile.am
  screenshotdir = $(GDM_SCREENSHOT_DIR)
  cachedir = $(localstatedir)/cache/gdm
  
-@@ -125,6 +126,7 @@ uninstall-hook:
+@@ -129,6 +130,7 @@ uninstall-hook:
  	$(DESTDIR)$(workingdir)/.gconf.mandatory \
  	$(DESTDIR)$(screenshotdir) \
  	$(DESTDIR)$(xauthdir)
@@ -203,7 +219,7 @@ diff -up gdm-2.29.4/data/Makefile.am.fix-boot gdm-2.29.4/data/Makefile.am
  
  install-data-hook: gdm.conf-custom Xsession Init PostSession PreSession gconf.path
  	if test '!' -d $(DESTDIR)$(gdmconfdir); then \
-@@ -217,6 +219,11 @@ install-data-hook: gdm.conf-custom Xsess
+@@ -221,6 +223,11 @@ install-data-hook: gdm.conf-custom Xsess
  		chmod 1770 $(DESTDIR)$(workingdir); \
  		chown root:gdm $(DESTDIR)$(workingdir) || : ; \
  	fi

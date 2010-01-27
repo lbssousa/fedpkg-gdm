@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.29.4
-Release: 3%{?dist}
+Version: 2.29.5
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -94,11 +94,8 @@ Provides: service(graphical-login)
 
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
-
-# uses /etc/sysconfig/keyboard and is thus not directly upstreamable
-# should probably be changed to get the system layout from the X server
-# https://bugzilla.gnome.org/show_bug.cgi?id=572765
-Patch13: gdm-system-keyboard.patch
+Patch3: add-locale-alias.patch
+Patch4: xklavier-fix.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -143,7 +140,8 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch13 -p1 -b .system-keyboard
+%patch3 -p1 -b .add-locale-alias
+%patch4 -p1 -b .xklavier-fix
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -361,7 +359,8 @@ fi
 %{_sbindir}/gdm-stop
 %{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
-%{_datadir}/gdm/*.glade
+%{_datadir}/gdm/*.ui
+%{_datadir}/gdm/locale.alias
 %{_sysconfdir}/gconf/schemas/*.schemas
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
@@ -404,6 +403,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Jan 26 2010 Ray Strode <rstrode@redhat.com> 2.29.5-1
+- Update to 2.29.5
+
 * Sun Jan 17 2010 Matthias Clasen <mclasen@redhat.com> - 2.29.4-3
 - Rebuild
 
