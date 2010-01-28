@@ -16,7 +16,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.29.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -90,7 +90,7 @@ BuildRequires: libxklavier-devel >= 4.0
 BuildRequires: DeviceKit-power-devel >= 008
 BuildRequires: libXdmcp-devel
 
-Provides: service(graphical-login)
+Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
@@ -403,6 +403,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Jan 28 2010 Ray Strode <rstrode@redhat.com> 2.29.5-2
+- name graphical-login vprovides (bug 559268)
+
 * Tue Jan 26 2010 Ray Strode <rstrode@redhat.com> 2.29.5-1
 - Update to 2.29.5
 
