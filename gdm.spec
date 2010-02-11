@@ -15,8 +15,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.29.5
-Release: 2%{?dist}
+Version: 2.29.6
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -403,6 +403,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Feb 11 2010 Matthias Clasen <mclasen@redhat.com> 2.29.6-1
+- Update to 2.29.6
+
 * Thu Jan 28 2010 Ray Strode <rstrode@redhat.com> 2.29.5-2
 - name graphical-login vprovides (bug 559268)
 
