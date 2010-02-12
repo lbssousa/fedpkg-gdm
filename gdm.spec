@@ -94,8 +94,6 @@ Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
-Patch3: add-locale-alias.patch
-Patch4: xklavier-fix.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -140,8 +138,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch3 -p1 -b .add-locale-alias
-%patch4 -p1 -b .xklavier-fix
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
