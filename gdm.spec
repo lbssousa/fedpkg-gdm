@@ -102,6 +102,8 @@ Patch98: tray-padding.patch
 Patch99: gdm-2.23.1-fedora-logo.patch
 Patch100: fix-boot.patch
 
+Patch101: gdm-libs.patch
+
 %package user-switch-applet
 Summary:   GDM User Switcher Panel Applet
 Group:     User Interface/Desktops
@@ -143,6 +145,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch98 -p1 -b .tray-padding
 %patch99 -p1 -b .fedora-logo
 %patch100 -p1 -b .fix-boot
+%patch101 -p1 -b .libs
 
 autoreconf -i -f
 
