@@ -9,18 +9,18 @@
 %define gail_version 1.2.0
 %define nss_version 3.11.1
 %define consolekit_version 0.3.0-9
-%define hal_version 0.5.9
 %define fontconfig_version 2.6.0
 %define _default_patch_fuzz 999
 
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.29.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
+#VCS: git:git://git.gnome.org/gdm
 Source: http://download.gnome.org/sources/gdm/2.29/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
@@ -33,7 +33,6 @@ Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: polkit-gnome-authentication-agent-1.desktop
 
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Prereq: /usr/sbin/useradd
 
 Requires: gtk2 >= 0:%{gtk2_version}
@@ -45,7 +44,6 @@ Requires: system-logos
 Requires: xorg-x11-server-utils
 Requires: setxkbmap
 Requires: xorg-x11-xinit
-Requires: hal >= %{hal_version}
 Requires: ConsoleKit >= %{consolekit_version}
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
@@ -402,6 +400,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Mar 24 2010 Matthias Clasen <mclasen@redhat.com> 2.29.6-2
+- Drop unnecessary hal dependency (#567432)
+
 * Thu Feb 11 2010 Matthias Clasen <mclasen@redhat.com> 2.29.6-1
 - Update to 2.29.6
 
