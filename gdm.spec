@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.29.6
-Release: 2%{?dist}
+Version: 2.29.92
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -33,7 +33,7 @@ Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: polkit-gnome-authentication-agent-1.desktop
 
-Prereq: /usr/sbin/useradd
+Requires(pre): /usr/sbin/useradd
 
 Requires: gtk2 >= 0:%{gtk2_version}
 Requires: libglade2 >= 0:%{libglade2_version}
@@ -400,8 +400,17 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
-* Wed Mar 24 2010 Matthias Clasen <mclasen@redhat.com> 2.29.6-2
-- Drop unnecessary hal dependency (#567432)
+* Wed Mar 24 2010 Matthias Clasen <mclasen@redhat.com> 2.29.92-4
+- Drop hal dependency
+
+* Tue Mar 09 2010 Ray Strode <rstrode@redhat.com> 2.29.92-3
+- Drop Prereq in favor of Requires(pre)
+
+* Tue Mar 09 2010 Ray Strode <rstrode@redhat.com> 2.29.92-2
+- Rebase multistack patch
+
+* Tue Mar 09 2010 Bastien Nocera <bnocera@redhat.com> 2.29.92-1
+- Update to 2.29.92
 
 * Thu Feb 11 2010 Matthias Clasen <mclasen@redhat.com> 2.29.6-1
 - Update to 2.29.6
