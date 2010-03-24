@@ -1,7 +1,7 @@
-From 61fb36fe30a4781e4b4fce7d11fa8eec567463ac Mon Sep 17 00:00:00 2001
+From 1324842ceb10360ca3c7362dbf0f86f12ec0dd7f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 11:00:08 -0500
-Subject: [PATCH 01/50] Drop session "Open" in favor of "StartConversation"
+Subject: [PATCH 01/47] Introduce new Conversation object
 
 We want to eventually support having multiple
 simultaneous PAM conversations in one login
@@ -15,101 +15,77 @@ be easier later to have multiple conversation objects.
 The conversation is named by the pam service the login
 screen is talking to.
 ---
- daemon/gdm-factory-slave.c      |   13 +-
- daemon/gdm-product-slave.c      |   47 ++++--
- daemon/gdm-session-direct.c     |  322 ++++++++++++++++++++++++---------------
+ daemon/gdm-factory-slave.c      |    5 +-
+ daemon/gdm-product-slave.c      |   29 +++-
+ daemon/gdm-session-direct.c     |  318 ++++++++++++++++++++++++---------------
  daemon/gdm-session-private.h    |    3 +-
- daemon/gdm-session-relay.c      |   29 +++--
+ daemon/gdm-session-relay.c      |   15 ++-
  daemon/gdm-session-worker-job.c |    7 +
  daemon/gdm-session-worker-job.h |    2 +
- daemon/gdm-session.c            |   20 ++-
+ daemon/gdm-session.c            |   12 +-
  daemon/gdm-session.h            |    9 +-
  daemon/gdm-simple-slave.c       |    3 -
- daemon/test-session.c           |   13 +-
- 11 files changed, 293 insertions(+), 175 deletions(-)
+ daemon/test-session.c           |    5 +-
+ 11 files changed, 263 insertions(+), 145 deletions(-)
 
 diff --git a/daemon/gdm-factory-slave.c b/daemon/gdm-factory-slave.c
-index d09c913..6497293 100644
+index 606c995..bd98445 100644
 --- a/daemon/gdm-factory-slave.c
 +++ b/daemon/gdm-factory-slave.c
-@@ -180,10 +180,11 @@ on_session_secret_info_query (GdmSession      *session,
- }
+@@ -181,7 +181,8 @@ on_session_secret_info_query (GdmSession      *session,
  
  static void
--on_session_opened (GdmSession      *session,
--                   GdmFactorySlave *slave)
-+on_session_conversation_started (GdmSession      *session,
+ on_session_conversation_started (GdmSession      *session,
+-                                 GdmFactorySlave *slave)
 +                                 GdmFactorySlave *slave,
 +                                 const char      *service_name)
  {
--        g_debug ("GdmFactorySlave:  session opened");
-+        g_debug ("GdmFactorySlave:  session conversation started");
+         g_debug ("GdmFactorySlave: session conversation started");
  
-         gdm_greeter_server_ready (slave->priv->greeter_server);
- }
-@@ -367,7 +368,7 @@ on_session_relay_connected (GdmSessionRelay *session,
+@@ -388,7 +389,7 @@ on_session_relay_connected (GdmSessionRelay *session,
  {
          g_debug ("GdmFactorySlave: Relay Connected");
  
--        gdm_session_open (GDM_SESSION (slave->priv->session));
+-        gdm_session_start_conversation (GDM_SESSION (slave->priv->session));
 +        gdm_session_start_conversation (GDM_SESSION (slave->priv->session), "gdm");
  }
  
  static void
-@@ -694,8 +695,8 @@ gdm_factory_slave_start (GdmSlave *slave)
- 
-         GDM_FACTORY_SLAVE (slave)->priv->session = gdm_session_relay_new ();
-         g_signal_connect (GDM_FACTORY_SLAVE (slave)->priv->session,
--                          "opened",
--                          G_CALLBACK (on_session_opened),
-+                          "conversation-started",
-+                          G_CALLBACK (on_session_conversation_started),
-                           slave);
-         g_signal_connect (GDM_FACTORY_SLAVE (slave)->priv->session,
-                           "setup-complete",
 diff --git a/daemon/gdm-product-slave.c b/daemon/gdm-product-slave.c
-index 9adcb09..15a2820 100644
+index 1fff780..ec6300d 100644
 --- a/daemon/gdm-product-slave.c
 +++ b/daemon/gdm-product-slave.c
 @@ -246,19 +246,21 @@ relay_session_started (GdmProductSlave *slave,
  }
  
  static void
--relay_session_opened (GdmProductSlave *slave)
+-relay_session_conversation_started (GdmProductSlave *slave)
 +relay_session_conversation_started (GdmProductSlave *slave,
 +                                    const char      *service_name)
  {
 -        send_dbus_void_method (slave->priv->session_relay_connection,
--                               "Opened");
+-                               "ConversationStarted");
 +        send_dbus_string_method (slave->priv->session_relay_connection,
 +                                 "ConversationStarted", service_name);
  }
  
  static void
--on_session_opened (GdmSession      *session,
--                   GdmProductSlave *slave)
-+on_session_conversation_started (GdmSession      *session,
+ on_session_conversation_started (GdmSession      *session,
 +                                 const char      *service_name,
-+                                 GdmProductSlave *slave)
+                                  GdmProductSlave *slave)
  {
--        g_debug ("GdmProductSlave: session opened");
-+        g_debug ("GdmProductSlave: session conversation started");
+         g_debug ("GdmProductSlave: session conversation started");
  
--        relay_session_opened (slave);
+-        relay_session_conversation_started (slave);
 +        relay_session_conversation_started (slave, service_name);
  }
  
  static void
-@@ -784,10 +786,27 @@ on_relay_user_selected (GdmProductSlave *slave,
- }
- 
- static void
--on_relay_open (GdmProductSlave *slave,
--               DBusMessage     *message)
-+on_relay_start_conversation (GdmProductSlave *slave,
-+                             DBusMessage     *message)
+@@ -805,7 +807,24 @@ static void
+ on_relay_start_conversation (GdmProductSlave *slave,
+                              DBusMessage     *message)
  {
--        gdm_session_open (GDM_SESSION (slave->priv->session));
+-        gdm_session_start_conversation (GDM_SESSION (slave->priv->session));
 +        DBusError   error;
 +        char *service_name;
 +        dbus_bool_t res;
@@ -131,30 +107,8 @@ index 9adcb09..15a2820 100644
  }
  
  static void
-@@ -832,8 +851,8 @@ create_new_session (GdmProductSlave *slave)
-         g_free (display_device);
- 
-         g_signal_connect (slave->priv->session,
--                          "opened",
--                          G_CALLBACK (on_session_opened),
-+                          "conversation-started",
-+                          G_CALLBACK (on_session_conversation_started),
-                           slave);
-         g_signal_connect (slave->priv->session,
-                           "setup-complete",
-@@ -991,8 +1010,8 @@ relay_dbus_handle_message (DBusConnection *connection,
-                 on_relay_user_selected (slave, message);
-         } else if (dbus_message_is_signal (message, RELAY_SERVER_DBUS_INTERFACE, "StartSession")) {
-                 on_relay_start_session (slave, message);
--        } else if (dbus_message_is_signal (message, RELAY_SERVER_DBUS_INTERFACE, "Open")) {
--                on_relay_open (slave, message);
-+        } else if (dbus_message_is_signal (message, RELAY_SERVER_DBUS_INTERFACE, "StartConversation")) {
-+                on_relay_start_conversation (slave, message);
-         } else if (dbus_message_is_signal (message, RELAY_SERVER_DBUS_INTERFACE, "Cancelled")) {
-                 on_relay_cancelled (slave, message);
-         } else {
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index bb85393..ba7a90e 100644
+index 77d5801..dff3e68 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
 @@ -66,6 +66,16 @@
@@ -461,7 +415,7 @@ index bb85393..ba7a90e 100644
  
          reply = dbus_message_new_method_return (message);
          dbus_connection_send (connection, reply, NULL);
-@@ -1466,16 +1499,18 @@ handle_connection (DBusServer      *server,
+@@ -1522,16 +1555,18 @@ handle_connection (DBusServer      *server,
                     void            *user_data)
  {
          GdmSessionDirect *session = GDM_SESSION_DIRECT (user_data);
@@ -482,19 +436,17 @@ index bb85393..ba7a90e 100644
                  dbus_connection_ref (new_connection);
                  dbus_connection_setup_with_g_main (new_connection, NULL);
  
-@@ -1492,8 +1527,9 @@ handle_connection (DBusServer      *server,
-                                                       &vtable,
+@@ -1549,7 +1584,8 @@ handle_connection (DBusServer      *server,
                                                        session);
  
--                g_debug ("GdmSessionDirect: Emitting opened signal");
--                _gdm_session_opened (GDM_SESSION (session));
-+                g_debug ("GdmSessionDirect: Emitting conversation-started signal");
+                 g_debug ("GdmSessionDirect: Emitting conversation-started signal");
+-                _gdm_session_conversation_started (GDM_SESSION (session));
 +                _gdm_session_conversation_started (GDM_SESSION (session),
 +                                                   conversation->service_name);
          }
  }
  
-@@ -1563,8 +1599,6 @@ gdm_session_direct_init (GdmSessionDirect *session)
+@@ -1619,8 +1655,6 @@ gdm_session_direct_init (GdmSessionDirect *session)
                            G_CALLBACK (on_session_exited),
                            NULL);
  
@@ -503,7 +455,7 @@ index bb85393..ba7a90e 100644
          session->priv->environment = g_hash_table_new_full (g_str_hash,
                                                              g_str_equal,
                                                              (GDestroyNotify) g_free,
-@@ -1576,7 +1610,7 @@ gdm_session_direct_init (GdmSessionDirect *session)
+@@ -1632,7 +1666,7 @@ gdm_session_direct_init (GdmSessionDirect *session)
  
  static void
  worker_started (GdmSessionWorkerJob *job,
@@ -512,7 +464,7 @@ index bb85393..ba7a90e 100644
  {
          g_debug ("GdmSessionDirect: Worker job started");
  }
-@@ -1584,87 +1618,105 @@ worker_started (GdmSessionWorkerJob *job,
+@@ -1640,87 +1674,105 @@ worker_started (GdmSessionWorkerJob *job,
  static void
  worker_exited (GdmSessionWorkerJob *job,
                 int                  code,
@@ -638,7 +590,7 @@ index bb85393..ba7a90e 100644
  }
  
  static void
--gdm_session_direct_open (GdmSession *session)
+-gdm_session_direct_start_conversation (GdmSession *session)
 +gdm_session_direct_start_conversation (GdmSession *session,
 +                                       const char *service_name)
  {
@@ -646,7 +598,7 @@ index bb85393..ba7a90e 100644
  
          g_return_if_fail (session != NULL);
  
--        g_debug ("GdmSessionDirect: Opening session");
+-        g_debug ("GdmSessionDirect: Starting conversation");
 +        g_debug ("GdmSessionDirect: starting conversation");
  
 -        start_worker (impl);
@@ -654,7 +606,7 @@ index bb85393..ba7a90e 100644
  }
  
  static void
-@@ -1677,6 +1729,7 @@ send_setup (GdmSessionDirect *session,
+@@ -1733,6 +1785,7 @@ send_setup (GdmSessionDirect *session,
          const char     *display_device;
          const char     *display_hostname;
          const char     *display_x11_authority_file;
@@ -662,7 +614,7 @@ index bb85393..ba7a90e 100644
  
          g_assert (service_name != NULL);
  
-@@ -1714,7 +1767,8 @@ send_setup (GdmSessionDirect *session,
+@@ -1770,7 +1823,8 @@ send_setup (GdmSessionDirect *session,
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &display_hostname);
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &display_x11_authority_file);
  
@@ -672,7 +624,7 @@ index bb85393..ba7a90e 100644
                  g_debug ("GdmSessionDirect: Could not send %s signal", "Setup");
          }
  
-@@ -1732,6 +1786,7 @@ send_setup_for_user (GdmSessionDirect *session,
+@@ -1788,6 +1842,7 @@ send_setup_for_user (GdmSessionDirect *session,
          const char     *display_hostname;
          const char     *display_x11_authority_file;
          const char     *selected_user;
@@ -680,7 +632,7 @@ index bb85393..ba7a90e 100644
  
          g_assert (service_name != NULL);
  
-@@ -1775,7 +1830,8 @@ send_setup_for_user (GdmSessionDirect *session,
+@@ -1831,7 +1886,8 @@ send_setup_for_user (GdmSessionDirect *session,
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &display_x11_authority_file);
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &selected_user);
  
@@ -690,7 +642,7 @@ index bb85393..ba7a90e 100644
                  g_debug ("GdmSessionDirect: Could not send %s signal", "SetupForUser");
          }
  
-@@ -1789,7 +1845,8 @@ gdm_session_direct_setup (GdmSession *session,
+@@ -1845,7 +1901,8 @@ gdm_session_direct_setup (GdmSession *session,
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
  
          g_return_if_fail (session != NULL);
@@ -700,7 +652,7 @@ index bb85393..ba7a90e 100644
  
          send_setup (impl, service_name);
          gdm_session_direct_defaults_changed (impl);
-@@ -1803,7 +1860,8 @@ gdm_session_direct_setup_for_user (GdmSession *session,
+@@ -1859,7 +1916,8 @@ gdm_session_direct_setup_for_user (GdmSession *session,
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
  
          g_return_if_fail (session != NULL);
@@ -710,7 +662,7 @@ index bb85393..ba7a90e 100644
          g_return_if_fail (username != NULL);
  
          gdm_session_direct_select_user (session, username);
-@@ -1816,22 +1874,28 @@ static void
+@@ -1872,22 +1930,28 @@ static void
  gdm_session_direct_authenticate (GdmSession *session)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -743,7 +695,7 @@ index bb85393..ba7a90e 100644
  }
  
  static void
-@@ -1839,16 +1903,19 @@ gdm_session_direct_accredit (GdmSession *session,
+@@ -1895,16 +1959,19 @@ gdm_session_direct_accredit (GdmSession *session,
                               int         cred_flag)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -766,7 +718,7 @@ index bb85393..ba7a90e 100644
                  break;
          default:
                  g_assert_not_reached ();
-@@ -1862,6 +1929,7 @@ send_environment_variable (const char       *key,
+@@ -1918,6 +1985,7 @@ send_environment_variable (const char       *key,
  {
          DBusMessage    *message;
          DBusMessageIter iter;
@@ -774,7 +726,7 @@ index bb85393..ba7a90e 100644
  
          message = dbus_message_new_signal (GDM_SESSION_DBUS_PATH,
                                             GDM_SESSION_DBUS_INTERFACE,
-@@ -1871,7 +1939,8 @@ send_environment_variable (const char       *key,
+@@ -1927,7 +1995,8 @@ send_environment_variable (const char       *key,
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &key);
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &value);
  
@@ -784,7 +736,7 @@ index bb85393..ba7a90e 100644
                  g_debug ("GdmSessionDirect: Could not send %s signal", "SetEnvironmentVariable");
          }
  
-@@ -2004,6 +2073,7 @@ static void
+@@ -2070,6 +2139,7 @@ static void
  gdm_session_direct_start_session (GdmSession *session)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -792,7 +744,7 @@ index bb85393..ba7a90e 100644
          char             *command;
          char             *program;
  
-@@ -2023,7 +2093,8 @@ gdm_session_direct_start_session (GdmSession *session)
+@@ -2089,7 +2159,8 @@ gdm_session_direct_start_session (GdmSession *session)
          setup_session_environment (impl);
          send_environment (impl);
  
@@ -802,7 +754,7 @@ index bb85393..ba7a90e 100644
          g_free (program);
  }
  
-@@ -2036,16 +2107,12 @@ gdm_session_direct_close (GdmSession *session)
+@@ -2102,16 +2173,12 @@ gdm_session_direct_close (GdmSession *session)
  
          g_debug ("GdmSessionDirect: Closing session");
  
@@ -825,7 +777,7 @@ index bb85393..ba7a90e 100644
          }
  
          g_free (impl->priv->selected_user);
-@@ -2083,10 +2150,13 @@ gdm_session_direct_answer_query  (GdmSession *session,
+@@ -2149,10 +2216,13 @@ gdm_session_direct_answer_query  (GdmSession *session,
                                    const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -840,7 +792,7 @@ index bb85393..ba7a90e 100644
  }
  
  static void
-@@ -2096,7 +2166,7 @@ gdm_session_direct_cancel  (GdmSession *session)
+@@ -2162,7 +2232,7 @@ gdm_session_direct_cancel  (GdmSession *session)
  
          g_return_if_fail (session != NULL);
  
@@ -849,7 +801,7 @@ index bb85393..ba7a90e 100644
  }
  
  char *
-@@ -2161,6 +2231,7 @@ gdm_session_direct_select_session (GdmSession *session,
+@@ -2227,6 +2297,7 @@ gdm_session_direct_select_session (GdmSession *session,
                                     const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -857,7 +809,7 @@ index bb85393..ba7a90e 100644
  
          g_free (impl->priv->selected_session);
  
-@@ -2170,7 +2241,8 @@ gdm_session_direct_select_session (GdmSession *session,
+@@ -2236,7 +2307,8 @@ gdm_session_direct_select_session (GdmSession *session,
                  impl->priv->selected_session = g_strdup (text);
          }
  
@@ -867,7 +819,7 @@ index bb85393..ba7a90e 100644
                                   get_session_name (impl));
  }
  
-@@ -2179,6 +2251,7 @@ gdm_session_direct_select_language (GdmSession *session,
+@@ -2245,6 +2317,7 @@ gdm_session_direct_select_language (GdmSession *session,
                                      const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -875,7 +827,7 @@ index bb85393..ba7a90e 100644
  
          g_free (impl->priv->selected_language);
  
-@@ -2188,7 +2261,8 @@ gdm_session_direct_select_language (GdmSession *session,
+@@ -2254,7 +2327,8 @@ gdm_session_direct_select_language (GdmSession *session,
                  impl->priv->selected_language = g_strdup (text);
          }
  
@@ -885,7 +837,7 @@ index bb85393..ba7a90e 100644
                                   get_language_name (impl));
  }
  
-@@ -2197,6 +2271,7 @@ gdm_session_direct_select_layout (GdmSession *session,
+@@ -2263,6 +2337,7 @@ gdm_session_direct_select_layout (GdmSession *session,
                                    const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -893,7 +845,7 @@ index bb85393..ba7a90e 100644
  
          g_free (impl->priv->selected_layout);
  
-@@ -2206,7 +2281,8 @@ gdm_session_direct_select_layout (GdmSession *session,
+@@ -2272,7 +2347,8 @@ gdm_session_direct_select_layout (GdmSession *session,
                  impl->priv->selected_layout = g_strdup (text);
          }
  
@@ -903,55 +855,39 @@ index bb85393..ba7a90e 100644
                                   get_layout_name (impl));
  }
  
-@@ -2466,7 +2542,7 @@ gdm_session_direct_constructor (GType                  type,
- static void
- gdm_session_iface_init (GdmSessionIface *iface)
- {
--        iface->open = gdm_session_direct_open;
-+        iface->start_conversation = gdm_session_direct_start_conversation;
-         iface->setup = gdm_session_direct_setup;
-         iface->setup_for_user = gdm_session_direct_setup_for_user;
-         iface->authenticate = gdm_session_direct_authenticate;
 diff --git a/daemon/gdm-session-private.h b/daemon/gdm-session-private.h
-index 6a6fcfc..074aa6f 100644
+index 7ccf0d7..74b6069 100644
 --- a/daemon/gdm-session-private.h
 +++ b/daemon/gdm-session-private.h
 @@ -27,7 +27,8 @@
  G_BEGIN_DECLS
  
  /* state changes */
--void             _gdm_session_opened                       (GdmSession   *session);
+-void             _gdm_session_conversation_started         (GdmSession   *session);
 +void             _gdm_session_conversation_started         (GdmSession   *session,
 +                                                            const char   *service_name);
  void             _gdm_session_setup_complete               (GdmSession   *session);
  void             _gdm_session_setup_failed                 (GdmSession   *session,
                                                              const char   *message);
 diff --git a/daemon/gdm-session-relay.c b/daemon/gdm-session-relay.c
-index b57bf89..35b4738 100644
+index da0ecb3..a0b4cbf 100644
 --- a/daemon/gdm-session-relay.c
 +++ b/daemon/gdm-session-relay.c
 @@ -180,10 +180,11 @@ send_dbus_void_signal (GdmSessionRelay *session_relay,
  }
  
  static void
--gdm_session_relay_open (GdmSession *session)
+-gdm_session_relay_start_conversation (GdmSession *session)
 +gdm_session_relay_start_conversation (GdmSession *session,
 +                                      const char *service_name)
  {
          GdmSessionRelay *impl = GDM_SESSION_RELAY (session);
--        send_dbus_void_signal (impl, "Open");
+-        send_dbus_void_signal (impl, "StartConversation");
 +        send_dbus_string_signal (impl, "StartConversation", service_name);
  }
  
  static void
-@@ -664,22 +665,28 @@ handle_session_stopped (GdmSessionRelay *session_relay,
- }
- 
- static DBusHandlerResult
--handle_opened (GdmSessionRelay *session_relay,
-+handle_conversation_started (GdmSessionRelay *session_relay,
-                DBusConnection  *connection,
-                DBusMessage     *message)
+@@ -728,8 +729,14 @@ handle_conversation_started (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -964,58 +900,33 @@ index b57bf89..35b4738 100644
 +                g_warning ("ERROR: %s", error.message);
 +        }
  
--        g_debug ("GdmSessionRelay: Opened");
-+        g_debug ("GdmSessionRelay: Conversation Started");
+         g_debug ("GdmSessionRelay: Conversation Started");
  
-         reply = dbus_message_new_method_return (message);
+@@ -737,7 +744,7 @@ handle_conversation_started (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
--        _gdm_session_opened (GDM_SESSION (session_relay));
+-        _gdm_session_conversation_started (GDM_SESSION (session_relay));
 +        _gdm_session_conversation_started (GDM_SESSION (session_relay), service_name);
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -719,8 +726,8 @@ session_handle_child_message (DBusConnection *connection,
-                 return handle_session_started (session_relay, connection, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "SessionStopped")) {
-                 return handle_session_stopped (session_relay, connection, message);
--        } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "Opened")) {
--                return handle_opened (session_relay, connection, message);
-+        } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "ConversationStarted")) {
-+                return handle_conversation_started (session_relay, connection, message);
-         }
- 
-         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-@@ -749,7 +756,8 @@ do_introspect (DBusConnection *connection,
-         /* interface */
+@@ -812,6 +819,7 @@ do_introspect (DBusConnection *connection,
          xml = g_string_append (xml,
                                 "  <interface name=\"org.gnome.DisplayManager.SessionRelay\">\n"
--                               "    <method name=\"Opened\">\n"
-+                               "    <method name=\"ConversationStarted\">\n"
+                                "    <method name=\"ConversationStarted\">\n"
 +                               "      <arg name=\"service_name\" direction=\"in\" type=\"s\"/>\n"
                                 "    </method>\n"
                                 "    <method name=\"SetupComplete\">\n"
                                 "    </method>\n"
-@@ -810,7 +818,8 @@ do_introspect (DBusConnection *connection,
-                                "    <signal name=\"RefreshCredentials\">\n"
+@@ -873,6 +881,7 @@ do_introspect (DBusConnection *connection,
                                 "    </signal>\n"
  
--                               "    <signal name=\"Open\">\n"
-+                               "    <signal name=\"StartConversation\">\n"
+                                "    <signal name=\"StartConversation\">\n"
 +                               "      <arg name=\"service_name\" type=\"s\"/>\n"
                                 "    </signal>\n"
                                 "    <signal name=\"Close\">\n"
                                 "    </signal>\n"
-@@ -1106,7 +1115,7 @@ static void
- gdm_session_iface_init (GdmSessionIface *iface)
- {
- 
--        iface->open = gdm_session_relay_open;
-+        iface->start_conversation = gdm_session_relay_start_conversation;
-         iface->setup = gdm_session_relay_setup;
-         iface->setup_for_user = gdm_session_relay_setup_for_user;
-         iface->authenticate = gdm_session_relay_authenticate;
 diff --git a/daemon/gdm-session-worker-job.c b/daemon/gdm-session-worker-job.c
 index 633d6e2..9c020fa 100644
 --- a/daemon/gdm-session-worker-job.c
@@ -1048,45 +959,26 @@ index 5ad1c92..d24f025 100644
  
  #endif /* __GDM_SESSION_WORKER_JOB_H */
 diff --git a/daemon/gdm-session.c b/daemon/gdm-session.c
-index feb7938..0073294 100644
+index 1e2af92..1820e29 100644
 --- a/daemon/gdm-session.c
 +++ b/daemon/gdm-session.c
-@@ -28,7 +28,7 @@
- #include "gdm-session-private.h"
- 
- enum {
--        OPENED = 0,
-+        CONVERSATION_STARTED = 0,
-         SETUP_COMPLETE,
-         SETUP_FAILED,
-         RESET_COMPLETE,
-@@ -78,11 +78,12 @@ gdm_session_get_type (void)
+@@ -80,11 +80,12 @@ gdm_session_get_type (void)
  }
  
  void
--gdm_session_open (GdmSession *session)
+-gdm_session_start_conversation (GdmSession *session)
 +gdm_session_start_conversation (GdmSession *session,
 +                                const char *service_name)
  {
          g_return_if_fail (GDM_IS_SESSION (session));
  
--        GDM_SESSION_GET_IFACE (session)->open (session);
+-        GDM_SESSION_GET_IFACE (session)->start_conversation (session);
 +        GDM_SESSION_GET_IFACE (session)->start_conversation (session, service_name);
  }
  
  void
-@@ -203,14 +204,14 @@ gdm_session_class_init (gpointer g_iface)
- {
-         GType iface_type = G_TYPE_FROM_INTERFACE (g_iface);
- 
--        signals [OPENED] =
--                g_signal_new ("opened",
-+        signals [CONVERSATION_STARTED] =
-+                g_signal_new ("conversation-started",
-                               iface_type,
-                               G_SIGNAL_RUN_FIRST,
--                              G_STRUCT_OFFSET (GdmSessionIface, opened),
-+                              G_STRUCT_OFFSET (GdmSessionIface, conversation_started),
+@@ -220,7 +221,7 @@ gdm_session_class_init (gpointer g_iface)
+                               G_STRUCT_OFFSET (GdmSessionIface, conversation_started),
                                NULL,
                                NULL,
 -                              g_cclosure_marshal_VOID__VOID,
@@ -1094,119 +986,110 @@ index feb7938..0073294 100644
                                G_TYPE_NONE,
                                0);
          signals [SETUP_COMPLETE] =
-@@ -608,10 +609,11 @@ _gdm_session_session_died (GdmSession   *session,
+@@ -654,10 +655,11 @@ _gdm_session_session_died (GdmSession   *session,
  }
  
  void
--_gdm_session_opened (GdmSession   *session)
+-_gdm_session_conversation_started (GdmSession   *session)
 +_gdm_session_conversation_started (GdmSession   *session,
 +                                   const char   *service_name)
  {
          g_return_if_fail (GDM_IS_SESSION (session));
--        g_signal_emit (session, signals [OPENED], 0);
+-        g_signal_emit (session, signals [CONVERSATION_STARTED], 0);
 +        g_signal_emit (session, signals [CONVERSATION_STARTED], 0, service_name);
  }
  
  void
 diff --git a/daemon/gdm-session.h b/daemon/gdm-session.h
-index dfb7e27..77e0cf6 100644
+index fb199d3..00c2fa4 100644
 --- a/daemon/gdm-session.h
 +++ b/daemon/gdm-session.h
 @@ -45,7 +45,8 @@ struct _GdmSessionIface
          GTypeInterface base_iface;
  
          /* Methods */
--        void (* open)                        (GdmSession   *session);
+-        void (* start_conversation)          (GdmSession   *session);
 +        void (* start_conversation)          (GdmSession   *session,
 +                                              const char   *service_name);
          void (* setup)                       (GdmSession   *session,
                                                const char   *service_name);
          void (* setup_for_user)              (GdmSession   *session,
-@@ -103,7 +104,8 @@ struct _GdmSessionIface
+@@ -107,7 +108,8 @@ struct _GdmSessionIface
                                                int           exit_code);
          void (* session_died)                (GdmSession   *session,
                                                int           signal_number);
--        void (* opened)                      (GdmSession   *session);
+-        void (* conversation_started)        (GdmSession   *session);
 +        void (* conversation_started)        (GdmSession   *session,
 +                                              const char   *service_name);
          void (* closed)                      (GdmSession   *session);
          void (* selected_user_changed)       (GdmSession   *session,
                                                const char   *text);
-@@ -118,7 +120,8 @@ struct _GdmSessionIface
+@@ -122,7 +124,8 @@ struct _GdmSessionIface
  
  GType    gdm_session_get_type                    (void) G_GNUC_CONST;
  
--void     gdm_session_open                        (GdmSession *session);
+-void     gdm_session_start_conversation          (GdmSession *session);
 +void     gdm_session_start_conversation          (GdmSession *session,
 +                                                  const char *service_name);
  void     gdm_session_setup                       (GdmSession *session,
                                                    const char *service_name);
  void     gdm_session_setup_for_user              (GdmSession *session,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 3bf3835..5179f51 100644
+index 59e3530..08f88b7 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -179,7 +179,6 @@ reset_session (GdmSimpleSlave *slave)
  {
          destroy_session (slave);
          create_new_session (slave);
--        gdm_session_open (GDM_SESSION (slave->priv->session));
+-        gdm_session_start_conversation (GDM_SESSION (slave->priv->session));
  }
  
  static gboolean
-@@ -833,8 +832,6 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
+@@ -862,8 +861,6 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
  
          g_debug ("GdmSimpleSlave: Greeter connected");
  
--        gdm_session_open (GDM_SESSION (slave->priv->session));
+-        gdm_session_start_conversation (GDM_SESSION (slave->priv->session));
 -
          g_object_get (slave,
                        "display-is-local", &display_is_local,
                        NULL);
 diff --git a/daemon/test-session.c b/daemon/test-session.c
-index c6a158c..d9fa26e 100644
+index 9a4d7cf..ed13ff7 100644
 --- a/daemon/test-session.c
 +++ b/daemon/test-session.c
-@@ -33,12 +33,13 @@
- static GMainLoop *loop;
+@@ -34,11 +34,12 @@ static GMainLoop *loop;
  
  static void
--on_open (GdmSession *session,
--         const char *username)
-+on_conversation_started (GdmSession *session,
+ on_conversation_started (GdmSession *session,
 +                         const char *service_name,
-+                         const char *username)
+                          const char *username)
  {
-         g_debug ("Got opened: calling setup...");
+         g_debug ("Got conversation started: calling setup...");
  
 -        gdm_session_setup (session, "gdm");
 +        gdm_session_setup (session, service_name);
  }
  
  static void
-@@ -256,11 +257,11 @@ main (int   argc,
+@@ -256,7 +257,7 @@ main (int   argc,
                          username = argv[1];
                  }
  
--                gdm_session_open (GDM_SESSION (session));
+-                gdm_session_start_conversation (GDM_SESSION (session));
 +                gdm_session_start_conversation (GDM_SESSION (session), "gdm");
  
                  g_signal_connect (session,
--                                  "opened",
--                                  G_CALLBACK (on_open),
-+                                  "conversation-started",
-+                                  G_CALLBACK (on_conversation_started),
-                                   username);
-                 g_signal_connect (session,
-                                   "setup-complete",
+                                   "conversation-started",
 -- 
-1.6.6
+1.7.0.1
 
 
-From 150d2f09141849042c62a1be96b40a0fe51a3eed Mon Sep 17 00:00:00 2001
+From 2ea9e937438d49f6287e2ea00f016ff692c4fc16 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Feb 2009 10:55:03 -0500
-Subject: [PATCH 02/50] Rename session worker to the service it's managing
+Subject: [PATCH 02/47] Rename session worker to the service it's managing
 
 This way when we're running multiple PAM conversations at once
 it will be obvious which worker is managing which conversation.
@@ -1217,10 +1100,10 @@ it will be obvious which worker is managing which conversation.
  3 files changed, 57 insertions(+), 16 deletions(-)
 
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index ba7a90e..fbb6fea 100644
+index dff3e68..abc3c9d 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
-@@ -1644,6 +1644,7 @@ start_conversation (GdmSessionDirect *session,
+@@ -1700,6 +1700,7 @@ start_conversation (GdmSessionDirect *session,
                      const char       *service_name)
  {
          GdmSessionConversation *conversation;
@@ -1228,7 +1111,7 @@ index ba7a90e..fbb6fea 100644
  
          conversation = g_new0 (GdmSessionConversation, 1);
          conversation->session = session;
-@@ -1664,12 +1665,16 @@ start_conversation (GdmSessionDirect *session,
+@@ -1720,12 +1721,16 @@ start_conversation (GdmSessionDirect *session,
                            G_CALLBACK (worker_died),
                            conversation);
  
@@ -1389,13 +1272,13 @@ index d24f025..4833f23 100644
  
  GPid                    gdm_session_worker_job_get_pid            (GdmSessionWorkerJob *session_worker_job);
 -- 
-1.6.6
+1.7.0.1
 
 
-From 5a7f392f5e82171e06be87aedd4a728fbfc3ce44 Mon Sep 17 00:00:00 2001
+From 3bfd8954024306167813532c0f641f19b1fbde18 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 13:01:48 -0500
-Subject: [PATCH 03/50] Make greeter explicitly request PAM conversation
+Subject: [PATCH 03/47] Make greeter explicitly request PAM conversation
 
 Now the greeter has to say what PAM stack it wants the slave to
 run.  When that stack is ready, we emit the Ready signal as
@@ -1410,19 +1293,19 @@ come back one-by-one.
  daemon/gdm-factory-slave.c               |    3 +-
  daemon/gdm-greeter-server.c              |   53 ++++++++++++++++++++++++++++--
  daemon/gdm-greeter-server.h              |    5 ++-
- daemon/gdm-simple-slave.c                |   32 ++++++++++++++----
+ daemon/gdm-simple-slave.c                |   22 +++++++++++-
  gui/simple-greeter/gdm-greeter-client.c  |   18 ++++++----
  gui/simple-greeter/gdm-greeter-client.h  |    4 ++-
  gui/simple-greeter/gdm-greeter-session.c |    4 ++
- 7 files changed, 99 insertions(+), 20 deletions(-)
+ 7 files changed, 94 insertions(+), 15 deletions(-)
 
 diff --git a/daemon/gdm-factory-slave.c b/daemon/gdm-factory-slave.c
-index 6497293..d1bb5dd 100644
+index bd98445..ca3ba48 100644
 --- a/daemon/gdm-factory-slave.c
 +++ b/daemon/gdm-factory-slave.c
 @@ -186,7 +186,8 @@ on_session_conversation_started (GdmSession      *session,
  {
-         g_debug ("GdmFactorySlave:  session conversation started");
+         g_debug ("GdmFactorySlave: session conversation started");
  
 -        gdm_greeter_server_ready (slave->priv->greeter_server);
 +        gdm_greeter_server_ready (slave->priv->greeter_server,
@@ -1562,26 +1445,20 @@ index 6e92100..7333db1 100644
                                                                const char       *text);
  void                gdm_greeter_server_default_language_name_changed (GdmGreeterServer *greeter_server,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 5179f51..4144536 100644
+index 08f88b7..a42c38f 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
-@@ -495,17 +495,19 @@ on_session_secret_info_query (GdmSession     *session,
- }
+@@ -517,6 +517,7 @@ on_session_secret_info_query (GdmSession     *session,
  
  static void
--on_session_opened (GdmSession     *session,
--                   GdmSimpleSlave *slave)
-+on_session_conversation_started (GdmSession     *session,
+ on_session_conversation_started (GdmSession     *session,
 +                                 const char     *service_name,
-+                                 GdmSimpleSlave *slave)
+                                  GdmSimpleSlave *slave)
  {
          gboolean res;
-         gboolean enabled;
-         char    *username;
-         int      delay;
+@@ -526,7 +527,8 @@ on_session_conversation_started (GdmSession     *session,
  
--        g_debug ("GdmSimpleSlave: session opened");
-+        g_debug ("GdmSimpleSlave: conversation started");
+         g_debug ("GdmSimpleSlave: session conversation started");
          if (slave->priv->greeter_server != NULL) {
 -                res = gdm_greeter_server_ready (slave->priv->greeter_server);
 +                res = gdm_greeter_server_ready (slave->priv->greeter_server,
@@ -1589,7 +1466,7 @@ index 5179f51..4144536 100644
                  if (! res) {
                          g_warning ("Unable to send ready");
                  }
-@@ -521,8 +523,10 @@ on_session_opened (GdmSession     *session,
+@@ -542,8 +544,10 @@ on_session_conversation_started (GdmSession     *session,
                  gdm_greeter_server_request_timed_login (slave->priv->greeter_server, username, delay);
          } else {
                  g_debug ("GdmSimpleSlave: begin auto login for user '%s'", username);
@@ -1601,18 +1478,7 @@ index 5179f51..4144536 100644
                                              username);
          }
  
-@@ -614,8 +618,8 @@ create_new_session (GdmSimpleSlave *slave)
-         g_free (display_hostname);
- 
-         g_signal_connect (slave->priv->session,
--                          "opened",
--                          G_CALLBACK (on_session_opened),
-+                          "conversation-started",
-+                          G_CALLBACK (on_session_conversation_started),
-                           slave);
-         g_signal_connect (slave->priv->session,
-                           "setup-complete",
-@@ -746,6 +750,16 @@ on_greeter_session_died (GdmGreeterSession    *greeter,
+@@ -775,6 +779,16 @@ on_greeter_session_died (GdmGreeterSession    *greeter,
  }
  
  static void
@@ -1629,7 +1495,7 @@ index 5179f51..4144536 100644
  on_greeter_begin_verification (GdmGreeterServer *greeter_server,
                                 GdmSimpleSlave   *slave)
  {
-@@ -920,6 +934,10 @@ start_greeter (GdmSimpleSlave *slave)
+@@ -949,6 +963,10 @@ start_greeter (GdmSimpleSlave *slave)
  
          slave->priv->greeter_server = gdm_greeter_server_new (display_id);
          g_signal_connect (slave->priv->greeter_server,
@@ -1735,13 +1601,51 @@ index e7d206a..cd0cbdf 100644
  
          return res;
 -- 
-1.6.6
+1.7.0.1
 
 
-From dc6fd102aadd00b96b9f23b7cf88c2d42716474c Mon Sep 17 00:00:00 2001
+From ab835c20419bcc61b4b60e8fc6c2d00f6a267496 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Wed, 4 Mar 2009 22:09:21 -0500
+Subject: [PATCH 04/47] start autologin conversation when creating session if necessary
+
+Without this autologin breaks, since when it comes time to
+autologin, there's no worker to do it.
+---
+ daemon/gdm-simple-slave.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
+index a42c38f..9c3eb36 100644
+--- a/daemon/gdm-simple-slave.c
++++ b/daemon/gdm-simple-slave.c
+@@ -1076,8 +1076,18 @@ idle_connect_to_display (GdmSimpleSlave *slave)
+                 if (! enabled || delay > 0) {
+                         start_greeter (slave);
+                         create_new_session (slave);
++
++                        if (enabled) {
++                                g_debug ("GdmSimpleSlave: Starting timed login conversation");
++                                gdm_session_start_conversation (GDM_SESSION (slave->priv->session),
++                                                                "gdm-autologin");
++                        }
+                 } else {
+                         reset_session (slave);
++
++                        g_debug ("GdmSimpleSlave: Starting automatic login conversation");
++                        gdm_session_start_conversation (GDM_SESSION (slave->priv->session),
++                                                        "gdm-autologin");
+                 }
+         } else {
+                 if (slave->priv->connection_attempts >= MAX_CONNECT_ATTEMPTS) {
+-- 
+1.7.0.1
+
+
+From d25daddaa06df47927d9d7797bb1fdaeedca724f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 15:18:31 -0500
-Subject: [PATCH 04/50] Store multiple conversations in the session
+Subject: [PATCH 05/47] Store multiple conversations in the session
 
 We keep multiple conversations in the session now, keyed off of
 PAM service is at the other end.  Much of the guts still
@@ -1751,7 +1655,7 @@ only operate on the first conversation added though.
  1 files changed, 106 insertions(+), 17 deletions(-)
 
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index fbb6fea..d8f338f 100644
+index abc3c9d..5281b2b 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
 @@ -89,6 +89,7 @@ struct _GdmSessionDirectPrivate
@@ -1762,7 +1666,7 @@ index fbb6fea..d8f338f 100644
  
          GdmSessionWorkerJob *job;
          GPid                 session_pid;
-@@ -1493,6 +1494,42 @@ allow_user_function (DBusConnection *connection,
+@@ -1549,6 +1550,42 @@ allow_user_function (DBusConnection *connection,
          return FALSE;
  }
  
@@ -1805,7 +1709,7 @@ index fbb6fea..d8f338f 100644
  static void
  handle_connection (DBusServer      *server,
                     DBusConnection  *new_connection,
-@@ -1500,10 +1537,22 @@ handle_connection (DBusServer      *server,
+@@ -1556,10 +1593,22 @@ handle_connection (DBusServer      *server,
  {
          GdmSessionDirect *session = GDM_SESSION_DIRECT (user_data);
          GdmSessionConversation *conversation;
@@ -1829,7 +1733,7 @@ index fbb6fea..d8f338f 100644
          if (conversation->worker_connection == NULL) {
                  DBusObjectPathVTable vtable = { &session_unregister_handler,
                                                  &session_message_handler,
-@@ -1576,6 +1625,17 @@ setup_server (GdmSessionDirect *session)
+@@ -1632,6 +1681,17 @@ setup_server (GdmSessionDirect *session)
  }
  
  static void
@@ -1847,7 +1751,7 @@ index fbb6fea..d8f338f 100644
  gdm_session_direct_init (GdmSessionDirect *session)
  {
          session->priv = G_TYPE_INSTANCE_GET_PRIVATE (session,
-@@ -1599,6 +1659,11 @@ gdm_session_direct_init (GdmSessionDirect *session)
+@@ -1655,6 +1715,11 @@ gdm_session_direct_init (GdmSessionDirect *session)
                            G_CALLBACK (on_session_exited),
                            NULL);
  
@@ -1859,7 +1763,7 @@ index fbb6fea..d8f338f 100644
          session->priv->environment = g_hash_table_new_full (g_str_hash,
                                                              g_str_equal,
                                                              (GDestroyNotify) g_free,
-@@ -1698,17 +1763,15 @@ stop_conversation (GdmSessionConversation *conversation)
+@@ -1754,17 +1819,15 @@ stop_conversation (GdmSessionConversation *conversation)
                                                G_CALLBACK (worker_died),
                                                conversation);
  
@@ -1879,7 +1783,7 @@ index fbb6fea..d8f338f 100644
  }
  
  static void
-@@ -1716,12 +1779,20 @@ gdm_session_direct_start_conversation (GdmSession *session,
+@@ -1772,12 +1835,20 @@ gdm_session_direct_start_conversation (GdmSession *session,
                                         const char *service_name)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -1901,7 +1805,7 @@ index fbb6fea..d8f338f 100644
  }
  
  static void
-@@ -1772,8 +1843,8 @@ send_setup (GdmSessionDirect *session,
+@@ -1828,8 +1899,8 @@ send_setup (GdmSessionDirect *session,
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &display_hostname);
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &display_x11_authority_file);
  
@@ -1912,7 +1816,7 @@ index fbb6fea..d8f338f 100644
                  g_debug ("GdmSessionDirect: Could not send %s signal", "Setup");
          }
  
-@@ -1835,8 +1906,8 @@ send_setup_for_user (GdmSessionDirect *session,
+@@ -1891,8 +1962,8 @@ send_setup_for_user (GdmSessionDirect *session,
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &display_x11_authority_file);
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &selected_user);
  
@@ -1923,7 +1827,7 @@ index fbb6fea..d8f338f 100644
                  g_debug ("GdmSessionDirect: Could not send %s signal", "SetupForUser");
          }
  
-@@ -1850,8 +1921,6 @@ gdm_session_direct_setup (GdmSession *session,
+@@ -1906,8 +1977,6 @@ gdm_session_direct_setup (GdmSession *session,
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
  
          g_return_if_fail (session != NULL);
@@ -1932,7 +1836,7 @@ index fbb6fea..d8f338f 100644
  
          send_setup (impl, service_name);
          gdm_session_direct_defaults_changed (impl);
-@@ -1865,8 +1934,6 @@ gdm_session_direct_setup_for_user (GdmSession *session,
+@@ -1921,8 +1990,6 @@ gdm_session_direct_setup_for_user (GdmSession *session,
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
  
          g_return_if_fail (session != NULL);
@@ -1941,7 +1845,7 @@ index fbb6fea..d8f338f 100644
          g_return_if_fail (username != NULL);
  
          gdm_session_direct_select_user (session, username);
-@@ -2104,6 +2171,28 @@ gdm_session_direct_start_session (GdmSession *session)
+@@ -2170,6 +2237,28 @@ gdm_session_direct_start_session (GdmSession *session)
  }
  
  static void
@@ -1970,7 +1874,7 @@ index fbb6fea..d8f338f 100644
  gdm_session_direct_close (GdmSession *session)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
-@@ -2120,6 +2209,8 @@ gdm_session_direct_close (GdmSession *session)
+@@ -2186,6 +2275,8 @@ gdm_session_direct_close (GdmSession *session)
                                             impl->priv->display_device);
          }
  
@@ -1979,7 +1883,7 @@ index fbb6fea..d8f338f 100644
          g_free (impl->priv->selected_user);
          impl->priv->selected_user = NULL;
  
-@@ -2167,11 +2258,9 @@ gdm_session_direct_answer_query  (GdmSession *session,
+@@ -2233,11 +2324,9 @@ gdm_session_direct_answer_query  (GdmSession *session,
  static void
  gdm_session_direct_cancel  (GdmSession *session)
  {
@@ -1993,74 +1897,36 @@ index fbb6fea..d8f338f 100644
  
  char *
 -- 
-1.6.6
+1.7.0.1
 
 
-From fe4b7090ee1d6920e470df15cf6cd6df483530d3 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 4 Mar 2009 22:09:21 -0500
-Subject: [PATCH 05/50] start autologin conversation when creating session if necessary
-
-Without this autologin breaks, since when it comes time to
-autologin, there's no worker to do it.
----
- daemon/gdm-simple-slave.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 4144536..f70ed88 100644
---- a/daemon/gdm-simple-slave.c
-+++ b/daemon/gdm-simple-slave.c
-@@ -1047,8 +1047,18 @@ idle_connect_to_display (GdmSimpleSlave *slave)
-                 if (! enabled || delay > 0) {
-                         start_greeter (slave);
-                         create_new_session (slave);
-+
-+                        if (enabled) {
-+                                g_debug ("GdmSimpleSlave: Starting timed login conversation");
-+                                gdm_session_start_conversation (GDM_SESSION (slave->priv->session),
-+                                                                "gdm-autologin");
-+                        }
-                 } else {
-                         reset_session (slave);
-+
-+                        g_debug ("GdmSimpleSlave: Starting automatic login conversation");
-+                        gdm_session_start_conversation (GDM_SESSION (slave->priv->session),
-+                                                        "gdm-autologin");
-                 }
-         } else {
-                 if (slave->priv->connection_attempts >= MAX_CONNECT_ATTEMPTS) {
--- 
-1.6.6
-
-
-From 64ac77149c45408416279382565d61123dcbeff4 Mon Sep 17 00:00:00 2001
+From 8160da651f6d638cd4b75a8bfb8ae5b83fa4e593 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 22 Jan 2009 08:52:01 -0500
-Subject: [PATCH 06/50] Propagate service name to more layers
+Subject: [PATCH 06/47] Propagate service name to more layers
 
 This is more prep work to get multiple concurrent
 PAM stacks going.
 ---
- daemon/gdm-factory-slave.c               |   63 +++--
+ daemon/gdm-factory-slave.c               |   69 +++--
  daemon/gdm-greeter-server.c              |  120 ++++++--
  daemon/gdm-greeter-server.h              |   17 +-
- daemon/gdm-product-slave.c               |  233 ++++++++++++---
- daemon/gdm-session-direct.c              |  472 +++++++++++++++++-------------
- daemon/gdm-session-private.h             |   22 ++-
- daemon/gdm-session-relay.c               |  122 ++++++--
+ daemon/gdm-product-slave.c               |  246 ++++++++++++---
+ daemon/gdm-session-direct.c              |  498 +++++++++++++++++------------
+ daemon/gdm-session-private.h             |   26 ++-
+ daemon/gdm-session-relay.c               |  135 +++++++--
  daemon/gdm-session-worker.c              |   27 ++
- daemon/gdm-session.c                     |  151 ++++++----
- daemon/gdm-session.h                     |   44 +++-
- daemon/gdm-simple-slave.c                |   70 ++++--
+ daemon/gdm-session.c                     |  175 ++++++-----
+ daemon/gdm-session.h                     |   54 +++-
+ daemon/gdm-simple-slave.c                |   78 ++++--
  daemon/test-session.c                    |   22 +-
- gui/simple-greeter/gdm-greeter-client.c  |  188 ++++++++++---
+ gui/simple-greeter/gdm-greeter-client.c  |  188 +++++++++---
  gui/simple-greeter/gdm-greeter-client.h  |   16 +-
  gui/simple-greeter/gdm-greeter-session.c |   11 +-
- 15 files changed, 1125 insertions(+), 453 deletions(-)
+ 15 files changed, 1191 insertions(+), 491 deletions(-)
 
 diff --git a/daemon/gdm-factory-slave.c b/daemon/gdm-factory-slave.c
-index d1bb5dd..826612e 100644
+index ca3ba48..553ae3a 100644
 --- a/daemon/gdm-factory-slave.c
 +++ b/daemon/gdm-factory-slave.c
 @@ -144,45 +144,49 @@ on_greeter_session_died (GdmGreeterSession    *greeter,
@@ -2117,7 +1983,7 @@ index d1bb5dd..826612e 100644
 +                                 const char      *service_name,
 +                                 GdmFactorySlave *slave)
  {
-         g_debug ("GdmFactorySlave:  session conversation started");
+         g_debug ("GdmFactorySlave: session conversation started");
  
 @@ -192,17 +196,19 @@ on_session_conversation_started (GdmSession      *session,
  
@@ -2170,7 +2036,7 @@ index d1bb5dd..826612e 100644
                         GdmFactorySlave *slave)
  {
          int flag;
-@@ -248,39 +257,42 @@ on_session_authorized (GdmSession      *session,
+@@ -248,60 +257,65 @@ on_session_authorized (GdmSession      *session,
          /* FIXME: check for migration? */
          flag = GDM_SESSION_CRED_ESTABLISH;
  
@@ -2197,10 +2063,8 @@ index d1bb5dd..826612e 100644
  {
          g_debug ("GdmFactorySlave:  session user verified");
  
--        gdm_session_start_session (session);
-+        gdm_session_start_session (session, service_name);
- 
-         gdm_greeter_server_reset (slave->priv->greeter_server);
+-        gdm_session_open_session (session);
++        gdm_session_open_session (session, service_name);
  }
  
  static void
@@ -2217,7 +2081,34 @@ index d1bb5dd..826612e 100644
  
          queue_greeter_reset (slave);
  }
-@@ -368,37 +380,48 @@ on_session_relay_connected (GdmSessionRelay *session,
+ 
+ static void
+ on_session_opened (GdmSession      *session,
++                   const char      *service_name,
+                    GdmFactorySlave *slave)
+ {
+         g_debug ("GdmFactorySlave: session opened");
+ 
+-        gdm_session_start_session (session);
++        gdm_session_start_session (session, service_name);
+ 
+         gdm_greeter_server_reset (slave->priv->greeter_server);
+ }
+ 
+ static void
+ on_session_open_failed (GdmSession      *session,
++                        const char      *service_name,
+                         const char      *message,
+                         GdmFactorySlave *slave)
+ {
+         g_debug ("GdmFactorySlave: could not open session: %s", message);
+ 
+-        gdm_greeter_server_problem (slave->priv->greeter_server, _("Unable to open session"));
++        gdm_greeter_server_problem (slave->priv->greeter_server, service_name, _("Unable to open session"));
+ 
+         queue_greeter_reset (slave);
+ }
+@@ -389,37 +403,48 @@ on_session_relay_connected (GdmSessionRelay *session,
                              GdmFactorySlave *slave)
  {
          g_debug ("GdmFactorySlave: Relay Connected");
@@ -2270,7 +2161,7 @@ index d1bb5dd..826612e 100644
  }
  
  static void
-@@ -495,6 +518,10 @@ run_greeter (GdmFactorySlave *slave)
+@@ -516,6 +541,10 @@ run_greeter (GdmFactorySlave *slave)
  
          slave->priv->greeter_server = gdm_greeter_server_new (display_id);
          g_signal_connect (slave->priv->greeter_server,
@@ -2679,7 +2570,7 @@ index 7333db1..6d0dd87 100644
  G_END_DECLS
  
 diff --git a/daemon/gdm-product-slave.c b/daemon/gdm-product-slave.c
-index 15a2820..dd2e1bc 100644
+index ec6300d..93d83a1 100644
 --- a/daemon/gdm-product-slave.c
 +++ b/daemon/gdm-product-slave.c
 @@ -79,6 +79,8 @@ struct GdmProductSlavePrivate
@@ -2770,7 +2661,7 @@ index 15a2820..dd2e1bc 100644
  
          return TRUE;
  }
-@@ -508,96 +573,112 @@ on_session_reset_failed (GdmSession      *session,
+@@ -508,114 +573,133 @@ on_session_reset_failed (GdmSession      *session,
  
  static void
  on_session_authenticated (GdmSession      *session,
@@ -2851,6 +2742,32 @@ index 15a2820..dd2e1bc 100644
  }
  
  static void
+ on_session_opened (GdmSession      *session,
++                   const char      *service_name,
+                    GdmProductSlave *slave)
+ {
+-        send_dbus_void_method (slave->priv->session_relay_connection,
+-                               "SessionOpened");
++        send_dbus_string_method (slave->priv->session_relay_connection,
++                                 "SessionOpened", service_name);
+ }
+ 
+ static void
+ on_session_open_failed (GdmSession      *session,
++                        const char      *service_name,
+                         const char      *message,
+                         GdmProductSlave *slave)
+ {
+-        send_dbus_string_method (slave->priv->session_relay_connection,
+-                                 "SessionOpenFailed",
+-                                 message);
++        send_dbus_string_string_method (slave->priv->session_relay_connection,
++                                        "SessionOpenFailed",
++                                        service_name,
++                                        message);
+ }
+ 
+ static void
  on_session_info (GdmSession      *session,
 +                 const char      *service_name,
                   const char      *text,
@@ -2910,7 +2827,7 @@ index 15a2820..dd2e1bc 100644
  }
  
  static void
-@@ -658,36 +739,92 @@ static void
+@@ -676,36 +760,92 @@ static void
  on_relay_authenticate (GdmProductSlave *slave,
                         DBusMessage     *message)
  {
@@ -3011,7 +2928,7 @@ index 15a2820..dd2e1bc 100644
  }
  
  static void
-@@ -696,16 +833,18 @@ on_relay_answer_query (GdmProductSlave *slave,
+@@ -714,16 +854,18 @@ on_relay_answer_query (GdmProductSlave *slave,
  {
          DBusError   error;
          const char *text;
@@ -3031,7 +2948,7 @@ index 15a2820..dd2e1bc 100644
          } else {
                  g_warning ("Unable to get arguments: %s", error.message);
                  dbus_error_free (&error);
-@@ -813,7 +952,25 @@ static void
+@@ -831,7 +973,25 @@ static void
  on_relay_start_session (GdmProductSlave *slave,
                          DBusMessage     *message)
  {
@@ -3059,7 +2976,7 @@ index 15a2820..dd2e1bc 100644
  
  static void
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index d8f338f..4789e1d 100644
+index 5281b2b..168bf73 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
 @@ -88,10 +88,10 @@ struct _GdmSessionDirectPrivate
@@ -3488,13 +3405,57 @@ index d8f338f..4789e1d 100644
  }
  
  static DBusHandlerResult
+ gdm_session_direct_handle_session_opened (GdmSessionDirect *session,
+-                                          DBusConnection   *connection,
++                                          GdmSessionConversation *conversation,
+                                           DBusMessage      *message)
+ {
+         DBusMessage *reply;
+@@ -986,10 +995,10 @@ gdm_session_direct_handle_session_opened (GdmSessionDirect *session,
+ 
+         g_debug ("GdmSessionDirect: Emitting 'session-opened' signal");
+ 
+-        _gdm_session_session_opened (GDM_SESSION (session));
++        _gdm_session_session_opened (GDM_SESSION (session), conversation->service_name);
+ 
+         reply = dbus_message_new_method_return (message);
+-        dbus_connection_send (connection, reply, NULL);
++        dbus_connection_send (conversation->worker_connection, reply, NULL);
+         dbus_message_unref (reply);
+ 
+         return DBUS_HANDLER_RESULT_HANDLED;
+@@ -997,7 +1006,7 @@ gdm_session_direct_handle_session_opened (GdmSessionDirect *session,
+ 
+ static DBusHandlerResult
+ gdm_session_direct_handle_open_failed (GdmSessionDirect *session,
+-                                       DBusConnection   *connection,
++                                       GdmSessionConversation *conversation,
+                                        DBusMessage      *message)
+ {
+         DBusMessage *reply;
+@@ -1012,18 +1021,18 @@ gdm_session_direct_handle_open_failed (GdmSessionDirect *session,
+         }
+ 
+         reply = dbus_message_new_method_return (message);
+-        dbus_connection_send (connection, reply, NULL);
++        dbus_connection_send (conversation->worker_connection, reply, NULL);
+         dbus_message_unref (reply);
+ 
+         g_debug ("GdmSessionDirect: Emitting 'session-open-failed' signal");
+-        _gdm_session_session_open_failed (GDM_SESSION (session), text);
++        _gdm_session_session_open_failed (GDM_SESSION (session), conversation->service_name, text);
+ 
+         return DBUS_HANDLER_RESULT_HANDLED;
+ }
+ 
+ static DBusHandlerResult
  gdm_session_direct_handle_session_started (GdmSessionDirect *session,
 -                                           DBusConnection   *connection,
 +                                           GdmSessionConversation *conversation,
                                             DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -990,7 +999,7 @@ gdm_session_direct_handle_session_started (GdmSessionDirect *session,
+@@ -1042,7 +1051,7 @@ gdm_session_direct_handle_session_started (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3503,7 +3464,7 @@ index d8f338f..4789e1d 100644
          dbus_message_unref (reply);
  
          g_debug ("GdmSessionDirect: Emitting 'session-started' signal with pid '%d'",
-@@ -999,14 +1008,14 @@ gdm_session_direct_handle_session_started (GdmSessionDirect *session,
+@@ -1051,14 +1060,14 @@ gdm_session_direct_handle_session_started (GdmSessionDirect *session,
          session->priv->session_pid = pid;
          session->priv->is_running = TRUE;
  
@@ -3520,7 +3481,7 @@ index d8f338f..4789e1d 100644
                                          DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -1021,18 +1030,18 @@ gdm_session_direct_handle_start_failed (GdmSessionDirect *session,
+@@ -1073,18 +1082,18 @@ gdm_session_direct_handle_start_failed (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3542,7 +3503,7 @@ index d8f338f..4789e1d 100644
                                            DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -1047,7 +1056,7 @@ gdm_session_direct_handle_session_exited (GdmSessionDirect *session,
+@@ -1099,7 +1108,7 @@ gdm_session_direct_handle_session_exited (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3551,7 +3512,7 @@ index d8f338f..4789e1d 100644
          dbus_message_unref (reply);
  
          g_debug ("GdmSessionDirect: Emitting 'session-exited' signal with exit code '%d'",
-@@ -1061,7 +1070,7 @@ gdm_session_direct_handle_session_exited (GdmSessionDirect *session,
+@@ -1113,7 +1122,7 @@ gdm_session_direct_handle_session_exited (GdmSessionDirect *session,
  
  static DBusHandlerResult
  gdm_session_direct_handle_session_died (GdmSessionDirect *session,
@@ -3560,7 +3521,7 @@ index d8f338f..4789e1d 100644
                                          DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -1076,7 +1085,7 @@ gdm_session_direct_handle_session_died (GdmSessionDirect *session,
+@@ -1128,7 +1137,7 @@ gdm_session_direct_handle_session_died (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3569,7 +3530,7 @@ index d8f338f..4789e1d 100644
          dbus_message_unref (reply);
  
          g_debug ("GdmSessionDirect: Emitting 'session-died' signal with signal number '%d'",
-@@ -1090,7 +1099,7 @@ gdm_session_direct_handle_session_died (GdmSessionDirect *session,
+@@ -1142,7 +1151,7 @@ gdm_session_direct_handle_session_died (GdmSessionDirect *session,
  
  static DBusHandlerResult
  gdm_session_direct_handle_saved_language_name_read (GdmSessionDirect *session,
@@ -3578,7 +3539,7 @@ index d8f338f..4789e1d 100644
                                                      DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -1105,7 +1114,7 @@ gdm_session_direct_handle_saved_language_name_read (GdmSessionDirect *session,
+@@ -1157,7 +1166,7 @@ gdm_session_direct_handle_saved_language_name_read (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3587,7 +3548,7 @@ index d8f338f..4789e1d 100644
          dbus_message_unref (reply);
  
          if (strcmp (language_name,
-@@ -1123,7 +1132,7 @@ gdm_session_direct_handle_saved_language_name_read (GdmSessionDirect *session,
+@@ -1175,7 +1184,7 @@ gdm_session_direct_handle_saved_language_name_read (GdmSessionDirect *session,
  
  static DBusHandlerResult
  gdm_session_direct_handle_saved_layout_name_read (GdmSessionDirect *session,
@@ -3596,7 +3557,7 @@ index d8f338f..4789e1d 100644
                                                    DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -1138,7 +1147,7 @@ gdm_session_direct_handle_saved_layout_name_read (GdmSessionDirect *session,
+@@ -1190,7 +1199,7 @@ gdm_session_direct_handle_saved_layout_name_read (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3605,7 +3566,7 @@ index d8f338f..4789e1d 100644
          dbus_message_unref (reply);
  
          if (strcmp (layout_name,
-@@ -1156,7 +1165,7 @@ gdm_session_direct_handle_saved_layout_name_read (GdmSessionDirect *session,
+@@ -1208,7 +1217,7 @@ gdm_session_direct_handle_saved_layout_name_read (GdmSessionDirect *session,
  
  static DBusHandlerResult
  gdm_session_direct_handle_saved_session_name_read (GdmSessionDirect *session,
@@ -3614,7 +3575,7 @@ index d8f338f..4789e1d 100644
                                                     DBusMessage      *message)
  {
          DBusMessage *reply;
-@@ -1171,7 +1180,7 @@ gdm_session_direct_handle_saved_session_name_read (GdmSessionDirect *session,
+@@ -1223,7 +1232,7 @@ gdm_session_direct_handle_saved_session_name_read (GdmSessionDirect *session,
          }
  
          reply = dbus_message_new_method_return (message);
@@ -3623,7 +3584,7 @@ index d8f338f..4789e1d 100644
          dbus_message_unref (reply);
  
          if (! get_session_command_for_name (session_name, NULL)) {
-@@ -1199,54 +1208,57 @@ session_worker_message (DBusConnection *connection,
+@@ -1251,58 +1260,61 @@ session_worker_message (DBusConnection *connection,
                          DBusMessage    *message,
                          void           *user_data)
  {
@@ -3681,6 +3642,12 @@ index d8f338f..4789e1d 100644
          } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "UsernameChanged")) {
 -                return gdm_session_direct_handle_username_changed (session, connection, message);
 +                return gdm_session_direct_handle_username_changed (session, conversation, message);
+         } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "SessionOpened")) {
+-                return gdm_session_direct_handle_session_opened (session, connection, message);
++                return gdm_session_direct_handle_session_opened (session, conversation, message);
+         } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "OpenFailed")) {
+-                return gdm_session_direct_handle_open_failed (session, connection, message);
++                return gdm_session_direct_handle_open_failed (session, conversation, message);
          } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "SessionStarted")) {
 -                return gdm_session_direct_handle_session_started (session, connection, message);
 +                return gdm_session_direct_handle_session_started (session, conversation, message);
@@ -3705,7 +3672,7 @@ index d8f338f..4789e1d 100644
          }
  
          return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-@@ -1480,6 +1492,27 @@ session_unregister_handler (DBusConnection  *connection,
+@@ -1536,6 +1548,27 @@ session_unregister_handler (DBusConnection  *connection,
          g_debug ("session_unregister_handler");
  }
  
@@ -3733,7 +3700,7 @@ index d8f338f..4789e1d 100644
  static dbus_bool_t
  allow_user_function (DBusConnection *connection,
                       unsigned long   uid,
-@@ -1494,40 +1527,83 @@ allow_user_function (DBusConnection *connection,
+@@ -1550,40 +1583,85 @@ allow_user_function (DBusConnection *connection,
          return FALSE;
  }
  
@@ -3803,7 +3770,9 @@ index d8f338f..4789e1d 100644
 -find_conversation_by_pid (GdmSessionDirect *session,
 -                          GPid              pid)
 +static DBusHandlerResult
-+on_message (DBusConnection *connection, DBusMessage *message, void *user_data)
++on_message (DBusConnection *connection,
++            DBusMessage    *message,
++            void           *user_data)
  {
 -        GHashTableIter iter;
 -        gpointer key, value;
@@ -3835,7 +3804,7 @@ index d8f338f..4789e1d 100644
  }
  
  static void
-@@ -1536,50 +1612,23 @@ handle_connection (DBusServer      *server,
+@@ -1592,50 +1670,23 @@ handle_connection (DBusServer      *server,
                     void            *user_data)
  {
          GdmSessionDirect *session = GDM_SESSION_DIRECT (user_data);
@@ -3900,7 +3869,7 @@ index d8f338f..4789e1d 100644
  }
  
  static gboolean
-@@ -1764,6 +1813,8 @@ stop_conversation (GdmSessionConversation *conversation)
+@@ -1820,6 +1871,8 @@ stop_conversation (GdmSessionConversation *conversation)
                                                conversation);
  
          if (conversation->worker_connection != NULL) {
@@ -3909,7 +3878,7 @@ index d8f338f..4789e1d 100644
                  dbus_connection_close (conversation->worker_connection);
                  conversation->worker_connection = NULL;
          }
-@@ -1789,10 +1840,6 @@ gdm_session_direct_start_conversation (GdmSession *session,
+@@ -1845,10 +1898,6 @@ gdm_session_direct_start_conversation (GdmSession *session,
  
          g_hash_table_insert (impl->priv->conversations,
                               g_strdup (service_name), conversation);
@@ -3920,7 +3889,7 @@ index d8f338f..4789e1d 100644
  }
  
  static void
-@@ -1943,45 +1990,50 @@ gdm_session_direct_setup_for_user (GdmSession *session,
+@@ -1999,45 +2048,50 @@ gdm_session_direct_setup_for_user (GdmSession *session,
  }
  
  static void
@@ -3984,7 +3953,7 @@ index d8f338f..4789e1d 100644
          switch (cred_flag) {
          case GDM_SESSION_CRED_ESTABLISH:
                  send_dbus_void_signal (conversation, "EstablishCredentials");
-@@ -1995,13 +2047,12 @@ gdm_session_direct_accredit (GdmSession *session,
+@@ -2051,13 +2105,12 @@ gdm_session_direct_accredit (GdmSession *session,
  }
  
  static void
@@ -4001,7 +3970,7 @@ index d8f338f..4789e1d 100644
  
          message = dbus_message_new_signal (GDM_SESSION_DBUS_PATH,
                                             GDM_SESSION_DBUS_INTERFACE,
-@@ -2011,7 +2062,6 @@ send_environment_variable (const char       *key,
+@@ -2067,7 +2120,6 @@ send_environment_variable (const char       *key,
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &key);
          dbus_message_iter_append_basic (&iter, DBUS_TYPE_STRING, &value);
  
@@ -4009,7 +3978,7 @@ index d8f338f..4789e1d 100644
          if (! send_dbus_message (conversation, message)) {
                  g_debug ("GdmSessionDirect: Could not send %s signal", "SetEnvironmentVariable");
          }
-@@ -2020,12 +2070,13 @@ send_environment_variable (const char       *key,
+@@ -2076,12 +2128,13 @@ send_environment_variable (const char       *key,
  }
  
  static void
@@ -4025,7 +3994,23 @@ index d8f338f..4789e1d 100644
  }
  
  static const char *
-@@ -2142,7 +2193,8 @@ setup_session_environment (GdmSessionDirect *session)
+@@ -2198,17 +2251,22 @@ setup_session_environment (GdmSessionDirect *session)
+ }
+ 
+ static void
+-gdm_session_direct_open_session (GdmSession *session)
++gdm_session_direct_open_session (GdmSession *session,
++                                 const char *service_name)
+ {
+         GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
++        GdmSessionConversation *conversation;
+ 
+         g_return_if_fail (session != NULL);
+ 
+-        send_dbus_void_signal (impl, "OpenSession");
++        conversation = find_conversation_by_name (impl, service_name);
++
++        send_dbus_string_signal (conversation, "OpenSession", service_name);
  }
  
  static void
@@ -4035,7 +4020,7 @@ index d8f338f..4789e1d 100644
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
          GdmSessionConversation *conversation;
-@@ -2162,10 +2214,11 @@ gdm_session_direct_start_session (GdmSession *session)
+@@ -2228,10 +2286,11 @@ gdm_session_direct_start_session (GdmSession *session)
  
          g_free (command);
  
@@ -4049,7 +4034,7 @@ index d8f338f..4789e1d 100644
          send_dbus_string_signal (conversation, "StartProgram", program);
          g_free (program);
  }
-@@ -2211,6 +2264,11 @@ gdm_session_direct_close (GdmSession *session)
+@@ -2277,6 +2336,11 @@ gdm_session_direct_close (GdmSession *session)
  
          stop_all_conversations (impl);
  
@@ -4061,7 +4046,7 @@ index d8f338f..4789e1d 100644
          g_free (impl->priv->selected_user);
          impl->priv->selected_user = NULL;
  
-@@ -2243,6 +2301,7 @@ gdm_session_direct_close (GdmSession *session)
+@@ -2309,6 +2373,7 @@ gdm_session_direct_close (GdmSession *session)
  
  static void
  gdm_session_direct_answer_query  (GdmSession *session,
@@ -4069,7 +4054,7 @@ index d8f338f..4789e1d 100644
                                    const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
-@@ -2250,7 +2309,7 @@ gdm_session_direct_answer_query  (GdmSession *session,
+@@ -2316,7 +2381,7 @@ gdm_session_direct_answer_query  (GdmSession *session,
  
          g_return_if_fail (session != NULL);
  
@@ -4078,7 +4063,7 @@ index d8f338f..4789e1d 100644
  
          answer_pending_query (conversation, text);
  }
-@@ -2325,7 +2384,8 @@ gdm_session_direct_select_session (GdmSession *session,
+@@ -2391,7 +2456,8 @@ gdm_session_direct_select_session (GdmSession *session,
                                     const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -4088,7 +4073,7 @@ index d8f338f..4789e1d 100644
  
          g_free (impl->priv->selected_session);
  
-@@ -2335,9 +2395,15 @@ gdm_session_direct_select_session (GdmSession *session,
+@@ -2401,9 +2467,15 @@ gdm_session_direct_select_session (GdmSession *session,
                  impl->priv->selected_session = g_strdup (text);
          }
  
@@ -4107,7 +4092,7 @@ index d8f338f..4789e1d 100644
  }
  
  static void
-@@ -2345,7 +2411,8 @@ gdm_session_direct_select_language (GdmSession *session,
+@@ -2411,7 +2483,8 @@ gdm_session_direct_select_language (GdmSession *session,
                                      const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -4117,7 +4102,7 @@ index d8f338f..4789e1d 100644
  
          g_free (impl->priv->selected_language);
  
-@@ -2355,9 +2422,15 @@ gdm_session_direct_select_language (GdmSession *session,
+@@ -2421,9 +2494,15 @@ gdm_session_direct_select_language (GdmSession *session,
                  impl->priv->selected_language = g_strdup (text);
          }
  
@@ -4136,7 +4121,7 @@ index d8f338f..4789e1d 100644
  }
  
  static void
-@@ -2365,7 +2438,8 @@ gdm_session_direct_select_layout (GdmSession *session,
+@@ -2431,7 +2510,8 @@ gdm_session_direct_select_layout (GdmSession *session,
                                    const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -4146,7 +4131,7 @@ index d8f338f..4789e1d 100644
  
          g_free (impl->priv->selected_layout);
  
-@@ -2375,9 +2449,15 @@ gdm_session_direct_select_layout (GdmSession *session,
+@@ -2441,9 +2521,15 @@ gdm_session_direct_select_layout (GdmSession *session,
                  impl->priv->selected_layout = g_strdup (text);
          }
  
@@ -4166,10 +4151,10 @@ index d8f338f..4789e1d 100644
  
  static void
 diff --git a/daemon/gdm-session-private.h b/daemon/gdm-session-private.h
-index 074aa6f..de6e54a 100644
+index 74b6069..4dc6e44 100644
 --- a/daemon/gdm-session-private.h
 +++ b/daemon/gdm-session-private.h
-@@ -29,24 +29,34 @@ G_BEGIN_DECLS
+@@ -29,27 +29,39 @@ G_BEGIN_DECLS
  /* state changes */
  void             _gdm_session_conversation_started         (GdmSession   *session,
                                                              const char   *service_name);
@@ -4200,6 +4185,12 @@ index 074aa6f..de6e54a 100644
  void             _gdm_session_accreditation_failed         (GdmSession   *session,
 +                                                            const char   *service_name,
                                                              const char   *text);
+-void             _gdm_session_session_opened               (GdmSession   *session);
++void             _gdm_session_session_opened               (GdmSession   *session,
++                                                            const char   *service_name);
+ void             _gdm_session_session_open_failed          (GdmSession   *session,
++                                                            const char   *service_name,
+                                                             const char   *message);
  void             _gdm_session_session_started              (GdmSession   *session,
 +                                                            const char   *service_name,
                                                              int           pid);
@@ -4208,7 +4199,7 @@ index 074aa6f..de6e54a 100644
                                                              const char   *message);
  void             _gdm_session_session_exited               (GdmSession   *session,
                                                              int           exit_code);
-@@ -67,12 +77,16 @@ void             _gdm_session_selected_user_changed        (GdmSession   *sessio
+@@ -70,12 +82,16 @@ void             _gdm_session_selected_user_changed        (GdmSession   *sessio
  
  /* call and response stuff */
  void             _gdm_session_info_query                   (GdmSession   *session,
@@ -4226,7 +4217,7 @@ index 074aa6f..de6e54a 100644
  
  G_END_DECLS
 diff --git a/daemon/gdm-session-relay.c b/daemon/gdm-session-relay.c
-index 35b4738..6e15f75 100644
+index a0b4cbf..98ccc51 100644
 --- a/daemon/gdm-session-relay.c
 +++ b/daemon/gdm-session-relay.c
 @@ -212,31 +212,34 @@ gdm_session_relay_setup_for_user (GdmSession *session,
@@ -4270,7 +4261,18 @@ index 35b4738..6e15f75 100644
                  break;
          default:
                  g_assert_not_reached ();
-@@ -245,10 +248,11 @@ gdm_session_relay_accredit (GdmSession *session,
+@@ -244,18 +247,20 @@ gdm_session_relay_accredit (GdmSession *session,
+ }
+ 
+ static void
+-gdm_session_relay_open_session (GdmSession *session)
++gdm_session_relay_open_session (GdmSession *session,
++                                const char *service_name)
+ {
+         GdmSessionRelay *impl = GDM_SESSION_RELAY (session);
+-        send_dbus_void_signal (impl, "OpenSession");
++        send_dbus_string_signal (impl, "OpenSession", service_name);
+ }
  
  static void
  gdm_session_relay_answer_query (GdmSession *session,
@@ -4283,7 +4285,7 @@ index 35b4738..6e15f75 100644
  }
  
  static void
-@@ -292,11 +296,12 @@ gdm_session_relay_cancel (GdmSession *session)
+@@ -299,11 +304,12 @@ gdm_session_relay_cancel (GdmSession *session)
  }
  
  static void
@@ -4298,7 +4300,7 @@ index 35b4738..6e15f75 100644
  }
  
  /* Note: Use abstract sockets like dbus does by default on Linux. Abstract
-@@ -334,10 +339,12 @@ handle_info_query (GdmSessionRelay *session_relay,
+@@ -341,10 +347,12 @@ handle_info_query (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4312,7 +4314,7 @@ index 35b4738..6e15f75 100644
                                       DBUS_TYPE_STRING, &text,
                                       DBUS_TYPE_INVALID)) {
                  g_warning ("ERROR: %s", error.message);
-@@ -349,7 +356,7 @@ handle_info_query (GdmSessionRelay *session_relay,
+@@ -356,7 +364,7 @@ handle_info_query (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4321,7 +4323,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -361,12 +368,14 @@ handle_secret_info_query (GdmSessionRelay *session_relay,
+@@ -368,12 +376,14 @@ handle_secret_info_query (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4337,7 +4339,7 @@ index 35b4738..6e15f75 100644
                                       DBUS_TYPE_STRING, &text,
                                       DBUS_TYPE_INVALID)) {
                  g_warning ("ERROR: %s", error.message);
-@@ -378,7 +387,7 @@ handle_secret_info_query (GdmSessionRelay *session_relay,
+@@ -385,7 +395,7 @@ handle_secret_info_query (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4346,7 +4348,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -390,12 +399,14 @@ handle_info (GdmSessionRelay *session_relay,
+@@ -397,12 +407,14 @@ handle_info (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4362,7 +4364,7 @@ index 35b4738..6e15f75 100644
                                       DBUS_TYPE_STRING, &text,
                                       DBUS_TYPE_INVALID)) {
                  g_warning ("ERROR: %s", error.message);
-@@ -407,7 +418,7 @@ handle_info (GdmSessionRelay *session_relay,
+@@ -414,7 +426,7 @@ handle_info (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4371,7 +4373,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -419,12 +430,14 @@ handle_problem (GdmSessionRelay *session_relay,
+@@ -426,12 +438,14 @@ handle_problem (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4387,7 +4389,7 @@ index 35b4738..6e15f75 100644
                                       DBUS_TYPE_STRING, &text,
                                       DBUS_TYPE_INVALID)) {
                  g_warning ("ERROR: %s", error.message);
-@@ -436,7 +449,7 @@ handle_problem (GdmSessionRelay *session_relay,
+@@ -443,7 +457,7 @@ handle_problem (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4396,7 +4398,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -448,8 +461,15 @@ handle_setup_complete (GdmSessionRelay *session_relay,
+@@ -455,8 +469,15 @@ handle_setup_complete (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4412,7 +4414,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: SetupComplete");
  
-@@ -457,7 +477,7 @@ handle_setup_complete (GdmSessionRelay *session_relay,
+@@ -464,7 +485,7 @@ handle_setup_complete (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4421,7 +4423,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -469,8 +489,15 @@ handle_setup_failed (GdmSessionRelay *session_relay,
+@@ -476,8 +497,15 @@ handle_setup_failed (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4437,7 +4439,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: SetupFailed");
  
-@@ -478,7 +505,7 @@ handle_setup_failed (GdmSessionRelay *session_relay,
+@@ -485,7 +513,7 @@ handle_setup_failed (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4446,7 +4448,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -491,8 +518,15 @@ handle_authenticated (GdmSessionRelay *session_relay,
+@@ -498,8 +526,15 @@ handle_authenticated (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4462,7 +4464,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: Authenticated");
  
-@@ -500,7 +534,7 @@ handle_authenticated (GdmSessionRelay *session_relay,
+@@ -507,7 +542,7 @@ handle_authenticated (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4471,7 +4473,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -512,8 +546,15 @@ handle_authentication_failed (GdmSessionRelay *session_relay,
+@@ -519,8 +554,15 @@ handle_authentication_failed (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4487,7 +4489,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: AuthenticationFailed");
  
-@@ -521,7 +562,7 @@ handle_authentication_failed (GdmSessionRelay *session_relay,
+@@ -528,7 +570,7 @@ handle_authentication_failed (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4496,7 +4498,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -533,8 +574,15 @@ handle_authorized (GdmSessionRelay *session_relay,
+@@ -540,8 +582,15 @@ handle_authorized (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4512,7 +4514,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: Authorized");
  
-@@ -542,7 +590,7 @@ handle_authorized (GdmSessionRelay *session_relay,
+@@ -549,7 +598,7 @@ handle_authorized (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4521,7 +4523,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -554,8 +602,15 @@ handle_authorization_failed (GdmSessionRelay *session_relay,
+@@ -561,8 +610,15 @@ handle_authorization_failed (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4537,7 +4539,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: AuthorizationFailed");
  
-@@ -563,7 +618,7 @@ handle_authorization_failed (GdmSessionRelay *session_relay,
+@@ -570,7 +626,7 @@ handle_authorization_failed (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4546,7 +4548,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -575,8 +630,15 @@ handle_accredited (GdmSessionRelay *session_relay,
+@@ -582,8 +638,15 @@ handle_accredited (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4562,7 +4564,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: Accredited");
  
-@@ -584,7 +646,7 @@ handle_accredited (GdmSessionRelay *session_relay,
+@@ -591,7 +654,7 @@ handle_accredited (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4571,7 +4573,7 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -596,8 +658,15 @@ handle_accreditation_failed (GdmSessionRelay *session_relay,
+@@ -603,8 +666,15 @@ handle_accreditation_failed (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4587,7 +4589,7 @@ index 35b4738..6e15f75 100644
  
          g_debug ("GdmSessionRelay: AccreditationFailed");
  
-@@ -605,7 +674,7 @@ handle_accreditation_failed (GdmSessionRelay *session_relay,
+@@ -612,7 +682,7 @@ handle_accreditation_failed (GdmSessionRelay *session_relay,
          dbus_connection_send (connection, reply, NULL);
          dbus_message_unref (reply);
  
@@ -4596,7 +4598,49 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
  }
-@@ -617,6 +686,7 @@ handle_session_started (GdmSessionRelay *session_relay,
+@@ -623,9 +693,11 @@ handle_session_opened (GdmSessionRelay *session_relay,
+ {
+         DBusMessage *reply;
+         DBusError    error;
++        char        *service_name;
+ 
+         dbus_error_init (&error);
+         if (! dbus_message_get_args (message, &error,
++                                     DBUS_TYPE_STRING, &service_name,
+                                      DBUS_TYPE_INVALID)) {
+                 g_warning ("ERROR: %s", error.message);
+         }
+@@ -637,7 +709,7 @@ handle_session_opened (GdmSessionRelay *session_relay,
+         dbus_connection_send (connection, reply, NULL);
+         dbus_message_unref (reply);
+ 
+-        _gdm_session_session_opened (GDM_SESSION (session_relay));
++        _gdm_session_session_opened (GDM_SESSION (session_relay), service_name);
+ 
+         return DBUS_HANDLER_RESULT_HANDLED;
+ }
+@@ -649,9 +721,11 @@ handle_session_open_failed (GdmSessionRelay *session_relay,
+ {
+         DBusMessage *reply;
+         DBusError    error;
++        char        *service_name;
+ 
+         dbus_error_init (&error);
+         if (! dbus_message_get_args (message, &error,
++                                     DBUS_TYPE_STRING, &service_name,
+                                      DBUS_TYPE_INVALID)) {
+                 g_warning ("ERROR: %s", error.message);
+         }
+@@ -663,7 +737,7 @@ handle_session_open_failed (GdmSessionRelay *session_relay,
+         dbus_connection_send (connection, reply, NULL);
+         dbus_message_unref (reply);
+ 
+-        _gdm_session_session_open_failed (GDM_SESSION (session_relay), NULL);
++        _gdm_session_session_open_failed (GDM_SESSION (session_relay), service_name, NULL);
+ 
+         return DBUS_HANDLER_RESULT_HANDLED;
+ }
+@@ -675,6 +749,7 @@ handle_session_started (GdmSessionRelay *session_relay,
  {
          DBusMessage *reply;
          DBusError    error;
@@ -4604,7 +4648,7 @@ index 35b4738..6e15f75 100644
          int          pid;
  
          dbus_error_init (&error);
-@@ -624,6 +694,7 @@ handle_session_started (GdmSessionRelay *session_relay,
+@@ -682,6 +757,7 @@ handle_session_started (GdmSessionRelay *session_relay,
          pid = 0;
          if (! dbus_message_get_args (message,
                                       &error,
@@ -4612,7 +4656,7 @@ index 35b4738..6e15f75 100644
                                       DBUS_TYPE_INT32, &pid,
                                       DBUS_TYPE_INVALID)) {
                  g_warning ("ERROR: %s", error.message);
-@@ -636,6 +707,7 @@ handle_session_started (GdmSessionRelay *session_relay,
+@@ -694,6 +770,7 @@ handle_session_started (GdmSessionRelay *session_relay,
          dbus_message_unref (reply);
  
          _gdm_session_session_started (GDM_SESSION (session_relay),
@@ -4621,10 +4665,10 @@ index 35b4738..6e15f75 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 346bf80..80844b4 100644
+index 5e34fb9..2f07e13 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2859,6 +2859,28 @@ worker_dbus_filter_function (DBusConnection *connection,
+@@ -2876,6 +2876,28 @@ worker_dbus_filter_function (DBusConnection *connection,
          return DBUS_HANDLER_RESULT_HANDLED;
  }
  
@@ -4653,7 +4697,7 @@ index 346bf80..80844b4 100644
  static GObject *
  gdm_session_worker_constructor (GType                  type,
                                  guint                  n_construct_properties,
-@@ -2885,6 +2907,11 @@ gdm_session_worker_constructor (GType                  type,
+@@ -2902,6 +2924,11 @@ gdm_session_worker_constructor (GType                  type,
                  exit (1);
          }
  
@@ -4666,7 +4710,7 @@ index 346bf80..80844b4 100644
          dbus_connection_set_exit_on_disconnect (worker->priv->connection, TRUE);
  
 diff --git a/daemon/gdm-session.c b/daemon/gdm-session.c
-index 0073294..5f6ff5d 100644
+index 1820e29..a7b4e8b 100644
 --- a/daemon/gdm-session.c
 +++ b/daemon/gdm-session.c
 @@ -24,6 +24,7 @@
@@ -4677,7 +4721,7 @@ index 0073294..5f6ff5d 100644
  #include "gdm-session.h"
  #include "gdm-session-private.h"
  
-@@ -114,37 +115,41 @@ gdm_session_setup_for_user (GdmSession *session,
+@@ -116,37 +117,41 @@ gdm_session_setup_for_user (GdmSession *session,
  }
  
  void
@@ -4725,7 +4769,18 @@ index 0073294..5f6ff5d 100644
  }
  
  void
-@@ -192,11 +197,12 @@ gdm_session_cancel (GdmSession *session)
+@@ -194,19 +199,21 @@ gdm_session_cancel (GdmSession *session)
+ }
+ 
+ void
+-gdm_session_open_session (GdmSession *session)
++gdm_session_open_session (GdmSession *session,
++                          const char *service_name)
+ {
+         g_return_if_fail (GDM_IS_SESSION (session));
+ 
+-        GDM_SESSION_GET_IFACE (session)->open_session (session);
++        GDM_SESSION_GET_IFACE (session)->open_session (session, service_name);
  }
  
  void
@@ -4740,7 +4795,7 @@ index 0073294..5f6ff5d 100644
  }
  
  static void
-@@ -213,7 +219,7 @@ gdm_session_class_init (gpointer g_iface)
+@@ -223,7 +230,7 @@ gdm_session_class_init (gpointer g_iface)
                                NULL,
                                g_cclosure_marshal_VOID__STRING,
                                G_TYPE_NONE,
@@ -4749,7 +4804,7 @@ index 0073294..5f6ff5d 100644
          signals [SETUP_COMPLETE] =
                  g_signal_new ("setup-complete",
                                iface_type,
-@@ -221,9 +227,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -231,9 +238,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, setup_complete),
                                NULL,
                                NULL,
@@ -4762,7 +4817,7 @@ index 0073294..5f6ff5d 100644
          signals [SETUP_FAILED] =
                  g_signal_new ("setup-failed",
                                iface_type,
-@@ -231,10 +238,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -241,10 +249,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, setup_failed),
                                NULL,
                                NULL,
@@ -4776,7 +4831,7 @@ index 0073294..5f6ff5d 100644
          signals [RESET_COMPLETE] =
                  g_signal_new ("reset-complete",
                                iface_type,
-@@ -263,9 +270,9 @@ gdm_session_class_init (gpointer g_iface)
+@@ -273,9 +281,9 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, authenticated),
                                NULL,
                                NULL,
@@ -4788,7 +4843,7 @@ index 0073294..5f6ff5d 100644
          signals [AUTHENTICATION_FAILED] =
                  g_signal_new ("authentication-failed",
                                iface_type,
-@@ -273,10 +280,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -283,10 +291,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, authentication_failed),
                                NULL,
                                NULL,
@@ -4802,7 +4857,7 @@ index 0073294..5f6ff5d 100644
          signals [AUTHORIZED] =
                  g_signal_new ("authorized",
                                iface_type,
-@@ -284,9 +291,9 @@ gdm_session_class_init (gpointer g_iface)
+@@ -294,9 +302,9 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, authorized),
                                NULL,
                                NULL,
@@ -4814,7 +4869,7 @@ index 0073294..5f6ff5d 100644
          signals [AUTHORIZATION_FAILED] =
                  g_signal_new ("authorization-failed",
                                iface_type,
-@@ -294,10 +301,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -304,10 +312,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, authorization_failed),
                                NULL,
                                NULL,
@@ -4828,7 +4883,7 @@ index 0073294..5f6ff5d 100644
          signals [ACCREDITED] =
                  g_signal_new ("accredited",
                                iface_type,
-@@ -305,9 +312,9 @@ gdm_session_class_init (gpointer g_iface)
+@@ -315,9 +323,9 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, accredited),
                                NULL,
                                NULL,
@@ -4840,7 +4895,7 @@ index 0073294..5f6ff5d 100644
          signals [ACCREDITATION_FAILED] =
                  g_signal_new ("accreditation-failed",
                                iface_type,
-@@ -315,10 +322,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -325,10 +333,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, accreditation_failed),
                                NULL,
                                NULL,
@@ -4854,7 +4909,7 @@ index 0073294..5f6ff5d 100644
  
           signals [INFO_QUERY] =
                  g_signal_new ("info-query",
-@@ -327,10 +334,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -337,10 +345,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, info_query),
                                NULL,
                                NULL,
@@ -4868,7 +4923,7 @@ index 0073294..5f6ff5d 100644
          signals [SECRET_INFO_QUERY] =
                  g_signal_new ("secret-info-query",
                                iface_type,
-@@ -338,10 +345,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -348,10 +356,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, secret_info_query),
                                NULL,
                                NULL,
@@ -4882,7 +4937,7 @@ index 0073294..5f6ff5d 100644
          signals [INFO] =
                  g_signal_new ("info",
                                iface_type,
-@@ -349,10 +356,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -359,10 +367,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, info),
                                NULL,
                                NULL,
@@ -4896,8 +4951,35 @@ index 0073294..5f6ff5d 100644
          signals [PROBLEM] =
                  g_signal_new ("problem",
                                iface_type,
-@@ -360,10 +367,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -370,10 +378,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, problem),
+                               NULL,
+                               NULL,
+-                              g_cclosure_marshal_VOID__STRING,
++                              gdm_marshal_VOID__STRING_STRING,
+                               G_TYPE_NONE,
+-                              1,
+-                              G_TYPE_STRING);
++                              2,
++                              G_TYPE_STRING, G_TYPE_STRING);
+         signals [SESSION_OPENED] =
+                 g_signal_new ("session-opened",
+                               iface_type,
+@@ -381,9 +389,10 @@ gdm_session_class_init (gpointer g_iface)
+                               G_STRUCT_OFFSET (GdmSessionIface, session_opened),
+                               NULL,
+                               NULL,
+-                              g_cclosure_marshal_VOID__VOID,
++                              g_cclosure_marshal_VOID__STRING,
+                               G_TYPE_NONE,
+-                              0);
++                              1,
++                              G_TYPE_STRING);
+         signals [SESSION_OPEN_FAILED] =
+                 g_signal_new ("session-open-failed",
+                               iface_type,
+@@ -391,10 +400,10 @@ gdm_session_class_init (gpointer g_iface)
+                               G_STRUCT_OFFSET (GdmSessionIface, session_open_failed),
                                NULL,
                                NULL,
 -                              g_cclosure_marshal_VOID__STRING,
@@ -4910,7 +4992,7 @@ index 0073294..5f6ff5d 100644
          signals [SESSION_STARTED] =
                  g_signal_new ("session-started",
                                iface_type,
-@@ -371,10 +378,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -402,10 +411,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, session_started),
                                NULL,
                                NULL,
@@ -4924,7 +5006,7 @@ index 0073294..5f6ff5d 100644
          signals [SESSION_START_FAILED] =
                  g_signal_new ("session-start-failed",
                                iface_type,
-@@ -382,10 +389,10 @@ gdm_session_class_init (gpointer g_iface)
+@@ -413,10 +422,10 @@ gdm_session_class_init (gpointer g_iface)
                                G_STRUCT_OFFSET (GdmSessionIface, session_start_failed),
                                NULL,
                                NULL,
@@ -4938,7 +5020,7 @@ index 0073294..5f6ff5d 100644
          signals [SESSION_EXITED] =
                  g_signal_new ("session-exited",
                                iface_type,
-@@ -465,19 +472,21 @@ gdm_session_class_init (gpointer g_iface)
+@@ -496,19 +505,21 @@ gdm_session_class_init (gpointer g_iface)
  }
  
  void
@@ -4963,7 +5045,7 @@ index 0073294..5f6ff5d 100644
  }
  
  void
-@@ -497,99 +506,111 @@ _gdm_session_reset_failed (GdmSession   *session,
+@@ -528,114 +539,128 @@ _gdm_session_reset_failed (GdmSession   *session,
  }
  
  void
@@ -5070,6 +5152,26 @@ index 0073294..5f6ff5d 100644
  }
  
  void
+-_gdm_session_session_opened (GdmSession   *session)
++_gdm_session_session_opened (GdmSession   *session,
++                             const char   *service_name)
+ {
+         g_return_if_fail (GDM_IS_SESSION (session));
+-        g_signal_emit (session, signals [SESSION_OPENED], 0);
++        g_signal_emit (session, signals [SESSION_OPENED], 0, service_name);
+ }
+ 
+ void
+ _gdm_session_session_open_failed (GdmSession   *session,
++                                  const char   *service_name,
+                                   const char   *text)
+ {
+         g_return_if_fail (GDM_IS_SESSION (session));
+-        g_signal_emit (session, signals [SESSION_OPEN_FAILED], 0, text);
++        g_signal_emit (session, signals [SESSION_OPEN_FAILED], 0, service_name, text);
+ }
+ 
+ void
  _gdm_session_session_started (GdmSession   *session,
 +                              const char   *service_name,
                                int           pid)
@@ -5091,10 +5193,10 @@ index 0073294..5f6ff5d 100644
  
  void
 diff --git a/daemon/gdm-session.h b/daemon/gdm-session.h
-index 77e0cf6..db5fc4a 100644
+index 00c2fa4..20a442b 100644
 --- a/daemon/gdm-session.h
 +++ b/daemon/gdm-session.h
-@@ -53,11 +53,15 @@ struct _GdmSessionIface
+@@ -53,12 +53,17 @@ struct _GdmSessionIface
                                                const char   *service_name,
                                                const char   *username);
          void (* reset)                       (GdmSession   *session);
@@ -5107,12 +5209,15 @@ index 77e0cf6..db5fc4a 100644
          void (* accredit)                    (GdmSession   *session,
 +                                              const char   *service_name,
                                                int           cred_flag);
+-        void (* open_session)                (GdmSession   *session);
++        void (* open_session)                (GdmSession   *session,
++                                              const char   *service_name);
          void (* answer_query)                (GdmSession   *session,
 +                                              const char   *service_name,
                                                const char   *text);
          void (* select_language)             (GdmSession   *session,
                                                const char   *text);
-@@ -67,38 +71,53 @@ struct _GdmSessionIface
+@@ -68,41 +73,58 @@ struct _GdmSessionIface
                                                const char   *text);
          void (* select_user)                 (GdmSession   *session,
                                                const char   *text);
@@ -5163,6 +5268,12 @@ index 77e0cf6..db5fc4a 100644
          void (* problem)                     (GdmSession   *session,
 +                                              const char   *service_name,
                                                const char   *problem);
+-        void (* session_opened)              (GdmSession   *session);
++        void (* session_opened)              (GdmSession   *session,
++                                              const char   *service_name);
+         void (* session_open_failed)         (GdmSession   *session,
++                                              const char   *service_name,
+                                               const char   *message);
          void (* session_started)             (GdmSession   *session,
 +                                              const char   *service_name,
                                                int           pid);
@@ -5171,7 +5282,7 @@ index 77e0cf6..db5fc4a 100644
                                                const char   *message);
          void (* session_exited)              (GdmSession   *session,
                                                int           exit_code);
-@@ -128,14 +147,19 @@ void     gdm_session_setup_for_user              (GdmSession *session,
+@@ -132,15 +154,21 @@ void     gdm_session_setup_for_user              (GdmSession *session,
                                                    const char *service_name,
                                                    const char *username);
  void     gdm_session_reset                       (GdmSession *session);
@@ -5184,7 +5295,10 @@ index 77e0cf6..db5fc4a 100644
  void     gdm_session_accredit                    (GdmSession *session,
 +                                                  const char *service_name,
                                                    int         cred_flag);
+-void     gdm_session_open_session                (GdmSession *session);
 -void     gdm_session_start_session               (GdmSession *session);
++void     gdm_session_open_session                (GdmSession *session,
++                                                  const char *service_name);
 +void     gdm_session_start_session               (GdmSession *session,
 +                                                  const char *service_name);
  void     gdm_session_close                       (GdmSession *session);
@@ -5195,7 +5309,7 @@ index 77e0cf6..db5fc4a 100644
  void     gdm_session_select_session              (GdmSession *session,
                                                    const char *session_name);
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index f70ed88..7c2f384 100644
+index 9c3eb36..e2a7877 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -71,6 +71,8 @@ struct GdmSimpleSlavePrivate
@@ -5347,8 +5461,8 @@ index f70ed88..7c2f384 100644
 +                       const char     *service_name,
                         GdmSimpleSlave *slave)
  {
--        queue_start_session (slave);
-+        queue_start_session (slave, service_name);
+-        gdm_session_open_session (session);
++        gdm_session_open_session (session, service_name);
  }
  
  static void
@@ -5365,7 +5479,33 @@ index f70ed88..7c2f384 100644
                                                      problem);
                  }
          }
-@@ -457,41 +478,45 @@ on_session_accreditation_failed (GdmSession     *session,
+@@ -457,62 +478,68 @@ on_session_accreditation_failed (GdmSession     *session,
+ 
+ static void
+ on_session_opened (GdmSession     *session,
++                   const char     *service_name,
+                    GdmSimpleSlave *slave)
+ {
+-        queue_start_session (slave);
++        queue_start_session (slave, service_name);
+ }
+ 
+ static void
+ on_session_open_failed (GdmSession     *session,
++                        const char     *service_name,
+                         const char     *message,
+                         GdmSimpleSlave *slave)
+ {
+         if (slave->priv->greeter_server != NULL) {
+                 gdm_greeter_server_problem (slave->priv->greeter_server,
++                                            service_name,
+                                             _("Unable to open session"));
+         }
+ 
+-        destroy_session (slave);
+-        queue_greeter_reset (slave);
++        gdm_session_stop_conversation (session, service_name);
+ }
  
  static void
  on_session_info (GdmSession     *session,
@@ -5415,7 +5555,7 @@ index f70ed88..7c2f384 100644
  }
  
  static void
-@@ -761,11 +786,12 @@ on_greeter_start_conversation (GdmGreeterServer *greeter_server,
+@@ -790,11 +817,12 @@ on_greeter_start_conversation (GdmGreeterServer *greeter_server,
  
  static void
  on_greeter_begin_verification (GdmGreeterServer *greeter_server,
@@ -5429,7 +5569,7 @@ index f70ed88..7c2f384 100644
  }
  
  static void
-@@ -781,21 +807,23 @@ on_greeter_begin_auto_login (GdmGreeterServer *greeter_server,
+@@ -810,21 +838,23 @@ on_greeter_begin_auto_login (GdmGreeterServer *greeter_server,
  
  static void
  on_greeter_begin_verification_for_user (GdmGreeterServer *greeter_server,
@@ -5455,7 +5595,7 @@ index f70ed88..7c2f384 100644
  }
  
  static void
-@@ -858,18 +886,20 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
+@@ -887,18 +917,20 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
  
  static void
  on_start_session_when_ready (GdmGreeterServer *session,
@@ -5478,7 +5618,7 @@ index f70ed88..7c2f384 100644
  {
          g_debug ("GdmSimpleSlave: Will start session when ready and told");
 diff --git a/daemon/test-session.c b/daemon/test-session.c
-index d9fa26e..3cf8483 100644
+index ed13ff7..7f6c5fe 100644
 --- a/daemon/test-session.c
 +++ b/daemon/test-session.c
 @@ -44,10 +44,11 @@ on_conversation_started (GdmSession *session,
@@ -6045,13 +6185,13 @@ index cd0cbdf..e856dd4 100644
  
  static int
 -- 
-1.6.6
+1.7.0.1
 
 
-From 2c1ed73f15a375ecb619784e0f858a1e8de84cf0 Mon Sep 17 00:00:00 2001
+From 9d25310a9d6f77c149357e0f6b0d18b6e9bf4b18 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Sat, 7 Feb 2009 11:36:40 -0500
-Subject: [PATCH 07/50] emit "ConversationStopped" signal at end of conv
+Subject: [PATCH 07/47] emit "ConversationStopped" signal at end of conv
 
 This will allow us to track when individual
 PAM conversations fail, instead of doing one
@@ -6122,10 +6262,10 @@ index 6d0dd87..976f0b7 100644
                                                                const char       *text);
  void                gdm_greeter_server_default_language_name_changed (GdmGreeterServer *greeter_server,
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index 4789e1d..d41668c 100644
+index 168bf73..09d6a76 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
-@@ -1736,9 +1736,15 @@ worker_exited (GdmSessionWorkerJob *job,
+@@ -1794,9 +1794,15 @@ worker_exited (GdmSessionWorkerJob *job,
  {
          g_debug ("GdmSessionDirect: Worker job exited: %d", code);
  
@@ -6141,7 +6281,7 @@ index 4789e1d..d41668c 100644
  }
  
  static void
-@@ -1748,9 +1754,15 @@ worker_died (GdmSessionWorkerJob *job,
+@@ -1806,9 +1812,15 @@ worker_died (GdmSessionWorkerJob *job,
  {
          g_debug ("GdmSessionDirect: Worker job died: %d", signum);
  
@@ -6157,7 +6297,7 @@ index 4789e1d..d41668c 100644
  }
  
  static GdmSessionConversation *
-@@ -1823,6 +1835,10 @@ stop_conversation (GdmSessionConversation *conversation)
+@@ -1881,6 +1893,10 @@ stop_conversation (GdmSessionConversation *conversation)
  
          g_object_unref (conversation->job);
          conversation->job = NULL;
@@ -6168,7 +6308,7 @@ index 4789e1d..d41668c 100644
  }
  
  static void
-@@ -1843,6 +1859,25 @@ gdm_session_direct_start_conversation (GdmSession *session,
+@@ -1901,6 +1917,25 @@ gdm_session_direct_start_conversation (GdmSession *session,
  }
  
  static void
@@ -6194,7 +6334,7 @@ index 4789e1d..d41668c 100644
  send_setup (GdmSessionDirect *session,
              const char       *service_name)
  {
-@@ -2717,6 +2752,7 @@ static void
+@@ -2789,6 +2824,7 @@ static void
  gdm_session_iface_init (GdmSessionIface *iface)
  {
          iface->start_conversation = gdm_session_direct_start_conversation;
@@ -6203,7 +6343,7 @@ index 4789e1d..d41668c 100644
          iface->setup_for_user = gdm_session_direct_setup_for_user;
          iface->authenticate = gdm_session_direct_authenticate;
 diff --git a/daemon/gdm-session-private.h b/daemon/gdm-session-private.h
-index de6e54a..860c09c 100644
+index 4dc6e44..36781dd 100644
 --- a/daemon/gdm-session-private.h
 +++ b/daemon/gdm-session-private.h
 @@ -29,6 +29,8 @@ G_BEGIN_DECLS
@@ -6216,7 +6356,7 @@ index de6e54a..860c09c 100644
                                                              const char   *service_name);
  void             _gdm_session_setup_failed                 (GdmSession   *session,
 diff --git a/daemon/gdm-session.c b/daemon/gdm-session.c
-index 5f6ff5d..9ee34af 100644
+index a7b4e8b..8858071 100644
 --- a/daemon/gdm-session.c
 +++ b/daemon/gdm-session.c
 @@ -30,6 +30,7 @@
@@ -6227,7 +6367,7 @@ index 5f6ff5d..9ee34af 100644
          SETUP_COMPLETE,
          SETUP_FAILED,
          RESET_COMPLETE,
-@@ -88,6 +89,15 @@ gdm_session_start_conversation (GdmSession *session,
+@@ -90,6 +91,15 @@ gdm_session_start_conversation (GdmSession *session,
  }
  
  void
@@ -6243,7 +6383,7 @@ index 5f6ff5d..9ee34af 100644
  gdm_session_close (GdmSession *session)
  {
          g_return_if_fail (GDM_IS_SESSION (session));
-@@ -220,6 +230,16 @@ gdm_session_class_init (gpointer g_iface)
+@@ -231,6 +241,16 @@ gdm_session_class_init (gpointer g_iface)
                                g_cclosure_marshal_VOID__STRING,
                                G_TYPE_NONE,
                                1, G_TYPE_STRING);
@@ -6260,7 +6400,7 @@ index 5f6ff5d..9ee34af 100644
          signals [SETUP_COMPLETE] =
                  g_signal_new ("setup-complete",
                                iface_type,
-@@ -638,6 +658,14 @@ _gdm_session_conversation_started (GdmSession   *session,
+@@ -688,6 +708,14 @@ _gdm_session_conversation_started (GdmSession   *session,
  }
  
  void
@@ -6276,7 +6416,7 @@ index 5f6ff5d..9ee34af 100644
  {
          g_return_if_fail (GDM_IS_SESSION (session));
 diff --git a/daemon/gdm-session.h b/daemon/gdm-session.h
-index db5fc4a..c45a770 100644
+index 20a442b..22c2ccb 100644
 --- a/daemon/gdm-session.h
 +++ b/daemon/gdm-session.h
 @@ -47,6 +47,8 @@ struct _GdmSessionIface
@@ -6288,7 +6428,7 @@ index db5fc4a..c45a770 100644
          void (* setup)                       (GdmSession   *session,
                                                const char   *service_name);
          void (* setup_for_user)              (GdmSession   *session,
-@@ -125,6 +127,8 @@ struct _GdmSessionIface
+@@ -132,6 +134,8 @@ struct _GdmSessionIface
                                                int           signal_number);
          void (* conversation_started)        (GdmSession   *session,
                                                const char   *service_name);
@@ -6297,7 +6437,7 @@ index db5fc4a..c45a770 100644
          void (* closed)                      (GdmSession   *session);
          void (* selected_user_changed)       (GdmSession   *session,
                                                const char   *text);
-@@ -141,6 +145,8 @@ GType    gdm_session_get_type                    (void) G_GNUC_CONST;
+@@ -148,6 +152,8 @@ GType    gdm_session_get_type                    (void) G_GNUC_CONST;
  
  void     gdm_session_start_conversation          (GdmSession *session,
                                                    const char *service_name);
@@ -6307,7 +6447,7 @@ index db5fc4a..c45a770 100644
                                                    const char *service_name);
  void     gdm_session_setup_for_user              (GdmSession *session,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 7c2f384..79a05b8 100644
+index e2a7877..52e24fb 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -230,8 +230,7 @@ on_session_setup_failed (GdmSession     *session,
@@ -6352,7 +6492,7 @@ index 7c2f384..79a05b8 100644
  }
  
  static void
-@@ -559,6 +556,23 @@ on_session_conversation_started (GdmSession     *session,
+@@ -582,6 +579,23 @@ on_session_conversation_started (GdmSession     *session,
  }
  
  static void
@@ -6376,7 +6516,7 @@ index 7c2f384..79a05b8 100644
  on_session_selected_user_changed (GdmSession     *session,
                                    const char     *text,
                                    GdmSimpleSlave *slave)
-@@ -647,6 +661,10 @@ create_new_session (GdmSimpleSlave *slave)
+@@ -670,6 +684,10 @@ create_new_session (GdmSimpleSlave *slave)
                            G_CALLBACK (on_session_conversation_started),
                            slave);
          g_signal_connect (slave->priv->session,
@@ -6388,617 +6528,13 @@ index 7c2f384..79a05b8 100644
                            G_CALLBACK (on_session_setup_complete),
                            slave);
 -- 
-1.6.6
+1.7.0.1
 
 
-From 071750dba80749084941ee2fcb7eb3544c5679ed Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Mon, 26 Oct 2009 10:17:49 -0400
-Subject: [PATCH 08/50] init session pid to -1
-
----
- daemon/gdm-session-direct.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index d41668c..700a6c6 100644
---- a/daemon/gdm-session-direct.c
-+++ b/daemon/gdm-session-direct.c
-@@ -2330,7 +2330,6 @@ gdm_session_direct_close (GdmSession *session)
- 
-         g_hash_table_remove_all (impl->priv->environment);
- 
--        impl->priv->session_pid = -1;
-         impl->priv->is_running = FALSE;
- }
- 
--- 
-1.6.6
-
-
-From 26aafd77a748a0954e65e9777846e044c4edc301 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Mon, 9 Mar 2009 15:41:12 -0400
-Subject: [PATCH 09/50] Don't tear down greeter until pam_open_session finishes
-
-Some PAM modules ask questions at that late stage of the game,
-and so we need a greeter to forward the questions on to the
-user.
----
- daemon/gdm-factory-slave.c   |   37 ++++++++++++++++++++--
- daemon/gdm-product-slave.c   |   30 +++++++++++++++++-
- daemon/gdm-session-direct.c  |   70 ++++++++++++++++++++++++++++++++++++++++++
- daemon/gdm-session-private.h |    5 +++
- daemon/gdm-session-relay.c   |   68 ++++++++++++++++++++++++++++++++++++++++
- daemon/gdm-session-worker.c  |   16 ++++++++--
- daemon/gdm-session.c         |   50 ++++++++++++++++++++++++++++++
- daemon/gdm-session.h         |    9 +++++
- daemon/gdm-simple-slave.c    |   33 +++++++++++++++++++-
- 9 files changed, 310 insertions(+), 8 deletions(-)
-
-diff --git a/daemon/gdm-factory-slave.c b/daemon/gdm-factory-slave.c
-index 826612e..ef6d236 100644
---- a/daemon/gdm-factory-slave.c
-+++ b/daemon/gdm-factory-slave.c
-@@ -278,9 +278,7 @@ on_session_accredited (GdmSession      *session,
- {
-         g_debug ("GdmFactorySlave:  session user verified");
- 
--        gdm_session_start_session (session, service_name);
--
--        gdm_greeter_server_reset (slave->priv->greeter_server);
-+        gdm_session_open_session (session, service_name);
- }
- 
- static void
-@@ -298,6 +296,31 @@ on_session_accreditation_failed (GdmSession      *session,
- }
- 
- static void
-+on_session_opened (GdmSession      *session,
-+                   const char      *service_name,
-+                   GdmFactorySlave *slave)
-+{
-+        g_debug ("GdmFactorySlave: session opened");
-+
-+        gdm_session_start_session (session, service_name);
-+
-+        gdm_greeter_server_reset (slave->priv->greeter_server);
-+}
-+
-+static void
-+on_session_open_failed (GdmSession      *session,
-+                        const char      *service_name,
-+                        const char      *message,
-+                        GdmFactorySlave *slave)
-+{
-+        g_debug ("GdmFactorySlave: could not open session: %s", message);
-+
-+        gdm_greeter_server_problem (slave->priv->greeter_server, service_name, _("Unable to open session"));
-+
-+        queue_greeter_reset (slave);
-+}
-+
-+static void
- on_session_session_started (GdmSession      *session,
-                             GdmFactorySlave *slave)
- {
-@@ -767,6 +790,14 @@ gdm_factory_slave_start (GdmSlave *slave)
-                           G_CALLBACK (on_session_accreditation_failed),
-                           slave);
-         g_signal_connect (GDM_FACTORY_SLAVE (slave)->priv->session,
-+                          "session-opened",
-+                          G_CALLBACK (on_session_opened),
-+                          slave);
-+        g_signal_connect (GDM_FACTORY_SLAVE (slave)->priv->session,
-+                          "session-open-failed",
-+                          G_CALLBACK (on_session_open_failed),
-+                          slave);
-+        g_signal_connect (GDM_FACTORY_SLAVE (slave)->priv->session,
-                           "info",
-                           G_CALLBACK (on_session_info),
-                           slave);
-diff --git a/daemon/gdm-product-slave.c b/daemon/gdm-product-slave.c
-index dd2e1bc..93d83a1 100644
---- a/daemon/gdm-product-slave.c
-+++ b/daemon/gdm-product-slave.c
-@@ -635,6 +635,27 @@ on_session_accreditation_failed (GdmSession      *session,
- }
- 
- static void
-+on_session_opened (GdmSession      *session,
-+                   const char      *service_name,
-+                   GdmProductSlave *slave)
-+{
-+        send_dbus_string_method (slave->priv->session_relay_connection,
-+                                 "SessionOpened", service_name);
-+}
-+
-+static void
-+on_session_open_failed (GdmSession      *session,
-+                        const char      *service_name,
-+                        const char      *message,
-+                        GdmProductSlave *slave)
-+{
-+        send_dbus_string_string_method (slave->priv->session_relay_connection,
-+                                        "SessionOpenFailed",
-+                                        service_name,
-+                                        message);
-+}
-+
-+static void
- on_session_info (GdmSession      *session,
-                  const char      *service_name,
-                  const char      *text,
-@@ -1051,7 +1072,14 @@ create_new_session (GdmProductSlave *slave)
-                           "accreditation-failed",
-                           G_CALLBACK (on_session_accreditation_failed),
-                           slave);
--
-+        g_signal_connect (slave->priv->session,
-+                          "session-opened",
-+                          G_CALLBACK (on_session_opened),
-+                          slave);
-+        g_signal_connect (slave->priv->session,
-+                          "session-open-failed",
-+                          G_CALLBACK (on_session_open_failed),
-+                          slave);
-         g_signal_connect (slave->priv->session,
-                           "info",
-                           G_CALLBACK (on_session_info),
-diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index 700a6c6..54c832d 100644
---- a/daemon/gdm-session-direct.c
-+++ b/daemon/gdm-session-direct.c
-@@ -979,6 +979,58 @@ gdm_session_direct_handle_problem (GdmSessionDirect *session,
- }
- 
- static DBusHandlerResult
-+gdm_session_direct_handle_session_opened (GdmSessionDirect *session,
-+                                          GdmSessionConversation *conversation,
-+                                          DBusMessage      *message)
-+{
-+        DBusMessage *reply;
-+        DBusError    error;
-+
-+        g_debug ("GdmSessionDirect: Handling SessionOpened");
-+
-+        dbus_error_init (&error);
-+        if (! dbus_message_get_args (message, &error, DBUS_TYPE_INVALID)) {
-+                g_warning ("ERROR: %s", error.message);
-+        }
-+
-+        g_debug ("GdmSessionDirect: Emitting 'session-opened' signal");
-+
-+        _gdm_session_session_opened (GDM_SESSION (session), conversation->service_name);
-+
-+        reply = dbus_message_new_method_return (message);
-+        dbus_connection_send (conversation->worker_connection, reply, NULL);
-+        dbus_message_unref (reply);
-+
-+        return DBUS_HANDLER_RESULT_HANDLED;
-+}
-+
-+static DBusHandlerResult
-+gdm_session_direct_handle_open_failed (GdmSessionDirect *session,
-+                                       GdmSessionConversation *conversation,
-+                                       DBusMessage      *message)
-+{
-+        DBusMessage *reply;
-+        DBusError    error;
-+        const char  *text;
-+
-+        dbus_error_init (&error);
-+        if (! dbus_message_get_args (message, &error,
-+                                     DBUS_TYPE_STRING, &text,
-+                                     DBUS_TYPE_INVALID)) {
-+                g_warning ("ERROR: %s", error.message);
-+        }
-+
-+        reply = dbus_message_new_method_return (message);
-+        dbus_connection_send (conversation->worker_connection, reply, NULL);
-+        dbus_message_unref (reply);
-+
-+        g_debug ("GdmSessionDirect: Emitting 'session-open-failed' signal");
-+        _gdm_session_session_open_failed (GDM_SESSION (session), conversation->service_name, text);
-+
-+        return DBUS_HANDLER_RESULT_HANDLED;
-+}
-+
-+static DBusHandlerResult
- gdm_session_direct_handle_session_started (GdmSessionDirect *session,
-                                            GdmSessionConversation *conversation,
-                                            DBusMessage      *message)
-@@ -1245,6 +1297,10 @@ session_worker_message (DBusConnection *connection,
-                 return gdm_session_direct_handle_accreditation_failed (session, conversation, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "UsernameChanged")) {
-                 return gdm_session_direct_handle_username_changed (session, conversation, message);
-+        } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "SessionOpened")) {
-+                return gdm_session_direct_handle_session_opened (session, conversation, message);
-+        } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "OpenFailed")) {
-+                return gdm_session_direct_handle_open_failed (session, conversation, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "SessionStarted")) {
-                 return gdm_session_direct_handle_session_started (session, conversation, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_DBUS_INTERFACE, "StartFailed")) {
-@@ -2228,6 +2284,19 @@ setup_session_environment (GdmSessionDirect *session)
- }
- 
- static void
-+gdm_session_direct_open_session (GdmSession *session,
-+                                 const char *service_name)
-+{
-+        GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
-+        GdmSessionConversation *conversation;
-+
-+        g_return_if_fail (session != NULL);
-+
-+        conversation = find_conversation_by_name (impl, service_name);
-+        send_dbus_void_signal (conversation, "OpenSession");
-+}
-+
-+static void
- gdm_session_direct_start_session (GdmSession *session,
-                                   const char *service_name)
- {
-@@ -2757,6 +2826,7 @@ gdm_session_iface_init (GdmSessionIface *iface)
-         iface->authenticate = gdm_session_direct_authenticate;
-         iface->authorize = gdm_session_direct_authorize;
-         iface->accredit = gdm_session_direct_accredit;
-+        iface->open_session = gdm_session_direct_open_session;
-         iface->close = gdm_session_direct_close;
- 
-         iface->cancel = gdm_session_direct_cancel;
-diff --git a/daemon/gdm-session-private.h b/daemon/gdm-session-private.h
-index 860c09c..36781dd 100644
---- a/daemon/gdm-session-private.h
-+++ b/daemon/gdm-session-private.h
-@@ -54,6 +54,11 @@ void             _gdm_session_accredited                   (GdmSession   *sessio
- void             _gdm_session_accreditation_failed         (GdmSession   *session,
-                                                             const char   *service_name,
-                                                             const char   *text);
-+void             _gdm_session_session_opened               (GdmSession   *session,
-+                                                            const char   *service_name);
-+void             _gdm_session_session_open_failed          (GdmSession   *session,
-+                                                            const char   *service_name,
-+                                                            const char   *message);
- void             _gdm_session_session_started              (GdmSession   *session,
-                                                             const char   *service_name,
-                                                             int           pid);
-diff --git a/daemon/gdm-session-relay.c b/daemon/gdm-session-relay.c
-index 6e15f75..3bf8ed7 100644
---- a/daemon/gdm-session-relay.c
-+++ b/daemon/gdm-session-relay.c
-@@ -247,6 +247,14 @@ gdm_session_relay_accredit (GdmSession *session,
- }
- 
- static void
-+gdm_session_relay_open_session (GdmSession *session,
-+                                const char *service_name)
-+{
-+        GdmSessionRelay *impl = GDM_SESSION_RELAY (session);
-+        send_dbus_string_signal (impl, "OpenSession", service_name);
-+}
-+
-+static void
- gdm_session_relay_answer_query (GdmSession *session,
-                                 const char *service_name,
-                                 const char *text)
-@@ -678,6 +686,61 @@ handle_accreditation_failed (GdmSessionRelay *session_relay,
- 
-         return DBUS_HANDLER_RESULT_HANDLED;
- }
-+static DBusHandlerResult
-+handle_session_opened (GdmSessionRelay *session_relay,
-+                       DBusConnection  *connection,
-+                       DBusMessage     *message)
-+{
-+        DBusMessage *reply;
-+        DBusError    error;
-+        char        *service_name;
-+
-+        dbus_error_init (&error);
-+        if (! dbus_message_get_args (message, &error,
-+                                     DBUS_TYPE_STRING, &service_name,
-+                                     DBUS_TYPE_INVALID)) {
-+                g_warning ("ERROR: %s", error.message);
-+        }
-+        dbus_error_free (&error);
-+
-+        g_debug ("GdmSessionRelay: Session Opened");
-+
-+        reply = dbus_message_new_method_return (message);
-+        dbus_connection_send (connection, reply, NULL);
-+        dbus_message_unref (reply);
-+
-+        _gdm_session_session_opened (GDM_SESSION (session_relay), service_name);
-+
-+        return DBUS_HANDLER_RESULT_HANDLED;
-+}
-+
-+static DBusHandlerResult
-+handle_session_open_failed (GdmSessionRelay *session_relay,
-+                            DBusConnection  *connection,
-+                            DBusMessage     *message)
-+{
-+        DBusMessage *reply;
-+        DBusError    error;
-+        char        *service_name;
-+
-+        dbus_error_init (&error);
-+        if (! dbus_message_get_args (message, &error,
-+                                     DBUS_TYPE_STRING, &service_name,
-+                                     DBUS_TYPE_INVALID)) {
-+                g_warning ("ERROR: %s", error.message);
-+        }
-+        dbus_error_free (&error);
-+
-+        g_debug ("GdmSessionRelay: Session Open Failed");
-+
-+        reply = dbus_message_new_method_return (message);
-+        dbus_connection_send (connection, reply, NULL);
-+        dbus_message_unref (reply);
-+
-+        _gdm_session_session_open_failed (GDM_SESSION (session_relay), service_name, NULL);
-+
-+        return DBUS_HANDLER_RESULT_HANDLED;
-+}
- 
- static DBusHandlerResult
- handle_session_started (GdmSessionRelay *session_relay,
-@@ -794,6 +857,10 @@ session_handle_child_message (DBusConnection *connection,
-                 return handle_accredited (session_relay, connection, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "AccreditationFailed")) {
-                 return handle_accreditation_failed (session_relay, connection, message);
-+        } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "SessionOpened")) {
-+                return handle_session_opened (session_relay, connection, message);
-+        } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "SessionOpenFailed")) {
-+                return handle_session_open_failed (session_relay, connection, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "SessionStarted")) {
-                 return handle_session_started (session_relay, connection, message);
-         } else if (dbus_message_is_method_call (message, GDM_SESSION_RELAY_DBUS_INTERFACE, "SessionStopped")) {
-@@ -1193,6 +1260,7 @@ gdm_session_iface_init (GdmSessionIface *iface)
-         iface->authenticate = gdm_session_relay_authenticate;
-         iface->authorize = gdm_session_relay_authorize;
-         iface->accredit = gdm_session_relay_accredit;
-+        iface->open_session = gdm_session_relay_open_session;
-         iface->close = gdm_session_relay_close;
- 
-         iface->cancel = gdm_session_relay_cancel;
-diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 80844b4..8bc51a5 100644
---- a/daemon/gdm-session-worker.c
-+++ b/daemon/gdm-session-worker.c
-@@ -2450,13 +2450,13 @@ do_open_session (GdmSessionWorker *worker)
-         res = gdm_session_worker_open_user_session (worker, &error);
-         if (! res) {
-                 send_dbus_string_method (worker->priv->connection,
--                                         "StartFailed",
-+                                         "OpenFailed",
-                                          error->message);
-                 g_error_free (error);
-                 return;
-         }
- 
--        queue_state_change (worker);
-+        send_dbus_void_method (worker->priv->connection, "SessionOpened");
- }
- 
- static void
-@@ -2572,7 +2572,7 @@ on_start_program (GdmSessionWorker *worker,
-         const char *text;
-         dbus_bool_t res;
- 
--        if (worker->priv->state != GDM_SESSION_WORKER_STATE_ACCREDITED) {
-+        if (worker->priv->state != GDM_SESSION_WORKER_STATE_SESSION_OPENED) {
-                 g_debug ("GdmSessionWorker: ignoring spurious start program while in state %s", get_state_name (worker->priv->state));
-                 return;
-         }
-@@ -2731,6 +2731,14 @@ on_establish_credentials (GdmSessionWorker *worker,
- }
- 
- static void
-+on_open_session (GdmSessionWorker *worker,
-+                 DBusMessage      *message)
-+{
-+        /* FIXME: return error if not in ACCREDITED state */
-+        queue_state_change (worker);
-+}
-+
-+static void
- on_reauthenticate (GdmSessionWorker *worker,
-                    DBusMessage      *message)
- {
-@@ -2802,6 +2810,8 @@ worker_dbus_handle_message (DBusConnection *connection,
-                 on_authorize (worker, message);
-         } else if (dbus_message_is_signal (message, GDM_SESSION_DBUS_INTERFACE, "EstablishCredentials")) {
-                 on_establish_credentials (worker, message);
-+        } else if (dbus_message_is_signal (message, GDM_SESSION_DBUS_INTERFACE, "OpenSession")) {
-+                on_open_session (worker, message);
-         } else if (dbus_message_is_signal (message, GDM_SESSION_DBUS_INTERFACE, "StartProgram")) {
-                 on_start_program (worker, message);
-         } else if (dbus_message_is_signal (message, GDM_SESSION_DBUS_INTERFACE, "Reauthenticate")) {
-diff --git a/daemon/gdm-session.c b/daemon/gdm-session.c
-index 9ee34af..8858071 100644
---- a/daemon/gdm-session.c
-+++ b/daemon/gdm-session.c
-@@ -46,6 +46,8 @@ enum {
-         PROBLEM,
-         INFO_QUERY,
-         SECRET_INFO_QUERY,
-+        SESSION_OPENED,
-+        SESSION_OPEN_FAILED,
-         SESSION_STARTED,
-         SESSION_START_FAILED,
-         SESSION_EXITED,
-@@ -207,6 +209,15 @@ gdm_session_cancel (GdmSession *session)
- }
- 
- void
-+gdm_session_open_session (GdmSession *session,
-+                          const char *service_name)
-+{
-+        g_return_if_fail (GDM_IS_SESSION (session));
-+
-+        GDM_SESSION_GET_IFACE (session)->open_session (session, service_name);
-+}
-+
-+void
- gdm_session_start_session (GdmSession *session,
-                            const char *service_name)
- {
-@@ -391,6 +402,28 @@ gdm_session_class_init (gpointer g_iface)
-                               G_TYPE_NONE,
-                               2,
-                               G_TYPE_STRING, G_TYPE_STRING);
-+        signals [SESSION_OPENED] =
-+                g_signal_new ("session-opened",
-+                              iface_type,
-+                              G_SIGNAL_RUN_FIRST,
-+                              G_STRUCT_OFFSET (GdmSessionIface, session_opened),
-+                              NULL,
-+                              NULL,
-+                              g_cclosure_marshal_VOID__STRING,
-+                              G_TYPE_NONE,
-+                              1,
-+                              G_TYPE_STRING);
-+        signals [SESSION_OPEN_FAILED] =
-+                g_signal_new ("session-open-failed",
-+                              iface_type,
-+                              G_SIGNAL_RUN_FIRST,
-+                              G_STRUCT_OFFSET (GdmSessionIface, session_open_failed),
-+                              NULL,
-+                              NULL,
-+                              gdm_marshal_VOID__STRING_STRING,
-+                              G_TYPE_NONE,
-+                              2,
-+                              G_TYPE_STRING, G_TYPE_STRING);
-         signals [SESSION_STARTED] =
-                 g_signal_new ("session-started",
-                               iface_type,
-@@ -616,6 +649,23 @@ _gdm_session_problem (GdmSession   *session,
- }
- 
- void
-+_gdm_session_session_opened (GdmSession   *session,
-+                             const char   *service_name)
-+{
-+        g_return_if_fail (GDM_IS_SESSION (session));
-+        g_signal_emit (session, signals [SESSION_OPENED], 0, service_name);
-+}
-+
-+void
-+_gdm_session_session_open_failed (GdmSession   *session,
-+                                  const char   *service_name,
-+                                  const char   *text)
-+{
-+        g_return_if_fail (GDM_IS_SESSION (session));
-+        g_signal_emit (session, signals [SESSION_OPEN_FAILED], 0, service_name, text);
-+}
-+
-+void
- _gdm_session_session_started (GdmSession   *session,
-                               const char   *service_name,
-                               int           pid)
-diff --git a/daemon/gdm-session.h b/daemon/gdm-session.h
-index c45a770..22c2ccb 100644
---- a/daemon/gdm-session.h
-+++ b/daemon/gdm-session.h
-@@ -62,6 +62,8 @@ struct _GdmSessionIface
-         void (* accredit)                    (GdmSession   *session,
-                                               const char   *service_name,
-                                               int           cred_flag);
-+        void (* open_session)                (GdmSession   *session,
-+                                              const char   *service_name);
-         void (* answer_query)                (GdmSession   *session,
-                                               const char   *service_name,
-                                               const char   *text);
-@@ -115,6 +117,11 @@ struct _GdmSessionIface
-         void (* problem)                     (GdmSession   *session,
-                                               const char   *service_name,
-                                               const char   *problem);
-+        void (* session_opened)              (GdmSession   *session,
-+                                              const char   *service_name);
-+        void (* session_open_failed)         (GdmSession   *session,
-+                                              const char   *service_name,
-+                                              const char   *message);
-         void (* session_started)             (GdmSession   *session,
-                                               const char   *service_name,
-                                               int           pid);
-@@ -160,6 +167,8 @@ void     gdm_session_authorize                   (GdmSession *session,
- void     gdm_session_accredit                    (GdmSession *session,
-                                                   const char *service_name,
-                                                   int         cred_flag);
-+void     gdm_session_open_session                (GdmSession *session,
-+                                                  const char *service_name);
- void     gdm_session_start_session               (GdmSession *session,
-                                                   const char *service_name);
- void     gdm_session_close                       (GdmSession *session);
-diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 79a05b8..d79bcbb 100644
---- a/daemon/gdm-simple-slave.c
-+++ b/daemon/gdm-simple-slave.c
-@@ -434,7 +434,7 @@ on_session_accredited (GdmSession     *session,
-                        const char     *service_name,
-                        GdmSimpleSlave *slave)
- {
--        queue_start_session (slave, service_name);
-+        gdm_session_open_session (session, service_name);
- }
- 
- static void
-@@ -474,6 +474,29 @@ on_session_accreditation_failed (GdmSession     *session,
- }
- 
- static void
-+on_session_opened (GdmSession     *session,
-+                   const char     *service_name,
-+                   GdmSimpleSlave *slave)
-+{
-+        queue_start_session (slave, service_name);
-+}
-+
-+static void
-+on_session_open_failed (GdmSession     *session,
-+                        const char     *service_name,
-+                        const char     *message,
-+                        GdmSimpleSlave *slave)
-+{
-+        if (slave->priv->greeter_server != NULL) {
-+                gdm_greeter_server_problem (slave->priv->greeter_server,
-+                                            service_name,
-+                                            _("Unable to open session"));
-+        }
-+
-+        gdm_session_stop_conversation (session, service_name);
-+}
-+
-+static void
- on_session_info (GdmSession     *session,
-                  const char     *service_name,
-                  const char     *text,
-@@ -705,6 +728,14 @@ create_new_session (GdmSimpleSlave *slave)
-                           G_CALLBACK (on_session_accreditation_failed),
-                           slave);
-         g_signal_connect (slave->priv->session,
-+                          "session-opened",
-+                          G_CALLBACK (on_session_opened),
-+                          slave);
-+        g_signal_connect (slave->priv->session,
-+                          "session-open-failed",
-+                          G_CALLBACK (on_session_open_failed),
-+                          slave);
-+        g_signal_connect (slave->priv->session,
-                           "info",
-                           G_CALLBACK (on_session_info),
-                           slave);
--- 
-1.6.6
-
-
-From 812afba27dc8ed276da91b6c832c78d9c91a1c7d Mon Sep 17 00:00:00 2001
+From addb34cb8d5aec8dda0d463e38db941a4db16eca Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 30 Jan 2009 23:57:31 -0500
-Subject: [PATCH 10/50] Add limited support for multiple pam stacks
+Subject: [PATCH 08/47] Add limited support for multiple pam stacks
 
 This hard codes 3 pam stacks and doesn't handle
 switching between them very well yet.
@@ -7683,13 +7219,13 @@ index 0000000..ade21b6
 +
 +#endif /* __GDM_TASK_LIST_H */
 -- 
-1.6.6
+1.7.0.1
 
 
-From fbfe0ddc59c92b5c37511877b82a458ac3931283 Mon Sep 17 00:00:00 2001
+From b3704382fc973cb1222d91c487da283f93576b98 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Mar 2009 11:19:40 -0500
-Subject: [PATCH 11/50] Create session settings object when first starting worker
+Subject: [PATCH 09/47] Create session settings object when first starting worker
 
 This is because one PAM module may complete before setup
 gets called on another, and when one completes *all* PAM
@@ -7700,10 +7236,10 @@ set by the user.
  1 files changed, 1 insertions(+), 2 deletions(-)
 
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 8bc51a5..b07a939 100644
+index 2f07e13..8328910 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2313,8 +2313,6 @@ do_setup (GdmSessionWorker *worker)
+@@ -2316,8 +2316,6 @@ do_setup (GdmSessionWorker *worker)
          GError  *error;
          gboolean res;
  
@@ -7712,7 +7248,7 @@ index 8bc51a5..b07a939 100644
          g_signal_connect_swapped (worker->priv->user_settings,
                                    "notify::language-name",
                                    G_CALLBACK (on_saved_language_name_read),
-@@ -2963,6 +2961,7 @@ gdm_session_worker_init (GdmSessionWorker *worker)
+@@ -2970,6 +2968,7 @@ gdm_session_worker_init (GdmSessionWorker *worker)
                                                             g_str_equal,
                                                             (GDestroyNotify) g_free,
                                                             (GDestroyNotify) g_free);
@@ -7721,20 +7257,20 @@ index 8bc51a5..b07a939 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From 32b001a8254a7123fba925a56fdf6235aea32ad3 Mon Sep 17 00:00:00 2001
+From 57679898d909be56f6312091e7f1f53cdd1076c9 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 5 Feb 2009 15:20:25 -0500
-Subject: [PATCH 12/50] Queue a greeter reset when the user clicks cancel
+Subject: [PATCH 10/47] Queue a greeter reset when the user clicks cancel
 
 ---
  daemon/gdm-simple-slave.c |   37 +++++++++++++++++++++++++++++++++++++
  1 files changed, 37 insertions(+), 0 deletions(-)
 
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index d79bcbb..edc8d8d 100644
+index 52e24fb..86aa706 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -829,6 +829,9 @@ on_greeter_start_conversation (GdmGreeterServer *greeter_server,
@@ -7860,13 +7396,13 @@ index d79bcbb..edc8d8d 100644
  }
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 8f99408b3d2510155bb605cfc9bc1e93f871490c Mon Sep 17 00:00:00 2001
+From 07cf93e20ac862617e44d684ff7d0ce174ebe5fd Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:23:48 -0500
-Subject: [PATCH 13/50] Add a plugin based extension system to greeter
+Subject: [PATCH 11/47] Add a plugin based extension system to greeter
 
 This allows plugins to drive which PAM conversations
 get run.  This commit just adds one plugin "password"
@@ -7885,7 +7421,7 @@ run.
  gui/simple-greeter/gdm-greeter-session.c           |   91 +++-
  gui/simple-greeter/gdm-plugin-manager.c            |  478 ++++++++++++++
  gui/simple-greeter/gdm-plugin-manager.h            |   66 ++
- gui/simple-greeter/gdm-task-list.c                 |  216 +++++--
+ gui/simple-greeter/gdm-task-list.c                 |  223 +++++--
  gui/simple-greeter/gdm-task-list.h                 |   36 +-
  gui/simple-greeter/libgdmsimplegreeter/Makefile.am |   46 ++
  .../libgdmsimplegreeter/gdm-conversation.c         |  147 +++++
@@ -7903,7 +7439,7 @@ run.
  gui/simple-greeter/plugins/password/page.ui        |   56 ++
  gui/simple-greeter/plugins/password/plugin.c       |   40 ++
  po/POTFILES.in                                     |    1 +
- 30 files changed, 2956 insertions(+), 224 deletions(-)
+ 30 files changed, 2960 insertions(+), 227 deletions(-)
  create mode 100644 gui/simple-greeter/gdm-greeter-plugin.c
  create mode 100644 gui/simple-greeter/gdm-greeter-plugin.h
  create mode 100644 gui/simple-greeter/gdm-plugin-manager.c
@@ -7925,7 +7461,7 @@ run.
  create mode 100644 gui/simple-greeter/plugins/password/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index ac00aa7..ae5c12a 100644
+index a692cca..e75bc93 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -18,6 +18,22 @@ AC_PROG_CXX
@@ -7951,7 +7487,7 @@ index ac00aa7..ae5c12a 100644
  AC_HEADER_STDC
  
  AC_SUBST(VERSION)
-@@ -192,6 +208,15 @@ AC_ARG_WITH(dmconfdir,
+@@ -193,6 +209,15 @@ AC_ARG_WITH(dmconfdir,
  AC_SUBST(dmconfdir)
  
  dnl ---------------------------------------------------------------------------
@@ -7967,7 +7503,7 @@ index ac00aa7..ae5c12a 100644
  dnl - Configure arguments
  dnl ---------------------------------------------------------------------------
  
-@@ -1262,6 +1287,21 @@ fi
+@@ -1263,6 +1288,21 @@ fi
  
  AC_SUBST(GDM_SCREENSHOT_DIR)
  
@@ -7989,7 +7525,7 @@ index ac00aa7..ae5c12a 100644
  
  dnl ---------------------------------------------------------------------------
  dnl - Finish
-@@ -1390,6 +1430,10 @@ docs/Makefile
+@@ -1391,6 +1431,10 @@ docs/Makefile
  gui/Makefile
  gui/simple-greeter/Makefile
  gui/simple-greeter/libnotificationarea/Makefile
@@ -10295,7 +9831,7 @@ index 0000000..f181140
 +
 +#endif /* __GDM_PLUGIN_MANAGER_H */
 diff --git a/gui/simple-greeter/gdm-task-list.c b/gui/simple-greeter/gdm-task-list.c
-index e0fd3d4..25831a6 100644
+index e0fd3d4..3dff10e 100644
 --- a/gui/simple-greeter/gdm-task-list.c
 +++ b/gui/simple-greeter/gdm-task-list.c
 @@ -37,12 +37,6 @@
@@ -10311,7 +9847,7 @@ index e0fd3d4..25831a6 100644
  struct GdmTaskListPrivate
  {
          GtkWidget *box;
-@@ -59,54 +53,161 @@ static guint    signals[NUMBER_OF_SIGNALS];
+@@ -59,54 +53,162 @@ static guint    signals[NUMBER_OF_SIGNALS];
  
  static void     gdm_task_list_class_init  (GdmTaskListClass *klass);
  static void     gdm_task_list_init        (GdmTaskList      *task_list);
@@ -10449,7 +9985,16 @@ index e0fd3d4..25831a6 100644
 +                button = gtk_radio_button_new_from_widget (previous_button);
          }
 +        g_object_set_data (G_OBJECT (task), "gdm-task-list-button", button);
-+
+ 
+-        g_object_set (task->radio_button, "draw-indicator", FALSE, NULL);
+-        g_object_set_data (G_OBJECT (task->radio_button), "gdm-task", task);
+-        g_signal_connect_swapped (task->radio_button,
+-                                  "toggled", G_CALLBACK (on_task_toggled), task_list);
+-        image = gtk_image_new_from_icon_name (icon_name, GTK_ICON_SIZE_DND);
+-        gtk_widget_show (image);
+-        gtk_container_add (GTK_CONTAINER (task->radio_button), image);
+-        gtk_widget_show (task->radio_button);
+-        gtk_container_add (GTK_CONTAINER (task->radio_button), task_list->priv->box);
 +        g_object_set (G_OBJECT (button), "draw-indicator", FALSE, NULL);
 +        g_object_set_data (G_OBJECT (button), "gdm-task", task);
 +        g_signal_connect_swapped (button, "toggled",
@@ -10466,29 +10011,23 @@ index e0fd3d4..25831a6 100644
 +        g_signal_connect_swapped (G_OBJECT (task), "disabled",
 +                                  G_CALLBACK (on_task_disabled),
 +                                  task_list);
-+
+ 
+-        gtk_container_add (GTK_CONTAINER (task_list->priv->box), task->radio_button);
+-        task_list->priv->tasks = g_list_append (task_list->priv->tasks, task);
 +        icon = gdm_task_get_icon (task);
 +        image = gtk_image_new_from_gicon (icon, GTK_ICON_SIZE_SMALL_TOOLBAR);
 +        g_object_unref (icon);
- 
--        g_object_set (task->radio_button, "draw-indicator", FALSE, NULL);
--        g_object_set_data (G_OBJECT (task->radio_button), "gdm-task", task);
--        g_signal_connect_swapped (task->radio_button,
--                                  "toggled", G_CALLBACK (on_task_toggled), task_list);
--        image = gtk_image_new_from_icon_name (icon_name, GTK_ICON_SIZE_DND);
-         gtk_widget_show (image);
--        gtk_container_add (GTK_CONTAINER (task->radio_button), image);
--        gtk_widget_show (task->radio_button);
--        gtk_container_add (GTK_CONTAINER (task->radio_button), task_list->priv->box);
++
++        gtk_widget_show (image);
 +        gtk_container_add (GTK_CONTAINER (button), image);
 +        description = gdm_task_get_description (task);
 +        gtk_widget_set_tooltip_text (button, description);
 +        g_free (description);
 +        gtk_widget_show (button);
- 
--        gtk_container_add (GTK_CONTAINER (task_list->priv->box), task->radio_button);
++
 +        gtk_container_add (GTK_CONTAINER (task_list->priv->box), button);
-         task_list->priv->tasks = g_list_append (task_list->priv->tasks, task);
++        task_list->priv->tasks = g_list_append (task_list->priv->tasks,
++                                                g_object_ref (task));
 +
 +        if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button))) {
 +                g_signal_emit (task_list, signals[ACTIVATED], 0, task);
@@ -10496,7 +10035,7 @@ index e0fd3d4..25831a6 100644
  }
  
  static void
-@@ -122,9 +223,9 @@ gdm_task_list_class_init (GdmTaskListClass *klass)
+@@ -122,9 +224,9 @@ gdm_task_list_class_init (GdmTaskListClass *klass)
                                              G_STRUCT_OFFSET (GdmTaskListClass, activated),
                                              NULL,
                                              NULL,
@@ -10508,7 +10047,7 @@ index e0fd3d4..25831a6 100644
  
          signals [DEACTIVATED] = g_signal_new ("deactivated",
                                              G_TYPE_FROM_CLASS (object_class),
-@@ -132,22 +233,19 @@ gdm_task_list_class_init (GdmTaskListClass *klass)
+@@ -132,22 +234,19 @@ gdm_task_list_class_init (GdmTaskListClass *klass)
                                              G_STRUCT_OFFSET (GdmTaskListClass, deactivated),
                                              NULL,
                                              NULL,
@@ -10535,7 +10074,16 @@ index e0fd3d4..25831a6 100644
          gtk_widget_show (widget->priv->box);
          gtk_container_add (GTK_CONTAINER (widget),
                             widget->priv->box);
-@@ -179,20 +277,46 @@ gdm_task_list_new (void)
+@@ -163,7 +262,7 @@ gdm_task_list_finalize (GObject *object)
+ 
+         widget = GDM_TASK_LIST (object);
+ 
+-        g_list_foreach (widget->priv->tasks, (GFunc) g_free, NULL);
++        g_list_foreach (widget->priv->tasks, (GFunc) g_object_unref, NULL);
+         g_list_free (widget->priv->tasks);
+ 
+         G_OBJECT_CLASS (gdm_task_list_parent_class)->finalize (object);
+@@ -179,20 +278,46 @@ gdm_task_list_new (void)
          return GTK_WIDGET (object);
  }
  
@@ -11921,13 +11469,13 @@ index 1fccb90..7c344c9 100644
  gui/user-switch-applet/gdm-entry-menu-item.c
  gui/user-switch-applet/GNOME_FastUserSwitchApplet.server.in.in
 -- 
-1.6.6
+1.7.0.1
 
 
-From 3be5d74603cfb18c3a1c8267e1d9ce0d3006ca51 Mon Sep 17 00:00:00 2001
+From a05933382617361499c6c6faeb95ee7ecab29f58 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Sat, 7 Feb 2009 21:17:49 -0500
-Subject: [PATCH 14/50] Force session reset if all PAM conversations fail
+Subject: [PATCH 12/47] Force session reset if all PAM conversations fail
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |   22 +++++++++++++++++++---
@@ -11980,13 +11528,13 @@ index a51184f..1b4fdef 100644
  }
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 17278780b7a5a136b4ccc2c1e58add345f2becaf Mon Sep 17 00:00:00 2001
+From a8b44bd0bde6eda3c6cc4c1ffef47ccd5add0f3f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 18 Feb 2009 12:32:39 -0500
-Subject: [PATCH 15/50] Add a way for plugins to pick users from list
+Subject: [PATCH 13/47] Add a way for plugins to pick users from list
 
 The smartcard plugin is going to want to
 start its conversation as soon as the card
@@ -12137,13 +11685,13 @@ index f1910cf..fb4bf49 100644
  G_END_DECLS
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 461164268b3744666f057a74a0fbfc38a1093513 Mon Sep 17 00:00:00 2001
+From 194cb74d6503c46fc0f143bd0d9595230eb29762 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 14:05:20 -0500
-Subject: [PATCH 16/50] Add new api to ask when chooser widget is done loading items
+Subject: [PATCH 14/47] Add new api to ask when chooser widget is done loading items
 
 ---
  gui/simple-greeter/gdm-chooser-widget.c |    8 ++++++++
@@ -12193,13 +11741,13 @@ index 7e3e59c..6a07843 100644
   */
  void           gdm_chooser_widget_loaded                       (GdmChooserWidget          *widget);
 -- 
-1.6.6
+1.7.0.1
 
 
-From ede8d9d579155c981e3c21addd3167f6d6fab31c Mon Sep 17 00:00:00 2001
+From 6d7f9a643389d679869e2450b539deeea69f224f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 14:31:27 -0500
-Subject: [PATCH 17/50] Tell tasks they're ready only after user list loads
+Subject: [PATCH 15/47] Tell tasks they're ready only after user list loads
 
 This way they won't try to access the list prematurely.
 ---
@@ -12253,13 +11801,13 @@ index 3de9918..c2463d9 100644
          }
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 4aadd1e16e92df4051f76e76d118fd5c062e45ee Mon Sep 17 00:00:00 2001
+From a83b0111d9c8a1035eab2746488bdf28402d0cc0 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:25:47 -0500
-Subject: [PATCH 18/50] Add fingerprint plugin
+Subject: [PATCH 16/47] Add fingerprint plugin
 
 This commit adds a plugin to initiate a conversation for
 fingerprint scans.
@@ -12291,10 +11839,10 @@ fingerprint scans.
  create mode 100644 gui/simple-greeter/plugins/fingerprint/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index ae5c12a..98d2f7e 100644
+index e75bc93..29239a7 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1434,6 +1434,10 @@ gui/simple-greeter/libgdmsimplegreeter/Makefile
+@@ -1435,6 +1435,10 @@ gui/simple-greeter/libgdmsimplegreeter/Makefile
  gui/simple-greeter/libgdmsimplegreeter/gdmsimplegreeter.pc
  gui/simple-greeter/plugins/Makefile
  gui/simple-greeter/plugins/password/Makefile
@@ -12962,13 +12510,13 @@ index 0000000..5ea9925
 +        return GDM_GREETER_EXTENSION (extension);
 +}
 -- 
-1.6.6
+1.7.0.1
 
 
-From 04ae1752db0dd528a51c693fdcb39269c57ecf90 Mon Sep 17 00:00:00 2001
+From ca7f457579e0272249ce497d8f1feafa39cdc805 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 11 Feb 2009 08:47:52 -0500
-Subject: [PATCH 19/50] Add start of a smartcard plugin
+Subject: [PATCH 17/47] Add start of a smartcard plugin
 
 It contains a copy and paste of an old RHEL patch
 I did a few years ago.
@@ -13011,7 +12559,7 @@ I did a few years ago.
  create mode 100644 gui/simple-greeter/plugins/smartcard/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index 98d2f7e..662dbcf 100644
+index 29239a7..33620a1 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -67,6 +67,7 @@ LIBCANBERRA_GTK_REQUIRED_VERSION=0.4
@@ -13035,7 +12583,7 @@ index 98d2f7e..662dbcf 100644
  PKG_CHECK_MODULES(XLIB, x11 xau, ,
    [AC_PATH_XTRA
      if test "x$no_x" = xyes; then
-@@ -1438,6 +1445,10 @@ gui/simple-greeter/plugins/fingerprint/Makefile
+@@ -1439,6 +1446,10 @@ gui/simple-greeter/plugins/fingerprint/Makefile
  gui/simple-greeter/plugins/fingerprint/icons/Makefile
  gui/simple-greeter/plugins/fingerprint/icons/16x16/Makefile
  gui/simple-greeter/plugins/fingerprint/icons/48x48/Makefile
@@ -16242,13 +15790,13 @@ index 7c344c9..3432b98 100644
  gui/user-switch-applet/gdm-entry-menu-item.c
  gui/user-switch-applet/GNOME_FastUserSwitchApplet.server.in.in
 -- 
-1.6.6
+1.7.0.1
 
 
-From 41aa37a4424b44e8c6d68a5da894f682c5fdc4ba Mon Sep 17 00:00:00 2001
+From 9d94f73380af5946f282fceab33f5f51db4193b4 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 23 Feb 2009 17:57:06 -0500
-Subject: [PATCH 20/50] Add a new "choosable" property to show tasks in user list
+Subject: [PATCH 18/47] Add a new "choosable" property to show tasks in user list
 
 Useful for Smartcard and some future "Guest" account plugin
 ---
@@ -16401,13 +15949,13 @@ index 6fa01fb..25d5de4 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From 9c9a5dd79d92763c600faefec1644f2276133985 Mon Sep 17 00:00:00 2001
+From 8457e0ad2c181d6f4d67fa7525c02b3f083121df Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 24 Feb 2009 15:12:35 -0500
-Subject: [PATCH 21/50] Separate handling of non-users in user list from users
+Subject: [PATCH 19/47] Separate handling of non-users in user list from users
 
 Now get_chosen_user returns NULL if the activated item
 wasn't a user.  We also separate the handling of on item
@@ -16564,13 +16112,13 @@ index 7aa99e7..316ef46 100644
  }
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 370127487869fb08cb6084dd50c5991ad37d3d19 Mon Sep 17 00:00:00 2001
+From 04628a2751e7f0543ed7f5009b566dfe13662a85 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 27 Feb 2009 15:44:13 -0500
-Subject: [PATCH 22/50] Initiate smart card auth when clicking on it in list
+Subject: [PATCH 20/47] Initiate smart card auth when clicking on it in list
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c      |   24 ++++++++++++++++++++
@@ -16640,13 +16188,13 @@ index 25d5de4..a9e41f4 100644
                          gdm_conversation_cancel (GDM_CONVERSATION (extension));
                  }
 -- 
-1.6.6
+1.7.0.1
 
 
-From 0e30e8e54c1cd4cded053b5b3eac2ef6d12c3b26 Mon Sep 17 00:00:00 2001
+From 4e0f55d8c7633e30808209172b986d2f41052de1 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 11:10:28 -0500
-Subject: [PATCH 23/50] Only show task list if user is selected
+Subject: [PATCH 21/47] Only show task list if user is selected
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |   32 ++++++++++++++----------
@@ -16759,10 +16307,10 @@ index 342133d..a7571cc 100644
                                  GDM_TASK (extension));
  
 diff --git a/gui/simple-greeter/gdm-task-list.c b/gui/simple-greeter/gdm-task-list.c
-index 25831a6..162b784 100644
+index 3dff10e..be50832 100644
 --- a/gui/simple-greeter/gdm-task-list.c
 +++ b/gui/simple-greeter/gdm-task-list.c
-@@ -302,17 +302,24 @@ gdm_task_list_set_active_task (GdmTaskList *widget,
+@@ -303,17 +303,24 @@ gdm_task_list_set_active_task (GdmTaskList *widget,
                                 GdmTask     *task)
  {
          GtkWidget *button;
@@ -16790,13 +16338,13 @@ index 25831a6..162b784 100644
  
  int
 -- 
-1.6.6
+1.7.0.1
 
 
-From aed9a5577ea94782e63bfbf823e04428bee33122 Mon Sep 17 00:00:00 2001
+From 3887d52e987f04408c209a79883500ffd669b576 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 13:53:34 -0500
-Subject: [PATCH 24/50] Pull verification functions out into their own subroutines
+Subject: [PATCH 22/47] Pull verification functions out into their own subroutines
 
 This makes the function smaller and easier to read
 ---
@@ -16985,13 +16533,13 @@ index a7571cc..0b4db33 100644
  }
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 0cd050377f88c5ad99bbbab045b623c145475e65 Mon Sep 17 00:00:00 2001
+From 6fa6b2e08b2358de4a7c5efe10d535c46ca3c6d0 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 13:57:34 -0500
-Subject: [PATCH 25/50] Add new function find_task_with_service_name
+Subject: [PATCH 23/47] Add new function find_task_with_service_name
 
 It hides a bunch of icky foreach calls.
 ---
@@ -17109,13 +16657,13 @@ index 0b4db33..c423e43 100644
          if (task == NULL) {
                  g_debug ("GdmGreeterLoginWindow: %s has no task associated with it", service_name);
 -- 
-1.6.6
+1.7.0.1
 
 
-From 7d3a2cd9cfa76e3173dc69202ae7ca19f1cbde20 Mon Sep 17 00:00:00 2001
+From 2360e9f39f1dcb54ca8928eb7eaec0d64df565e0 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 2 Mar 2009 17:09:16 -0500
-Subject: [PATCH 26/50] Notify plugins if their user choose requests fail
+Subject: [PATCH 24/47] Notify plugins if their user choose requests fail
 
 This allows the smart card plugin to cancel pending
 conversations when a card gets inserted.
@@ -17322,13 +16870,13 @@ index a9e41f4..274132e 100644
  
  char *
 -- 
-1.6.6
+1.7.0.1
 
 
-From f5ef0c1ddb21520e8fbc6f220a1b96bfb5c59092 Mon Sep 17 00:00:00 2001
+From e1af827b80baba71e6b5f9b36122d75aa41ee52c Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Mon, 13 Apr 2009 14:19:50 -0400
-Subject: [PATCH 27/50] reset all conversations if password conversation fails
+Subject: [PATCH 25/47] reset all conversations if password conversation fails
 
 This is a temporary hack until we store plugin policy in
 gconf.
@@ -17358,13 +16906,13 @@ index b2af64e..6ce65a0 100644
  
          if (task != NULL) {
 -- 
-1.6.6
+1.7.0.1
 
 
-From 9d185eccea582a312ae6c07528ca78efdfda6831 Mon Sep 17 00:00:00 2001
+From 97fdd612730c2aa42919d01ad1e965e261690f1e Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 21 Apr 2009 10:25:18 -0400
-Subject: [PATCH 28/50] When one PAM conversation wins, stop the others
+Subject: [PATCH 26/47] When one PAM conversation wins, stop the others
 
 This doesn't work yet, it's still in progress code.
 ---
@@ -17373,10 +16921,10 @@ This doesn't work yet, it's still in progress code.
  2 files changed, 46 insertions(+), 20 deletions(-)
 
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index 54c832d..aac83dd 100644
+index 09d6a76..86ceff8 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
-@@ -2297,6 +2297,40 @@ gdm_session_direct_open_session (GdmSession *session,
+@@ -2300,6 +2300,40 @@ gdm_session_direct_open_session (GdmSession *session,
  }
  
  static void
@@ -17417,7 +16965,7 @@ index 54c832d..aac83dd 100644
  gdm_session_direct_start_session (GdmSession *session,
                                    const char *service_name)
  {
-@@ -2308,6 +2342,16 @@ gdm_session_direct_start_session (GdmSession *session,
+@@ -2311,6 +2345,16 @@ gdm_session_direct_start_session (GdmSession *session,
          g_return_if_fail (session != NULL);
          g_return_if_fail (impl->priv->is_running == FALSE);
  
@@ -17434,7 +16982,7 @@ index 54c832d..aac83dd 100644
          command = get_session_command (impl);
  
          if (gdm_session_direct_bypasses_xsession (impl)) {
-@@ -2318,8 +2362,6 @@ gdm_session_direct_start_session (GdmSession *session,
+@@ -2321,8 +2365,6 @@ gdm_session_direct_start_session (GdmSession *session,
  
          g_free (command);
  
@@ -17443,7 +16991,7 @@ index 54c832d..aac83dd 100644
          setup_session_environment (impl);
          send_environment (impl, conversation);
  
-@@ -2330,23 +2372,7 @@ gdm_session_direct_start_session (GdmSession *session,
+@@ -2333,23 +2375,7 @@ gdm_session_direct_start_session (GdmSession *session,
  static void
  stop_all_conversations (GdmSessionDirect *session)
  {
@@ -17469,7 +17017,7 @@ index 54c832d..aac83dd 100644
  
  static void
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index edc8d8d..9fe0e0e 100644
+index 86aa706..efe7fc7 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -586,7 +586,7 @@ on_session_conversation_stopped (GdmSession     *session,
@@ -17482,13 +17030,13 @@ index edc8d8d..9fe0e0e 100644
                                                                 service_name);
                  if (! res) {
 -- 
-1.6.6
+1.7.0.1
 
 
-From 67f633e9b48de06c75007bea11177af500f6427f Mon Sep 17 00:00:00 2001
+From bdcc36eb922ce411bc3abcd6eca31e449fc5666c Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 21 Apr 2009 15:30:28 -0400
-Subject: [PATCH 29/50] When one PAM conv. wins, actually stop the others
+Subject: [PATCH 27/47] When one PAM conv. wins, actually stop the others
 
 We weren't properly keeping the winning conversation
 around in the previous commit
@@ -17497,10 +17045,10 @@ around in the previous commit
  1 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index aac83dd..d6a5a5b 100644
+index 86ceff8..158a5f1 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
-@@ -2321,13 +2321,20 @@ stop_all_other_conversations (GdmSessionDirect        *session,
+@@ -2324,13 +2324,20 @@ stop_all_other_conversations (GdmSessionDirect        *session,
                  conversation = (GdmSessionConversation *) value;
  
                  if (conversation == conversation_to_keep) {
@@ -17525,13 +17073,13 @@ index aac83dd..d6a5a5b 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From a289961317ab2a0cf74eaa1567b2cb7d6ae679f1 Mon Sep 17 00:00:00 2001
+From 4b901ff9f4d48244cc48df1837eafd184143d096 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 24 Jul 2009 14:41:48 -0400
-Subject: [PATCH 30/50] KILL pam stack instead of TERM pam stack
+Subject: [PATCH 28/47] KILL pam stack instead of TERM pam stack
 
 Some PAM modules are really slow to shut down.
 We need to handle them being slow to shut down better,
@@ -17557,13 +17105,13 @@ index 0327d77..d99b8a5 100644
          if (res < 0) {
                  g_warning ("Unable to kill session worker process");
 -- 
-1.6.6
+1.7.0.1
 
 
-From a33870b47f85b2dcb445402ec99dab51ca1ecd85 Mon Sep 17 00:00:00 2001
+From 6c35264f2715099bad657183d82899ab56bf4b8e Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 21 Oct 2009 16:08:52 -0400
-Subject: [PATCH 31/50] Don't show tasklist for autologin
+Subject: [PATCH 29/47] Don't show tasklist for autologin
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |    5 +++++
@@ -17586,13 +17134,13 @@ index 6ce65a0..d0d7363 100644
  
  static gboolean
 -- 
-1.6.6
+1.7.0.1
 
 
-From 1e8de8e23e9bf4a8888e781e8b8d807cdb702793 Mon Sep 17 00:00:00 2001
+From 9fe9625d2ca6d8378f00bc520071b0b339ad41c6 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 23 Oct 2009 17:39:19 -0400
-Subject: [PATCH 32/50] Drop the other hiding stuff for now.
+Subject: [PATCH 30/47] Drop the other hiding stuff for now.
 
 It depends on buttons being available that we don't have
 in the multi-stack branch.
@@ -17620,13 +17168,13 @@ index bff71e5..4d3c445 100644
          }
  }
 -- 
-1.6.6
+1.7.0.1
 
 
-From c6a1597c6bf52eeb643c4b883e2b997c3ea8818e Mon Sep 17 00:00:00 2001
+From 77282fbe8b3f7cee8bf498714a3f5145af047ce8 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 11:13:10 -0400
-Subject: [PATCH 33/50] Prevent start session signal handler from getting called multiple times
+Subject: [PATCH 31/47] Prevent start session signal handler from getting called multiple times
 
 It was causing a double free.
 ---
@@ -17656,13 +17204,13 @@ index d0d7363..5bd3019 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From 497ab40ed00755dc12d6fc66feef92b225db9ebd Mon Sep 17 00:00:00 2001
+From 64546b1a830c050eb79cf4b47ad24a652d4f1cc9 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 13:57:53 -0400
-Subject: [PATCH 34/50] Don't show unimportant images on plugin buttons
+Subject: [PATCH 32/47] Don't show unimportant images on plugin buttons
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |    8 +++++++-
@@ -17689,13 +17237,13 @@ index 5bd3019..e185efb 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From 4ed8c7356b7628d67da40dfd9044b68b27f204fb Mon Sep 17 00:00:00 2001
+From b8be6cb582874c1557adc48cef67557e5ae4e411 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 14:10:35 -0400
-Subject: [PATCH 35/50] Add visibility concept to task iface
+Subject: [PATCH 33/47] Add visibility concept to task iface
 
 ---
  gui/simple-greeter/libgdmsimplegreeter/gdm-task.c |    6 ++++++
@@ -17740,13 +17288,13 @@ index c75bf29..51e2b0a 100644
  
  #endif /* __GDM_TASK_H */
 -- 
-1.6.6
+1.7.0.1
 
 
-From bc661cd72996d5eeb3b613d89b47780ed609d1b4 Mon Sep 17 00:00:00 2001
+From bc43b3303ca3c6c3080784c222ebe3e460eb14c6 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 14:10:50 -0400
-Subject: [PATCH 36/50] adapt fingerprint to task iface
+Subject: [PATCH 34/47] adapt fingerprint to task iface
 
 ---
  .../fingerprint/gdm-fingerprint-extension.c        |    7 +++++++
@@ -17778,13 +17326,13 @@ index 316ef46..e1fc0ed 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From e372a7f8db62975ddf90bb89dc1fc54805c04c8b Mon Sep 17 00:00:00 2001
+From 36ce2ee1769d08c8260af73e26a83972204df0b7 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 14:11:05 -0400
-Subject: [PATCH 37/50] adapt smartcard plugin to task iface
+Subject: [PATCH 35/47] adapt smartcard plugin to task iface
 
 ---
  .../plugins/smartcard/gdm-smartcard-extension.c    |    7 +++++++
@@ -17816,13 +17364,13 @@ index 274132e..9967d5f 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From c052e01e13126c1344bbcb9a486d56b850251750 Mon Sep 17 00:00:00 2001
+From 565b1f2cee8a53e997ed7f0463c0e99e0d2f8cfc Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 14:10:50 -0400
-Subject: [PATCH 38/50] adapt password to task iface
+Subject: [PATCH 36/47] adapt password to task iface
 
 ---
  .../plugins/password/gdm-password-extension.c      |    7 +++++++
@@ -17854,13 +17402,13 @@ index 4922c65..255283e 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From deb082b332648fccf0fa3436a9d656f682a6e1ce Mon Sep 17 00:00:00 2001
+From e574f31ea1ba0154564496837cba4a6f53175dfc Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 16:05:14 -0400
-Subject: [PATCH 39/50] Return a different error code for "service won't work" than "auth failed"
+Subject: [PATCH 37/47] Return a different error code for "service won't work" than "auth failed"
 
 If we bubble it up to the greeter then we should be able to have
 a more sensible UI when e.g. fingerprinting isn't enabled.
@@ -17870,10 +17418,10 @@ a more sensible UI when e.g. fingerprinting isn't enabled.
  2 files changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index b07a939..72fdfa8 100644
+index 8328910..adc8dcf 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -1291,7 +1291,7 @@ gdm_session_worker_initialize_pam (GdmSessionWorker *worker,
+@@ -1294,7 +1294,7 @@ gdm_session_worker_initialize_pam (GdmSessionWorker *worker,
                   */
                  g_set_error (error,
                               GDM_SESSION_WORKER_ERROR,
@@ -17882,7 +17430,7 @@ index b07a939..72fdfa8 100644
                               _("error initiating conversation with authentication system - %s"),
                               error_code == PAM_ABORT? _("general failure") :
                               error_code == PAM_BUF_ERR? _("out of memory") :
-@@ -1403,7 +1403,15 @@ gdm_session_worker_authenticate_user (GdmSessionWorker *worker,
+@@ -1406,7 +1406,15 @@ gdm_session_worker_authenticate_user (GdmSessionWorker *worker,
          /* blocking call, does the actual conversation */
          error_code = pam_authenticate (worker->priv->pam_handle, authentication_flags);
  
@@ -17912,13 +17460,13 @@ index ee5465a..b1c8285 100644
          GDM_SESSION_WORKER_ERROR_AUTHORIZING,
          GDM_SESSION_WORKER_ERROR_OPENING_LOG_FILE,
 -- 
-1.6.6
+1.7.0.1
 
 
-From 6fe26b18d87e1d5319fe5300346a0a6368ff6b4d Mon Sep 17 00:00:00 2001
+From 564e1def472c57bd48d3f277f3adf89653665615 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:32:00 -0400
-Subject: [PATCH 40/50] Emit "service-unavailable" from session when pam service refuses to work
+Subject: [PATCH 38/47] Emit "service-unavailable" from session when pam service refuses to work
 
 ---
  daemon/gdm-session-direct.c  |   26 +++++++++++++++++++++++---
@@ -17930,7 +17478,7 @@ Subject: [PATCH 40/50] Emit "service-unavailable" from session when pam service 
  6 files changed, 103 insertions(+), 10 deletions(-)
 
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index d6a5a5b..e51ea18 100644
+index 158a5f1..2fca5e5 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
 @@ -280,9 +280,27 @@ on_session_exited (GdmSession *session,
@@ -17987,7 +17535,7 @@ index 36781dd..e0a810e 100644
                                                              const char   *service_name);
  void             _gdm_session_setup_failed                 (GdmSession   *session,
 diff --git a/daemon/gdm-session-relay.c b/daemon/gdm-session-relay.c
-index 3bf8ed7..a933557 100644
+index 98ccc51..88aee14 100644
 --- a/daemon/gdm-session-relay.c
 +++ b/daemon/gdm-session-relay.c
 @@ -463,6 +463,34 @@ handle_problem (GdmSessionRelay *session_relay,
@@ -18045,10 +17593,10 @@ index 3bf8ed7..a933557 100644
                                 "    </method>\n"
                                 "    <method name=\"SetupFailed\">\n"
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 72fdfa8..72fd2a3 100644
+index adc8dcf..4b77249 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2361,9 +2361,16 @@ do_setup (GdmSessionWorker *worker)
+@@ -2364,9 +2364,16 @@ do_setup (GdmSessionWorker *worker)
                                                   worker->priv->display_device,
                                                   &error);
          if (! res) {
@@ -18068,7 +17616,7 @@ index 72fdfa8..72fd2a3 100644
                  g_error_free (error);
                  return;
          }
-@@ -2384,10 +2391,18 @@ do_authenticate (GdmSessionWorker *worker)
+@@ -2387,10 +2394,18 @@ do_authenticate (GdmSessionWorker *worker)
                                                      worker->priv->password_is_required,
                                                      &error);
          if (! res) {
@@ -18151,13 +17699,13 @@ index 22c2ccb..9636b92 100644
                                                const char   *service_name);
          void (* setup_for_user)              (GdmSession   *session,
 -- 
-1.6.6
+1.7.0.1
 
 
-From 7ffe2e5b75ef6e498701dc5e2f28f1a9f0fb6aaa Mon Sep 17 00:00:00 2001
+From bf6f9b5587ae691263a4d6607ca869e016775160 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:38:52 -0400
-Subject: [PATCH 41/50] Bubble service-unavailable up to greeter
+Subject: [PATCH 39/47] Bubble service-unavailable up to greeter
 
 ---
  daemon/gdm-greeter-server.c |    8 ++++++++
@@ -18198,7 +17746,7 @@ index 976f0b7..c1da2f4 100644
  gboolean            gdm_greeter_server_ready                 (GdmGreeterServer *greeter_server,
                                                                const char       *service_name);
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 9fe0e0e..2e03a0e 100644
+index efe7fc7..13b47d7 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -211,6 +211,19 @@ queue_greeter_reset (GdmSimpleSlave *slave)
@@ -18233,13 +17781,13 @@ index 9fe0e0e..2e03a0e 100644
                            G_CALLBACK (on_session_setup_complete),
                            slave);
 -- 
-1.6.6
+1.7.0.1
 
 
-From 9fe4903b24c419f55a872a680302c0847a12f215 Mon Sep 17 00:00:00 2001
+From 0639204367cbd9094611c927f2d76292be62a0fe Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:46:39 -0400
-Subject: [PATCH 42/50] Catch service-unavailable from server in client and propagate it
+Subject: [PATCH 40/47] Catch service-unavailable from server in client and propagate it
 
 ---
  gui/simple-greeter/gdm-greeter-client.c |   20 ++++++++++++++++++++
@@ -18312,49 +17860,13 @@ index f879307..801bae4 100644
                                            const char        *service_name);
          void (* conversation_stopped)    (GdmGreeterClient  *client,
 -- 
-1.6.6
+1.7.0.1
 
 
-From bb943f545d444f2b3c7fef0fb05390f150a20e5e Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 28 Oct 2009 22:04:44 -0400
-Subject: [PATCH 43/50] Fix memory handling of task in task list
-
----
- gui/simple-greeter/gdm-task-list.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-task-list.c b/gui/simple-greeter/gdm-task-list.c
-index 162b784..be50832 100644
---- a/gui/simple-greeter/gdm-task-list.c
-+++ b/gui/simple-greeter/gdm-task-list.c
-@@ -203,7 +203,8 @@ gdm_task_list_add_task (GdmTaskList *task_list,
-         gtk_widget_show (button);
- 
-         gtk_container_add (GTK_CONTAINER (task_list->priv->box), button);
--        task_list->priv->tasks = g_list_append (task_list->priv->tasks, task);
-+        task_list->priv->tasks = g_list_append (task_list->priv->tasks,
-+                                                g_object_ref (task));
- 
-         if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button))) {
-                 g_signal_emit (task_list, signals[ACTIVATED], 0, task);
-@@ -261,7 +262,7 @@ gdm_task_list_finalize (GObject *object)
- 
-         widget = GDM_TASK_LIST (object);
- 
--        g_list_foreach (widget->priv->tasks, (GFunc) g_free, NULL);
-+        g_list_foreach (widget->priv->tasks, (GFunc) g_object_unref, NULL);
-         g_list_free (widget->priv->tasks);
- 
-         G_OBJECT_CLASS (gdm_task_list_parent_class)->finalize (object);
--- 
-1.6.6
-
-
-From 39008493b92a9193d83fab9178c62750b84e9f22 Mon Sep 17 00:00:00 2001
+From 3c01ce811187603615ca73b5c62f3f0848a589aa Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 22:09:45 -0400
-Subject: [PATCH 44/50] Add gdm_task_list_remove_task
+Subject: [PATCH 41/47] Add gdm_task_list_remove_task
 
 ---
  gui/simple-greeter/gdm-task-list.c |   29 +++++++++++++++++++++++++++++
@@ -18416,13 +17928,13 @@ index 8bc0c0e..3df5415 100644
  G_END_DECLS
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 68f370d08ca326e9661d581520498361c7c8f4ac Mon Sep 17 00:00:00 2001
+From 6454f9efb7aa5b9f73ac35c6622094ef0703eeb3 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:58:44 -0400
-Subject: [PATCH 45/50] Remove task from task list if unavailable
+Subject: [PATCH 42/47] Remove task from task list if unavailable
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |   20 ++++++++++++++++++++
@@ -18508,13 +18020,13 @@ index 848ea1e..3bf24e8 100644
                            G_CALLBACK (on_ready),
                            session);
 -- 
-1.6.6
+1.7.0.1
 
 
-From 452c6103577b400544d7e0c5ed548b9fee919bc3 Mon Sep 17 00:00:00 2001
+From a00cf6e7fb82cc6bc0cfeefbdeb6303e5163d04c Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 23:55:00 -0400
-Subject: [PATCH 46/50] Don't add task to UI if it's invisible
+Subject: [PATCH 43/47] Don't add task to UI if it's invisible
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |   14 +++++++++++---
@@ -18553,13 +18065,13 @@ index 03858e3..4a3df26 100644
                  name, description);
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 7ad647521a33faee7f5785971fcd2bcdc0411d19 Mon Sep 17 00:00:00 2001
+From 29c3f9d27a6e2c9c2769641eece61bf80bf3dfcb Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 29 Oct 2009 00:39:20 -0400
-Subject: [PATCH 47/50] add lame check to see if fingerprint is enabled
+Subject: [PATCH 44/47] add lame check to see if fingerprint is enabled
 
 ---
  .../fingerprint/gdm-fingerprint-extension.c        |   35 +++++++++++++++++++-
@@ -18612,13 +18124,13 @@ index e1fc0ed..b749ac1 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From cf005789c45da97b92e28f45e0ac94ca4cc941fb Mon Sep 17 00:00:00 2001
+From c493295a0a421dfa757bb2809aa694356ae3f4a0 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 29 Oct 2009 00:10:40 -0400
-Subject: [PATCH 48/50] don't activate invisible tasks
+Subject: [PATCH 45/47] don't activate invisible tasks
 
 ---
  gui/simple-greeter/gdm-task-list.c |    4 ++++
@@ -18640,13 +18152,13 @@ index dd77ed6..c9d7451 100644
          gtk_widget_set_sensitive (GTK_WIDGET (widget), TRUE);
  
 -- 
-1.6.6
+1.7.0.1
 
 
-From 9b3eb3f3b79f2169e43138575f33d6f0fefe812d Mon Sep 17 00:00:00 2001
+From 427844337e5690d0a750f1641a5066f96c144b15 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 29 Oct 2009 00:46:34 -0400
-Subject: [PATCH 49/50] Add lame check for smart card daemon
+Subject: [PATCH 46/47] Add lame check for smart card daemon
 
 We don't want to show the smart card bits if the daemon isn't running
 
@@ -18692,13 +18204,13 @@ index 9967d5f..903e18d 100644
  
  static void
 -- 
-1.6.6
+1.7.0.1
 
 
-From 92a18ffdee98e2867beebcab9d9d51d908cf0776 Mon Sep 17 00:00:00 2001
+From 8bc988c89f9c24e59c374a1ddc4c7efd2380bd3b Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Nov 2009 13:35:26 -0500
-Subject: [PATCH 50/50] Don't delay login for passwd -d users
+Subject: [PATCH 47/47] Don't delay login for passwd -d users
 
 Before we'd delay login if timed login was enabled, but
 we should have been checking if it was the reason login
@@ -18721,5 +18233,5 @@ index 4a3df26..de45663 100644
                          g_debug ("GdmGreeterLoginWindow: Okay, we'll start the session anyway,"
                                   "because the user isn't ever going to get an opportunity to"
 -- 
-1.6.6
+1.7.0.1
 
