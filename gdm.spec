@@ -14,14 +14,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.29.92
-Release: 4%{?dist}
+Version: 2.30.0
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/2.29/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.30/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdm-password.pam
@@ -55,8 +55,6 @@ Requires: plymouth-gdm-hooks
 Requires: pulseaudio-gdm-hooks
 # We need 1.0.4-5 since it lets us use "localhost" in auth cookies
 Requires: libXau >= 1.0.4-4
-Requires(post): scrollkeeper
-Requires(postun): scrollkeeper
 BuildRequires: pkgconfig(libcanberra-gtk)
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
@@ -159,11 +157,11 @@ cp -f %{SOURCE8} gui/simple-greeter/plugins/fingerprint/icons/16x16/gdm-fingerpr
 cp -f %{SOURCE9} gui/simple-greeter/plugins/fingerprint/icons/48x48/gdm-fingerprint.png
 
 %configure --with-pam-prefix=%{_sysconfdir} \
-	   --enable-profiling      \
-	   --enable-console-helper \
-	   --disable-scrollkeeper  \
-	   --with-console-kit      \
-	   --with-selinux
+           --enable-profiling      \
+           --enable-console-helper \
+           --disable-scrollkeeper  \
+           --with-console-kit      \
+           --with-selinux
 
 # drop unneeded direct library deps with --as-needed
 # libtool doesn't make this easy, so we do it the hard way
@@ -243,12 +241,8 @@ exit 0
 
 %post
 /sbin/ldconfig
-scrollkeeper-update
 
-touch --no-create /usr/share/icons/hicolor
-if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  gtk-update-icon-cache -q /usr/share/icons/hicolor
-fi
+touch --no-create /usr/share/icons/hicolor >&/dev/null || :
 
 export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
 gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
@@ -260,9 +254,9 @@ custom=/etc/gdm/custom.conf
 
 if [ $1 -ge 2 ] ; then
     if [ -f /usr/share/gdm/config/gdm.conf-custom ]; then
-	oldconffile=/usr/share/gdm/config/gdm.conf-custom
+        oldconffile=/usr/share/gdm/config/gdm.conf-custom
     elif [ -f /etc/X11/gdm/gdm.conf ]; then
-	oldconffile=/etc/X11/gdm/gdm.conf
+        oldconffile=/etc/X11/gdm/gdm.conf
     fi
 
     # Comment out some entries from the custom config file that may
@@ -310,11 +304,13 @@ fi
 
 %postun
 /sbin/ldconfig
-scrollkeeper-update
-touch --no-create %{_datadir}/icons/hicolor
-if [ -x /usr/bin/gtk-update-icon-cache ]; then
-  gtk-update-icon-cache -q %{_datadir}/icons/hicolor
+if [ $1 -eq 0 ]; then
+  touch --no-create %{_datadir}/icons/hicolor >&/dev/null || :
+  gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 fi
+
+%posttrans
+gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 
 %files -f gdm.lang
 %defattr(-, root, root)
@@ -400,6 +396,9 @@ fi
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Mar 29 2010 Matthias Clasen <mclasen@redhat.com> 2.30.0-1
+- Update to 2.30.0
+
 * Wed Mar 24 2010 Matthias Clasen <mclasen@redhat.com> 2.29.92-4
 - Drop hal dependency
 
