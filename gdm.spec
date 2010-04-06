@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.30.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -96,7 +96,6 @@ Patch96: gdm-multistack.patch
 Patch97: gdm-bubble-location.patch
 Patch98: tray-padding.patch
 Patch99: gdm-2.23.1-fedora-logo.patch
-Patch100: fix-boot.patch
 
 Patch101: gdm-libs.patch
 
@@ -140,7 +139,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
 %patch99 -p1 -b .fedora-logo
-%patch100 -p1 -b .fix-boot
 %patch101 -p1 -b .libs
 
 autoreconf -i -f
@@ -396,6 +394,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Apr 06 2010 Ray Strode <rstrode@redhat.com> 2.30.0-2
+- Update plymouth patch to work with 0.8.1
+
 * Mon Mar 29 2010 Matthias Clasen <mclasen@redhat.com> 2.30.0-1
 - Update to 2.30.0
 
