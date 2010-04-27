@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.30.0
-Release: 2%{?dist}
+Version: 2.30.2
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -181,8 +181,6 @@ done
 
 
 %install
-[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
-
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/Init
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/PreSession
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/PostSession
@@ -222,15 +220,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
 
 %find_lang gdm --with-gnome
 
-%clean
-[ -n "$RPM_BUILD_ROOT" -a "$RPM_BUILD_ROOT" != / ] && rm -rf $RPM_BUILD_ROOT
-
 %pre
-if [ "$1" -gt 1 ]; then
-  export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-  gconftool-2 --makefile-uninstall-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
-fi
-
+%gconf_schema_prepare gdm-simple-greeter
 /usr/sbin/useradd -M -u 42 -d /var/lib/gdm -s /sbin/nologin -r gdm > /dev/null 2>&1
 /usr/sbin/usermod -d /var/lib/gdm -s /sbin/nologin gdm >/dev/null 2>&1
 # ignore errors, as we can't disambiguate between gdm already existed
@@ -239,11 +230,8 @@ exit 0
 
 %post
 /sbin/ldconfig
-
+%gconf_schema_upgrade gdm-simple-greeter
 touch --no-create /usr/share/icons/hicolor >&/dev/null || :
-
-export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
 
 # if the user already has a config file, then migrate it to the new
 # location; rpm will ensure that old file will be renamed
@@ -295,10 +283,7 @@ fi
 /usr/sbin/gdm-safe-restart >/dev/null 2>&1 || :
 
 %preun
-if [ "$1" -eq 0 ]; then
-  export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-  gconftool-2 --makefile-uninstall-rule %{_sysconfdir}/gconf/schemas/gdm-simple-greeter.schemas >/dev/null
-fi
+%gconf_schema_remove gdm-simple-greeter
 
 %postun
 /sbin/ldconfig
@@ -394,6 +379,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Apr 27 2010 Matthias Clasen <mclasen@redhat.com> 2.30.2-1
+- Update to 2.30.2
+- Spec file cleanups
+
 * Tue Apr 06 2010 Ray Strode <rstrode@redhat.com> 2.30.0-2
 - Update plymouth patch to work with 0.8.1
 
