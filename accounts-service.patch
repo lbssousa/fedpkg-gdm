@@ -1,0 +1,2863 @@
+From 04a77f1fbb48138a6dfe0a1a20027fd3af6773fe Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 11 Mar 2010 09:07:21 -0500
+Subject: [PATCH 01/22] Add new gdm_user_is_logged_in method
+
+Before we were doing
+
+if (gdm_user_get_num_sessions > 0)
+
+all over the place.  This is slightly
+more clear.
+---
+ gui/simple-greeter/gdm-user-chooser-widget.c |    4 ++--
+ gui/simple-greeter/gdm-user.c                |    6 ++++++
+ gui/simple-greeter/gdm-user.h                |    1 +
+ 3 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-chooser-widget.c b/gui/simple-greeter/gdm-user-chooser-widget.c
+index 77e06a7..9658c2b 100644
+--- a/gui/simple-greeter/gdm-user-chooser-widget.c
++++ b/gui/simple-greeter/gdm-user-chooser-widget.c
+@@ -385,7 +385,7 @@ add_user (GdmUserChooserWidget *widget,
+         tooltip = g_strdup_printf (_("Log in as %s"),
+                                    gdm_user_get_user_name (user));
+ 
+-        is_logged_in = gdm_user_get_num_sessions (user) > 0;
++        is_logged_in = gdm_user_is_logged_in (user);
+ 
+         g_debug ("GdmUserChooserWidget: User added name:%s logged-in:%d pixbuf:%p",
+                  gdm_user_get_user_name (user),
+@@ -453,7 +453,7 @@ on_user_is_logged_in_changed (GdmUserManager       *manager,
+         g_debug ("GdmUserChooserWidget: User logged in changed: %s", gdm_user_get_user_name (user));
+ 
+         user_name = gdm_user_get_user_name (user);
+-        is_logged_in = gdm_user_get_num_sessions (user) > 0;
++        is_logged_in = gdm_user_is_logged_in (user);
+ 
+         gdm_chooser_widget_set_item_in_use (GDM_CHOOSER_WIDGET (widget),
+                                             user_name,
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 276a867..e182c2a 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -992,6 +992,12 @@ frame_pixbuf (GdkPixbuf *source)
+         return dest;
+ }
+ 
++gboolean
++gdm_user_is_logged_in (GdmUser *user)
++{
++        return user->sessions != NULL;
++}
++
+ GdkPixbuf *
+ gdm_user_render_icon (GdmUser   *user,
+                       gint       icon_size)
+diff --git a/gui/simple-greeter/gdm-user.h b/gui/simple-greeter/gdm-user.h
+index 9f153d9..c0b27ca 100644
+--- a/gui/simple-greeter/gdm-user.h
++++ b/gui/simple-greeter/gdm-user.h
+@@ -47,6 +47,7 @@ G_CONST_RETURN char  *gdm_user_get_home_directory  (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_shell           (GdmUser   *user);
+ guint                 gdm_user_get_num_sessions    (GdmUser   *user);
+ GList                *gdm_user_get_sessions        (GdmUser   *user);
++gboolean              gdm_user_is_logged_in        (GdmUser   *user);
+ gulong                gdm_user_get_login_frequency (GdmUser   *user);
+ 
+ GdkPixbuf            *gdm_user_render_icon         (GdmUser   *user,
+-- 
+1.6.5.2
+
+
+From c40b580ed71f206e8bcf0b2772011b4c944d1832 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 13:21:24 -0400
+Subject: [PATCH 02/22] Don't match users as dupes of themselves
+
+---
+ gui/simple-greeter/gdm-user-manager.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 01dc507..fe9d13d 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -746,9 +746,9 @@ match_real_name_cmpfunc (gconstpointer a,
+ static gboolean
+ match_real_name_hrfunc (gpointer key,
+                         gpointer value,
+-                        gpointer user_data)
++                        gpointer user)
+ {
+-        return (g_strcmp0 (user_data, gdm_user_get_real_name (value)) == 0);
++        return (value != user && g_strcmp0 (gdm_user_get_real_name (user), gdm_user_get_real_name (value)) == 0);
+ }
+ 
+ static void
+@@ -760,7 +760,7 @@ add_user (GdmUserManager *manager,
+         add_sessions_for_user (manager, user);
+         dup = g_hash_table_find (manager->priv->users,
+                                  match_real_name_hrfunc,
+-                                 (char *) gdm_user_get_real_name (user));
++                                 user);
+         if (dup != NULL) {
+                 _gdm_user_show_full_display_name (user);
+                 _gdm_user_show_full_display_name (dup);
+-- 
+1.6.5.2
+
+
+From 4f766f1a7be43b0b8d20159651371b462a1f9301 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 13:56:38 -0400
+Subject: [PATCH 03/22] Move get_primary_session_id to gdm-user.h
+
+It makes more sense there, and this will allow
+us to drop get_sessions eventually.
+---
+ gui/simple-greeter/gdm-user-manager.c |   61 +++++---------------------------
+ gui/simple-greeter/gdm-user.c         |   30 ++++++++++++++++
+ gui/simple-greeter/gdm-user.h         |    1 +
+ 3 files changed, 41 insertions(+), 51 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index fe9d13d..0bb868f 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -150,55 +150,6 @@ start_new_login_session (GdmUserManager *manager)
+         return res;
+ }
+ 
+-/* needs to stay in sync with gdm-slave */
+-static char *
+-_get_primary_user_session_id (GdmUserManager *manager,
+-                              GdmUser        *user)
+-{
+-        gboolean    can_activate_sessions;
+-        GList      *sessions;
+-        GList      *l;
+-        char       *primary_ssid;
+-
+-        if (manager->priv->seat_id == NULL || manager->priv->seat_id[0] == '\0') {
+-                g_debug ("GdmUserManager: display seat ID is not set; can't switch sessions");
+-                return NULL;
+-        }
+-
+-        primary_ssid = NULL;
+-        sessions = NULL;
+-
+-        can_activate_sessions = gdm_user_manager_can_switch (manager);
+-
+-        if (! can_activate_sessions) {
+-                g_debug ("GdmUserManager: seat is unable to activate sessions");
+-                goto out;
+-        }
+-
+-        sessions = gdm_user_get_sessions (user);
+-        if (sessions == NULL) {
+-                g_warning ("unable to determine sessions for user: %s",
+-                           gdm_user_get_user_name (user));
+-                goto out;
+-        }
+-
+-        for (l = sessions; l != NULL; l = l->next) {
+-                const char *ssid;
+-
+-                ssid = l->data;
+-
+-                /* FIXME: better way to choose? */
+-                if (ssid != NULL) {
+-                        primary_ssid = g_strdup (ssid);
+-                        break;
+-                }
+-        }
+-
+- out:
+-
+-        return primary_ssid;
+-}
+-
+ static gboolean
+ activate_session_id (GdmUserManager *manager,
+                      const char     *seat_id,
+@@ -439,15 +390,23 @@ gdm_user_manager_activate_user_session (GdmUserManager *manager,
+                                         GdmUser        *user)
+ {
+         gboolean ret;
+-        char    *ssid;
++        const char *ssid;
+         gboolean res;
+ 
++        gboolean can_activate_sessions;
+         g_return_val_if_fail (GDM_IS_USER_MANAGER (manager), FALSE);
+         g_return_val_if_fail (GDM_IS_USER (user), FALSE);
+ 
+         ret = FALSE;
+ 
+-        ssid = _get_primary_user_session_id (manager, user);
++        can_activate_sessions = gdm_user_manager_can_switch (manager);
++
++        if (! can_activate_sessions) {
++                g_debug ("GdmUserManager: seat is unable to activate sessions");
++                goto out;
++        }
++
++        ssid = gdm_user_get_primary_session_id (user);
+         if (ssid == NULL) {
+                 goto out;
+         }
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index e182c2a..2c62334 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -1065,3 +1065,33 @@ gdm_user_render_icon (GdmUser   *user,
+ 
+         return pixbuf;
+ }
++
++G_CONST_RETURN char *
++gdm_user_get_primary_session_id (GdmUser *user)
++{
++        GList *l;
++        const char *primary_ssid;
++
++        primary_ssid = NULL;
++
++        if (!gdm_user_is_logged_in (user)) {
++                g_debug ("User %s is not logged in, so has no primary session",
++                         gdm_user_get_user_name (user));
++                goto out;
++        }
++
++        for (l = user->sessions; l != NULL; l = l->next) {
++                const char *ssid;
++
++                ssid = l->data;
++
++                /* FIXME: better way to choose? */
++                if (ssid != NULL) {
++                        primary_ssid = ssid;
++                        break;
++                }
++        }
++out:
++        return primary_ssid;
++}
++
+diff --git a/gui/simple-greeter/gdm-user.h b/gui/simple-greeter/gdm-user.h
+index c0b27ca..3e448dd 100644
+--- a/gui/simple-greeter/gdm-user.h
++++ b/gui/simple-greeter/gdm-user.h
+@@ -49,6 +49,7 @@ guint                 gdm_user_get_num_sessions    (GdmUser   *user);
+ GList                *gdm_user_get_sessions        (GdmUser   *user);
+ gboolean              gdm_user_is_logged_in        (GdmUser   *user);
+ gulong                gdm_user_get_login_frequency (GdmUser   *user);
++G_CONST_RETURN char  *gdm_user_get_primary_session_id (GdmUser *user);
+ 
+ GdkPixbuf            *gdm_user_render_icon         (GdmUser   *user,
+                                                     gint       icon_size);
+-- 
+1.6.5.2
+
+
+From c9e7a8b8410ef7788c05c4937d4263a5308ae568 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 14:05:58 -0400
+Subject: [PATCH 04/22] Don't track manager from user object
+
+We don't need it, and it's a bit backward anyway.
+---
+ gui/simple-greeter/gdm-user-manager.c |    2 +-
+ gui/simple-greeter/gdm-user.c         |   21 ---------------------
+ 2 files changed, 1 insertions(+), 22 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 0bb868f..aadb147 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -683,7 +683,7 @@ create_user (GdmUserManager *manager)
+ {
+         GdmUser *user;
+ 
+-        user = g_object_new (GDM_TYPE_USER, "manager", manager, NULL);
++        user = g_object_new (GDM_TYPE_USER, NULL);
+         g_signal_connect (user,
+                           "sessions-changed",
+                           G_CALLBACK (on_user_sessions_changed),
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 2c62334..65ca7b5 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -30,7 +30,6 @@
+ #include <gio/gio.h>
+ #include <gtk/gtk.h>
+ 
+-#include "gdm-user-manager.h"
+ #include "gdm-user-private.h"
+ 
+ #define GDM_USER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), GDM_TYPE_USER, GdmUserClass))
+@@ -44,7 +43,6 @@
+ 
+ enum {
+         PROP_0,
+-        PROP_MANAGER,
+         PROP_REAL_NAME,
+         PROP_DISPLAY_NAME,
+         PROP_USER_NAME,
+@@ -62,8 +60,6 @@ enum {
+ struct _GdmUser {
+         GObject         parent;
+ 
+-        GdmUserManager *manager;
+-
+         uid_t           uid;
+         char           *user_name;
+         char           *real_name;
+@@ -170,10 +166,6 @@ gdm_user_set_property (GObject      *object,
+         user = GDM_USER (object);
+ 
+         switch (param_id) {
+-        case PROP_MANAGER:
+-                user->manager = g_value_get_object (value);
+-                g_assert (user->manager);
+-                break;
+         case PROP_LOGIN_FREQUENCY:
+                 _gdm_user_set_login_frequency (user, g_value_get_ulong (value));
+                 break;
+@@ -194,9 +186,6 @@ gdm_user_get_property (GObject    *object,
+         user = GDM_USER (object);
+ 
+         switch (param_id) {
+-        case PROP_MANAGER:
+-                g_value_set_object (value, user->manager);
+-                break;
+         case PROP_USER_NAME:
+                 g_value_set_string (value, user->user_name);
+                 break;
+@@ -236,15 +225,6 @@ gdm_user_class_init (GdmUserClass *class)
+         gobject_class->finalize = gdm_user_finalize;
+ 
+         g_object_class_install_property (gobject_class,
+-                                         PROP_MANAGER,
+-                                         g_param_spec_object ("manager",
+-                                                              _("Manager"),
+-                                                              _("The user manager object this user is controlled by."),
+-                                                              GDM_TYPE_USER_MANAGER,
+-                                                              (G_PARAM_READWRITE |
+-                                                               G_PARAM_CONSTRUCT_ONLY)));
+-
+-        g_object_class_install_property (gobject_class,
+                                          PROP_REAL_NAME,
+                                          g_param_spec_string ("real-name",
+                                                               "Real Name",
+@@ -311,7 +291,6 @@ gdm_user_class_init (GdmUserClass *class)
+ static void
+ gdm_user_init (GdmUser *user)
+ {
+-        user->manager = NULL;
+         user->user_name = NULL;
+         user->real_name = NULL;
+         user->display_name = NULL;
+-- 
+1.6.5.2
+
+
+From 321e40e627b9c8f570d7e293571f56892f8758c1 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 14:21:56 -0400
+Subject: [PATCH 05/22] Drop user properties in favor of a "changed" signal
+
+This is less specific, but good enough, and will make
+changing out the backend easier.
+---
+ gui/simple-greeter/gdm-user.c   |  165 +++++---------------------------------
+ gui/user-switch-applet/applet.c |   28 ++-----
+ 2 files changed, 29 insertions(+), 164 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 65ca7b5..182ef72 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -42,17 +42,7 @@
+ #define MINIMAL_UID       100
+ 
+ enum {
+-        PROP_0,
+-        PROP_REAL_NAME,
+-        PROP_DISPLAY_NAME,
+-        PROP_USER_NAME,
+-        PROP_UID,
+-        PROP_HOME_DIR,
+-        PROP_SHELL,
+-        PROP_LOGIN_FREQUENCY,
+-};
+-
+-enum {
++        CHANGED,
+         SESSIONS_CHANGED,
+         LAST_SIGNAL
+ };
+@@ -148,136 +138,22 @@ gdm_user_get_sessions (GdmUser *user)
+ }
+ 
+ static void
+-_gdm_user_set_login_frequency (GdmUser *user,
+-                               gulong   login_frequency)
+-{
+-        user->login_frequency = login_frequency;
+-        g_object_notify (G_OBJECT (user), "login-frequency");
+-}
+-
+-static void
+-gdm_user_set_property (GObject      *object,
+-                       guint         param_id,
+-                       const GValue *value,
+-                       GParamSpec   *pspec)
+-{
+-        GdmUser *user;
+-
+-        user = GDM_USER (object);
+-
+-        switch (param_id) {
+-        case PROP_LOGIN_FREQUENCY:
+-                _gdm_user_set_login_frequency (user, g_value_get_ulong (value));
+-                break;
+-        default:
+-                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+-                break;
+-        }
+-}
+-
+-static void
+-gdm_user_get_property (GObject    *object,
+-                       guint       param_id,
+-                       GValue     *value,
+-                       GParamSpec *pspec)
+-{
+-        GdmUser *user;
+-
+-        user = GDM_USER (object);
+-
+-        switch (param_id) {
+-        case PROP_USER_NAME:
+-                g_value_set_string (value, user->user_name);
+-                break;
+-        case PROP_REAL_NAME:
+-                g_value_set_string (value, user->real_name);
+-                break;
+-        case PROP_DISPLAY_NAME:
+-                g_value_set_string (value, user->display_name);
+-                break;
+-        case PROP_HOME_DIR:
+-                g_value_set_string (value, user->home_dir);
+-                break;
+-        case PROP_UID:
+-                g_value_set_ulong (value, user->uid);
+-                break;
+-        case PROP_SHELL:
+-                g_value_set_string (value, user->shell);
+-                break;
+-        case PROP_LOGIN_FREQUENCY:
+-                g_value_set_ulong (value, user->login_frequency);
+-                break;
+-        default:
+-                G_OBJECT_WARN_INVALID_PROPERTY_ID (object, param_id, pspec);
+-                break;
+-        }
+-}
+-
+-static void
+ gdm_user_class_init (GdmUserClass *class)
+ {
+         GObjectClass *gobject_class;
+ 
+         gobject_class = G_OBJECT_CLASS (class);
+ 
+-        gobject_class->set_property = gdm_user_set_property;
+-        gobject_class->get_property = gdm_user_get_property;
+         gobject_class->finalize = gdm_user_finalize;
+ 
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_REAL_NAME,
+-                                         g_param_spec_string ("real-name",
+-                                                              "Real Name",
+-                                                              "The real name to display for this user.",
+-                                                              NULL,
+-                                                              G_PARAM_READABLE));
+-
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_DISPLAY_NAME,
+-                                         g_param_spec_string ("display-name",
+-                                                              "Display Name",
+-                                                              "The unique name to display for this user.",
+-                                                              NULL,
+-                                                              G_PARAM_READABLE));
+-
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_UID,
+-                                         g_param_spec_ulong ("uid",
+-                                                             "User ID",
+-                                                             "The UID for this user.",
+-                                                             0, G_MAXULONG, 0,
+-                                                             G_PARAM_READABLE));
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_USER_NAME,
+-                                         g_param_spec_string ("user-name",
+-                                                              "User Name",
+-                                                              "The login name for this user.",
+-                                                              NULL,
+-                                                              G_PARAM_READABLE));
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_HOME_DIR,
+-                                         g_param_spec_string ("home-directory",
+-                                                              "Home Directory",
+-                                                              "The home directory for this user.",
+-                                                              NULL,
+-                                                              G_PARAM_READABLE));
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_SHELL,
+-                                         g_param_spec_string ("shell",
+-                                                              "Shell",
+-                                                              "The shell for this user.",
+-                                                              NULL,
+-                                                              G_PARAM_READABLE));
+-        g_object_class_install_property (gobject_class,
+-                                         PROP_LOGIN_FREQUENCY,
+-                                         g_param_spec_ulong ("login-frequency",
+-                                                             "login frequency",
+-                                                             "login frequency",
+-                                                             0,
+-                                                             G_MAXULONG,
+-                                                             0,
+-                                                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+-
++        signals [CHANGED] =
++                g_signal_new ("changed",
++                              G_TYPE_FROM_CLASS (class),
++                              G_SIGNAL_RUN_LAST,
++                              0,
++                              NULL, NULL,
++                              g_cclosure_marshal_VOID__VOID,
++                              G_TYPE_NONE, 0);
+         signals [SESSIONS_CHANGED] =
+                 g_signal_new ("sessions-changed",
+                               G_TYPE_FROM_CLASS (class),
+@@ -326,11 +202,12 @@ _gdm_user_update (GdmUser             *user,
+                   const struct passwd *pwent)
+ {
+         gchar *real_name = NULL;
++        gboolean changed;
+ 
+         g_return_if_fail (GDM_IS_USER (user));
+         g_return_if_fail (pwent != NULL);
+ 
+-        g_object_freeze_notify (G_OBJECT (user));
++        changed = FALSE;
+ 
+         /* Display Name */
+         if (pwent->pw_gecos && pwent->pw_gecos[0] != '\0') {
+@@ -370,7 +247,7 @@ _gdm_user_update (GdmUser             *user,
+              strcmp (real_name, user->real_name) != 0)) {
+                 g_free (user->real_name);
+                 user->real_name = real_name;
+-                g_object_notify (G_OBJECT (user), "real-name");
++                changed = TRUE;
+         } else {
+                 g_free (real_name);
+         }
+@@ -382,13 +259,13 @@ _gdm_user_update (GdmUser             *user,
+              strncmp (user->real_name, user->display_name, strlen (user->real_name)) != 0)) {
+                 g_free (user->display_name);
+                 user->display_name = NULL;
+-                g_object_notify (G_OBJECT (user), "display-name");
++                changed = TRUE;
+         }
+ 
+         /* UID */
+         if (pwent->pw_uid != user->uid) {
+                 user->uid = pwent->pw_uid;
+-                g_object_notify (G_OBJECT (user), "uid");
++                changed = TRUE;
+         }
+ 
+         /* Username */
+@@ -399,7 +276,7 @@ _gdm_user_update (GdmUser             *user,
+              strcmp (user->user_name, pwent->pw_name) != 0)) {
+                 g_free (user->user_name);
+                 user->user_name = g_strdup (pwent->pw_name);
+-                g_object_notify (G_OBJECT (user), "user-name");
++                changed = TRUE;
+         }
+ 
+         /* Home Directory */
+@@ -408,7 +285,7 @@ _gdm_user_update (GdmUser             *user,
+             strcmp (user->home_dir, pwent->pw_dir) != 0) {
+                 g_free (user->home_dir);
+                 user->home_dir = g_strdup (pwent->pw_dir);
+-                g_object_notify (G_OBJECT (user), "home-directory");
++                changed = TRUE;
+         }
+ 
+         /* Shell */
+@@ -419,10 +296,12 @@ _gdm_user_update (GdmUser             *user,
+              strcmp (user->shell, pwent->pw_shell) != 0)) {
+                 g_free (user->shell);
+                 user->shell = g_strdup (pwent->pw_shell);
+-                g_object_notify (G_OBJECT (user), "shell");
++                changed = TRUE;
+         }
+ 
+-        g_object_thaw_notify (G_OBJECT (user));
++        if (changed) {
++                g_signal_emit (user, signals[CHANGED], 0);
++        }
+ }
+ 
+ /**
+@@ -582,7 +461,7 @@ _gdm_user_show_full_display_name (GdmUser *user)
+              strcmp (uniq_name, user->display_name) != 0)) {
+                 g_free (user->display_name);
+                 user->display_name = uniq_name;
+-                g_object_notify (G_OBJECT (user), "display-name");
++                g_signal_emit (user, signals[CHANGED], 0);
+         } else {
+                 g_free (uniq_name);
+         }
+@@ -604,7 +483,7 @@ _gdm_user_show_short_display_name (GdmUser *user)
+         if (user->display_name) {
+                 g_free (user->display_name);
+                 user->display_name = NULL;
+-                g_object_notify (G_OBJECT (user), "display-name");
++                g_signal_emit (user, signals[CHANGED], 0);
+         }
+ }
+ 
+diff --git a/gui/user-switch-applet/applet.c b/gui/user-switch-applet/applet.c
+index 5d73283..89c2b69 100644
+--- a/gui/user-switch-applet/applet.c
++++ b/gui/user-switch-applet/applet.c
+@@ -80,7 +80,6 @@ typedef struct _GdmAppletData
+         guint           client_notify_lockdown_id;
+ 
+         guint           current_status;
+-        guint           user_icon_changed_id;
+         guint           user_notify_id;
+         gint8           pixel_size;
+         gint            panel_size;
+@@ -482,7 +481,6 @@ gdm_applet_data_free (GdmAppletData *adata)
+         gconf_client_notify_remove (adata->client, adata->client_notify_lockdown_id);
+ 
+         g_signal_handler_disconnect (adata->user, adata->user_notify_id);
+-        g_signal_handler_disconnect (adata->user, adata->user_icon_changed_id);
+ 
+ #ifdef BUILD_PRESENSE_STUFF
+         if (adata->presence_proxy != NULL) {
+@@ -581,11 +579,12 @@ menuitem_style_set_cb (GtkWidget     *menuitem,
+ }
+ 
+ static void
+-user_notify_display_name_cb (GObject       *object,
+-                             GParamSpec    *pspec,
+-                             GdmAppletData *adata)
++on_user_changed (GdmUser         *user,
++                 GdmAppletData   *adata)
+ {
++        g_debug ("user changed");
+         update_label (adata);
++        reset_icon (adata);
+ }
+ 
+ /* Called every time the menu is displayed (and also for some reason
+@@ -1283,14 +1282,6 @@ reset_icon (GdmAppletData *adata)
+ }
+ 
+ static void
+-on_user_icon_changed (GdmUser         *user,
+-                      GdmAppletData   *adata)
+-{
+-        g_debug ("User icon changed");
+-        reset_icon (adata);
+-}
+-
+-static void
+ setup_current_user (GdmAppletData *adata)
+ {
+         const char *name;
+@@ -1318,16 +1309,11 @@ setup_current_user (GdmAppletData *adata)
+         if (adata->user != NULL) {
+                 reset_icon (adata);
+ 
+-                adata->user_icon_changed_id =
+-                        g_signal_connect (adata->user,
+-                                          "icon-changed",
+-                                          G_CALLBACK (on_user_icon_changed),
+-                                          adata);
+                 adata->user_notify_id =
+                         g_signal_connect (adata->user,
+-                                         "notify::display-name",
+-                                         G_CALLBACK (user_notify_display_name_cb),
+-                                         adata);
++                                          "changed",
++                                          G_CALLBACK (on_user_changed),
++                                          adata);
+         }
+ }
+ 
+-- 
+1.6.5.2
+
+
+From 5dfb0d92923bede734900b362745c11744c095ad Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 14:22:47 -0400
+Subject: [PATCH 06/22] drop sessions_changed class member
+
+We're never going to have a default handler, we aren't
+going to have subclasses that need to chain up, so we don't
+need the vfunc.
+---
+ gui/simple-greeter/gdm-user.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 182ef72..3e0c61a 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -63,8 +63,6 @@ struct _GdmUser {
+ typedef struct _GdmUserClass
+ {
+         GObjectClass parent_class;
+-
+-        void (* sessions_changed) (GdmUser *user);
+ } GdmUserClass;
+ 
+ static void gdm_user_finalize     (GObject      *object);
+@@ -158,7 +156,7 @@ gdm_user_class_init (GdmUserClass *class)
+                 g_signal_new ("sessions-changed",
+                               G_TYPE_FROM_CLASS (class),
+                               G_SIGNAL_RUN_LAST,
+-                              G_STRUCT_OFFSET (GdmUserClass, sessions_changed),
++                              0,
+                               NULL, NULL,
+                               g_cclosure_marshal_VOID__VOID,
+                               G_TYPE_NONE, 0);
+-- 
+1.6.5.2
+
+
+From a407a2af7ad4cd19bab7daf412d7aab64b6f64a3 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 22:49:55 -0400
+Subject: [PATCH 07/22] Drop get_sessions
+
+We don't need it now.
+---
+ gui/simple-greeter/gdm-user.c |    6 ------
+ gui/simple-greeter/gdm-user.h |    1 -
+ 2 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 3e0c61a..dff394a 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -129,12 +129,6 @@ gdm_user_get_num_sessions (GdmUser    *user)
+         return g_list_length (user->sessions);
+ }
+ 
+-GList *
+-gdm_user_get_sessions (GdmUser *user)
+-{
+-        return user->sessions;
+-}
+-
+ static void
+ gdm_user_class_init (GdmUserClass *class)
+ {
+diff --git a/gui/simple-greeter/gdm-user.h b/gui/simple-greeter/gdm-user.h
+index 3e448dd..f871a5d 100644
+--- a/gui/simple-greeter/gdm-user.h
++++ b/gui/simple-greeter/gdm-user.h
+@@ -46,7 +46,6 @@ G_CONST_RETURN char  *gdm_user_get_display_name    (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_home_directory  (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_shell           (GdmUser   *user);
+ guint                 gdm_user_get_num_sessions    (GdmUser   *user);
+-GList                *gdm_user_get_sessions        (GdmUser   *user);
+ gboolean              gdm_user_is_logged_in        (GdmUser   *user);
+ gulong                gdm_user_get_login_frequency (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_primary_session_id (GdmUser *user);
+-- 
+1.6.5.2
+
+
+From 2f734941bcaaf095cbe2e46663d07aff51276c2b Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 22:59:02 -0400
+Subject: [PATCH 08/22] Drop get_shell and get_home_directory
+
+They aren't used, so let's cull them.
+---
+ gui/simple-greeter/gdm-user.c |   60 -----------------------------------------
+ gui/simple-greeter/gdm-user.h |    2 -
+ 2 files changed, 0 insertions(+), 62 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index dff394a..465c55f 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -271,26 +271,6 @@ _gdm_user_update (GdmUser             *user,
+                 changed = TRUE;
+         }
+ 
+-        /* Home Directory */
+-        if ((pwent->pw_dir && !user->home_dir) ||
+-            (!pwent->pw_dir && user->home_dir) ||
+-            strcmp (user->home_dir, pwent->pw_dir) != 0) {
+-                g_free (user->home_dir);
+-                user->home_dir = g_strdup (pwent->pw_dir);
+-                changed = TRUE;
+-        }
+-
+-        /* Shell */
+-        if ((pwent->pw_shell && !user->shell) ||
+-            (!pwent->pw_shell && user->shell) ||
+-            (pwent->pw_shell &&
+-             user->shell &&
+-             strcmp (user->shell, pwent->pw_shell) != 0)) {
+-                g_free (user->shell);
+-                user->shell = g_strdup (pwent->pw_shell);
+-                changed = TRUE;
+-        }
+-
+         if (changed) {
+                 g_signal_emit (user, signals[CHANGED], 0);
+         }
+@@ -375,46 +355,6 @@ gdm_user_get_user_name (GdmUser *user)
+         return user->user_name;
+ }
+ 
+-/**
+- * gdm_user_get_home_directory:
+- * @user: the user object to examine.
+- *
+- * Retrieves the home directory of @user.
+- *
+- * Returns: a pointer to an array of characters which must not be modified or
+- *  freed, or %NULL.
+- *
+- * Since: 1.0
+- **/
+-
+-G_CONST_RETURN gchar *
+-gdm_user_get_home_directory (GdmUser *user)
+-{
+-        g_return_val_if_fail (GDM_IS_USER (user), NULL);
+-
+-        return user->home_dir;
+-}
+-
+-/**
+- * gdm_user_get_shell:
+- * @user: the user object to examine.
+- *
+- * Retrieves the login shell of @user.
+- *
+- * Returns: a pointer to an array of characters which must not be modified or
+- *  freed, or %NULL.
+- *
+- * Since: 1.0
+- **/
+-
+-G_CONST_RETURN gchar *
+-gdm_user_get_shell (GdmUser *user)
+-{
+-        g_return_val_if_fail (GDM_IS_USER (user), NULL);
+-
+-        return user->shell;
+-}
+-
+ gulong
+ gdm_user_get_login_frequency (GdmUser *user)
+ {
+diff --git a/gui/simple-greeter/gdm-user.h b/gui/simple-greeter/gdm-user.h
+index f871a5d..6b51ffb 100644
+--- a/gui/simple-greeter/gdm-user.h
++++ b/gui/simple-greeter/gdm-user.h
+@@ -43,8 +43,6 @@ uid_t                 gdm_user_get_uid             (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_user_name       (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_real_name       (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_display_name    (GdmUser   *user);
+-G_CONST_RETURN char  *gdm_user_get_home_directory  (GdmUser   *user);
+-G_CONST_RETURN char  *gdm_user_get_shell           (GdmUser   *user);
+ guint                 gdm_user_get_num_sessions    (GdmUser   *user);
+ gboolean              gdm_user_is_logged_in        (GdmUser   *user);
+ gulong                gdm_user_get_login_frequency (GdmUser   *user);
+-- 
+1.6.5.2
+
+
+From ab2ca579a1e7b5dc468d020f67ceb97f65f4253a Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 23:03:09 -0400
+Subject: [PATCH 09/22] drop loading-users signal
+
+No one listens for it, so there's no point in having it.
+---
+ gui/simple-greeter/gdm-user-manager.c |   10 ----------
+ gui/simple-greeter/gdm-user-manager.h |    1 -
+ 2 files changed, 0 insertions(+), 11 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index aadb147..69787fa 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -101,7 +101,6 @@ struct GdmUserManagerPrivate
+ };
+ 
+ enum {
+-        LOADING_USERS,
+         USERS_LOADED,
+         USER_ADDED,
+         USER_REMOVED,
+@@ -1499,7 +1498,6 @@ queue_reload_users (GdmUserManager *manager)
+                 return;
+         }
+ 
+-        g_signal_emit (G_OBJECT (manager), signals[LOADING_USERS], 0);
+         manager->priv->reload_id = g_idle_add ((GSourceFunc)reload_users_timeout, manager);
+ }
+ 
+@@ -1565,14 +1563,6 @@ gdm_user_manager_class_init (GdmUserManagerClass *klass)
+ 
+         object_class->finalize = gdm_user_manager_finalize;
+ 
+-        signals [LOADING_USERS] =
+-                g_signal_new ("loading-users",
+-                              G_TYPE_FROM_CLASS (klass),
+-                              G_SIGNAL_RUN_LAST,
+-                              G_STRUCT_OFFSET (GdmUserManagerClass, loading_users),
+-                              NULL, NULL,
+-                              g_cclosure_marshal_VOID__VOID,
+-                              G_TYPE_NONE, 0);
+         signals [USERS_LOADED] =
+                 g_signal_new ("users-loaded",
+                               G_TYPE_FROM_CLASS (klass),
+diff --git a/gui/simple-greeter/gdm-user-manager.h b/gui/simple-greeter/gdm-user-manager.h
+index b2d0019..ffccea1 100644
+--- a/gui/simple-greeter/gdm-user-manager.h
++++ b/gui/simple-greeter/gdm-user-manager.h
+@@ -46,7 +46,6 @@ typedef struct
+ {
+         GObjectClass   parent_class;
+ 
+-        void          (* loading_users)             (GdmUserManager *user_manager);
+         void          (* users_loaded)              (GdmUserManager *user_manager);
+         void          (* user_added)                (GdmUserManager *user_manager,
+                                                      GdmUser        *user);
+-- 
+1.6.5.2
+
+
+From 59b9a9e2bfe86602e755adb490225cb3cbb5c654 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 23:30:01 -0400
+Subject: [PATCH 10/22] Drop "user-login-frequency-changed" signal in favor of "changed"
+
+It's less specific and will let us handle the other properties changes
+at the same time.
+---
+ gui/simple-greeter/gdm-user-chooser-widget.c |   58 ++++++++++++++++++++------
+ gui/simple-greeter/gdm-user-manager.c        |   40 +++++++++++++++---
+ gui/simple-greeter/gdm-user-manager.h        |    2 +-
+ gui/simple-greeter/gdm-user-private.h        |    4 ++
+ gui/simple-greeter/gdm-user.c                |   22 ++++++++++
+ 5 files changed, 106 insertions(+), 20 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-chooser-widget.c b/gui/simple-greeter/gdm-user-chooser-widget.c
+index 9658c2b..7d2f64e 100644
+--- a/gui/simple-greeter/gdm-user-chooser-widget.c
++++ b/gui/simple-greeter/gdm-user-chooser-widget.c
+@@ -461,21 +461,53 @@ on_user_is_logged_in_changed (GdmUserManager       *manager,
+ }
+ 
+ static void
+-on_user_login_frequency_changed (GdmUserManager       *manager,
+-                                 GdmUser              *user,
+-                                 GdmUserChooserWidget *widget)
++on_user_changed (GdmUserManager       *manager,
++                 GdmUser              *user,
++                 GdmUserChooserWidget *widget)
+ {
+-        const char *user_name;
+-        gulong      freq;
++        GdkPixbuf    *pixbuf;
++        char         *tooltip;
++        gboolean      is_logged_in;
++        int           size;
+ 
+-        g_debug ("GdmUserChooserWidget: User login frequency changed: %s", gdm_user_get_user_name (user));
++        /* wait for all users to be loaded */
++        if (! widget->priv->loaded) {
++                return;
++        }
++        if (! widget->priv->show_normal_users) {
++                return;
++        }
+ 
+-        user_name = gdm_user_get_user_name (user);
+-        freq = gdm_user_get_login_frequency (user);
++        size = get_icon_height_for_widget (GTK_WIDGET (widget));
++        pixbuf = gdm_user_render_icon (user, size);
+ 
+-        gdm_chooser_widget_set_item_priority (GDM_CHOOSER_WIDGET (widget),
+-                                              user_name,
+-                                              freq);
++        if (pixbuf == NULL && widget->priv->stock_person_pixbuf != NULL) {
++                pixbuf = g_object_ref (widget->priv->stock_person_pixbuf);
++        }
++
++        tooltip = g_strdup_printf (_("Log in as %s"),
++                                   gdm_user_get_user_name (user));
++
++        is_logged_in = gdm_user_is_logged_in (user);
++
++        g_debug ("GdmUserChooserWidget: User added name:%s logged-in:%d pixbuf:%p",
++                 gdm_user_get_user_name (user),
++                 is_logged_in,
++                 pixbuf);
++
++        gdm_chooser_widget_update_item (GDM_CHOOSER_WIDGET (widget),
++                                        gdm_user_get_user_name (user),
++                                        pixbuf,
++                                        gdm_user_get_display_name (user),
++                                        tooltip,
++                                        gdm_user_get_login_frequency (user),
++                                        is_logged_in,
++                                        FALSE);
++        g_free (tooltip);
++
++        if (pixbuf != NULL) {
++                g_object_unref (pixbuf);
++        }
+ }
+ 
+ static void
+@@ -526,8 +558,8 @@ load_users (GdmUserChooserWidget *widget)
+                                   G_CALLBACK (on_user_is_logged_in_changed),
+                                   widget);
+                 g_signal_connect (widget->priv->manager,
+-                                  "user-login-frequency-changed",
+-                                  G_CALLBACK (on_user_login_frequency_changed),
++                                  "user-changed",
++                                  G_CALLBACK (on_user_changed),
+                                   widget);
+         } else {
+                 gdm_chooser_widget_loaded (GDM_CHOOSER_WIDGET (widget));
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 69787fa..375f21e 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -105,7 +105,7 @@ enum {
+         USER_ADDED,
+         USER_REMOVED,
+         USER_IS_LOGGED_IN_CHANGED,
+-        USER_LOGIN_FREQUENCY_CHANGED,
++        USER_CHANGED,
+         LAST_SIGNAL
+ };
+ 
+@@ -115,6 +115,10 @@ static void     gdm_user_manager_class_init (GdmUserManagerClass *klass);
+ static void     gdm_user_manager_init       (GdmUserManager      *user_manager);
+ static void     gdm_user_manager_finalize   (GObject             *object);
+ 
++static gboolean match_real_name_hrfunc (gpointer key,
++                                        gpointer value,
++                                        gpointer user);
++
+ static gpointer user_manager_object = NULL;
+ 
+ G_DEFINE_TYPE (GdmUserManager, gdm_user_manager, G_TYPE_OBJECT)
+@@ -441,6 +445,27 @@ on_user_sessions_changed (GdmUser        *user,
+         g_signal_emit (manager, signals [USER_IS_LOGGED_IN_CHANGED], 0, user);
+ }
+ 
++static void
++on_user_changed (GdmUser        *user,
++                 GdmUserManager *manager)
++{
++        GdmUser *dup;
++
++        g_debug ("GdmUserManager: user changed");
++
++        dup = g_hash_table_find (manager->priv->users,
++                                 match_real_name_hrfunc,
++                                 user);
++        if (dup != NULL) {
++                _gdm_user_show_full_display_name (user);
++                _gdm_user_show_full_display_name (dup);
++        } else {
++                _gdm_user_show_short_display_name (user);
++        }
++
++        g_signal_emit (manager, signals[USER_CHANGED], 0, user);
++}
++
+ static char *
+ get_seat_id_for_session (DBusGConnection *connection,
+                          const char      *session_id)
+@@ -687,6 +712,10 @@ create_user (GdmUserManager *manager)
+                           "sessions-changed",
+                           G_CALLBACK (on_user_sessions_changed),
+                           manager);
++        g_signal_connect (user,
++                          "changed",
++                          G_CALLBACK (on_user_changed),
++                          manager);
+         return user;
+ }
+ 
+@@ -1198,8 +1227,7 @@ process_ck_history_line (GdmUserManager *manager,
+                 return;
+         }
+ 
+-        g_object_set (user, "login-frequency", frequency, NULL);
+-        g_signal_emit (manager, signals [USER_LOGIN_FREQUENCY_CHANGED], 0, user);
++        _gdm_user_update_login_frequency (user, frequency);
+         g_free (username);
+ }
+ 
+@@ -1595,11 +1623,11 @@ gdm_user_manager_class_init (GdmUserManagerClass *klass)
+                               NULL, NULL,
+                               g_cclosure_marshal_VOID__OBJECT,
+                               G_TYPE_NONE, 1, GDM_TYPE_USER);
+-        signals [USER_LOGIN_FREQUENCY_CHANGED] =
+-                g_signal_new ("user-login-frequency-changed",
++        signals [USER_CHANGED] =
++                g_signal_new ("user-changed",
+                               G_TYPE_FROM_CLASS (klass),
+                               G_SIGNAL_RUN_LAST,
+-                              G_STRUCT_OFFSET (GdmUserManagerClass, user_login_frequency_changed),
++                              G_STRUCT_OFFSET (GdmUserManagerClass, user_changed),
+                               NULL, NULL,
+                               g_cclosure_marshal_VOID__OBJECT,
+                               G_TYPE_NONE, 1, GDM_TYPE_USER);
+diff --git a/gui/simple-greeter/gdm-user-manager.h b/gui/simple-greeter/gdm-user-manager.h
+index ffccea1..79fac06 100644
+--- a/gui/simple-greeter/gdm-user-manager.h
++++ b/gui/simple-greeter/gdm-user-manager.h
+@@ -53,7 +53,7 @@ typedef struct
+                                                      GdmUser        *user);
+         void          (* user_is_logged_in_changed) (GdmUserManager *user_manager,
+                                                      GdmUser        *user);
+-        void          (* user_login_frequency_changed) (GdmUserManager *user_manager,
++        void          (* user_changed)              (GdmUserManager *user_manager,
+                                                         GdmUser        *user);
+ } GdmUserManagerClass;
+ 
+diff --git a/gui/simple-greeter/gdm-user-private.h b/gui/simple-greeter/gdm-user-private.h
+index 79cdcf4..b16547a 100644
+--- a/gui/simple-greeter/gdm-user-private.h
++++ b/gui/simple-greeter/gdm-user-private.h
+@@ -32,6 +32,10 @@ G_BEGIN_DECLS
+ 
+ void _gdm_user_update           (GdmUser             *user,
+                                  const struct passwd *pwent);
++
++void _gdm_user_update_login_frequency (GdmUser *user,
++                                       guint64  login_frequency);
++
+ void _gdm_user_add_session      (GdmUser             *user,
+                                  const char          *session_id);
+ void _gdm_user_remove_session   (GdmUser             *user,
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 465c55f..4bb2b78 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -277,6 +277,28 @@ _gdm_user_update (GdmUser             *user,
+ }
+ 
+ /**
++ * _gdm_user_update_login_frequency:
++ * @user: the user object to update
++ *
++ * Updates the login frequency of @user
++ *
++ * Since: 1.0
++ **/
++void
++_gdm_user_update_login_frequency (GdmUser *user,
++                                  guint64  login_frequency)
++{
++        g_return_if_fail (GDM_IS_USER (user));
++
++        if (login_frequency == user->login_frequency) {
++                return;
++        }
++
++        user->login_frequency = login_frequency;
++        g_signal_emit (user, signals[CHANGED], 0);
++}
++
++/**
+  * gdm_user_get_uid:
+  * @user: the user object to examine.
+  *
+-- 
+1.6.5.2
+
+
+From 8bf6c0686c680cb413e78245ca40d53526390d7a Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 23:47:16 -0400
+Subject: [PATCH 11/22] include settings-client.h to silence warning
+
+---
+ gui/simple-greeter/gdm-user-manager.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 375f21e..f2b4332 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -47,6 +47,7 @@
+ #include "gdm-user-manager.h"
+ #include "gdm-user-private.h"
+ #include "gdm-settings-keys.h"
++#include "gdm-settings-client.h"
+ 
+ #define GDM_USER_MANAGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GDM_TYPE_USER_MANAGER, GdmUserManagerPrivate))
+ 
+-- 
+1.6.5.2
+
+
+From 70232fcc80fa1007efe6061f0e83425ca99879e2 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 15 Mar 2010 23:51:22 -0400
+Subject: [PATCH 12/22] Rename users hashtable to user_by_name
+
+This will lend us the flexibility to index
+users by other criteria later.
+---
+ gui/simple-greeter/gdm-user-manager.c |   34 ++++++++++++++++----------------
+ 1 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index f2b4332..9f88e99 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -81,7 +81,7 @@
+ 
+ struct GdmUserManagerPrivate
+ {
+-        GHashTable            *users;
++        GHashTable            *users_by_name;
+         GHashTable            *sessions;
+         GHashTable            *shells;
+         DBusGConnection       *connection;
+@@ -454,7 +454,7 @@ on_user_changed (GdmUser        *user,
+ 
+         g_debug ("GdmUserManager: user changed");
+ 
+-        dup = g_hash_table_find (manager->priv->users,
++        dup = g_hash_table_find (manager->priv->users_by_name,
+                                  match_real_name_hrfunc,
+                                  user);
+         if (dup != NULL) {
+@@ -746,14 +746,14 @@ add_user (GdmUserManager *manager,
+         GdmUser *dup;
+ 
+         add_sessions_for_user (manager, user);
+-        dup = g_hash_table_find (manager->priv->users,
++        dup = g_hash_table_find (manager->priv->users_by_name,
+                                  match_real_name_hrfunc,
+                                  user);
+         if (dup != NULL) {
+                 _gdm_user_show_full_display_name (user);
+                 _gdm_user_show_full_display_name (dup);
+         }
+-        g_hash_table_insert (manager->priv->users,
++        g_hash_table_insert (manager->priv->users_by_name,
+                              g_strdup (gdm_user_get_user_name (user)),
+                              g_object_ref (user));
+ 
+@@ -904,7 +904,7 @@ seat_session_added (DBusGProxy     *seat_proxy,
+                 return;
+         }
+ 
+-        user = g_hash_table_lookup (manager->priv->users, pwent->pw_name);
++        user = g_hash_table_lookup (manager->priv->users_by_name, pwent->pw_name);
+         if (user == NULL) {
+                 g_debug ("Creating new user");
+ 
+@@ -945,7 +945,7 @@ seat_session_removed (DBusGProxy     *seat_proxy,
+                 return;
+         }
+ 
+-        user = g_hash_table_lookup (manager->priv->users, username);
++        user = g_hash_table_lookup (manager->priv->users_by_name, username);
+         if (user == NULL) {
+                 /* nothing to do */
+                 return;
+@@ -1052,7 +1052,7 @@ gdm_user_manager_get_user (GdmUserManager *manager,
+         g_return_val_if_fail (GDM_IS_USER_MANAGER (manager), NULL);
+         g_return_val_if_fail (username != NULL && username[0] != '\0', NULL);
+ 
+-        user = g_hash_table_lookup (manager->priv->users, username);
++        user = g_hash_table_lookup (manager->priv->users_by_name, username);
+ 
+         if (user == NULL) {
+                 struct passwd *pwent;
+@@ -1082,7 +1082,7 @@ gdm_user_manager_get_user_by_uid (GdmUserManager *manager,
+                 return NULL;
+         }
+ 
+-        user = g_hash_table_lookup (manager->priv->users, pwent->pw_name);
++        user = g_hash_table_lookup (manager->priv->users_by_name, pwent->pw_name);
+ 
+         if (user == NULL) {
+                 user = add_new_user_for_pwent (manager, pwent);
+@@ -1109,7 +1109,7 @@ gdm_user_manager_list_users (GdmUserManager *manager)
+         g_return_val_if_fail (GDM_IS_USER_MANAGER (manager), NULL);
+ 
+         retval = NULL;
+-        g_hash_table_foreach (manager->priv->users, listify_hash_values_hfunc, &retval);
++        g_hash_table_foreach (manager->priv->users_by_name, listify_hash_values_hfunc, &retval);
+ 
+         return g_slist_sort (retval, (GCompareFunc) gdm_user_collate);
+ }
+@@ -1399,7 +1399,7 @@ reload_passwd (GdmUserManager *manager)
+                 goto out;
+         }
+ 
+-        g_hash_table_foreach (manager->priv->users, listify_hash_values_hfunc, &old_users);
++        g_hash_table_foreach (manager->priv->users_by_name, listify_hash_values_hfunc, &old_users);
+         g_slist_foreach (old_users, (GFunc) g_object_ref, NULL);
+ 
+         /* Make sure we keep users who are logged in no matter what. */
+@@ -1442,7 +1442,7 @@ reload_passwd (GdmUserManager *manager)
+                                 continue;
+                         }
+ 
+-                        user = g_hash_table_lookup (manager->priv->users,
++                        user = g_hash_table_lookup (manager->priv->users_by_name,
+                                                     pwent->pw_name);
+ 
+                         /* Update users already in the *new* list */
+@@ -1469,7 +1469,7 @@ reload_passwd (GdmUserManager *manager)
+         for (list = old_users; list; list = list->next) {
+                 if (! g_slist_find (new_users, list->data)) {
+                         g_signal_emit (manager, signals[USER_REMOVED], 0, list->data);
+-                        g_hash_table_remove (manager->priv->users,
++                        g_hash_table_remove (manager->priv->users_by_name,
+                                              gdm_user_get_user_name (list->data));
+                 }
+         }
+@@ -1693,10 +1693,10 @@ gdm_user_manager_init (GdmUserManager *manager)
+                                                          g_free);
+ 
+         /* users */
+-        manager->priv->users = g_hash_table_new_full (g_str_hash,
+-                                                      g_str_equal,
+-                                                      g_free,
+-                                                      (GDestroyNotify) g_object_run_dispose);
++        manager->priv->users_by_name = g_hash_table_new_full (g_str_hash,
++                                                              g_str_equal,
++                                                              g_free,
++                                                              (GDestroyNotify) g_object_run_dispose);
+ 
+         if (manager->priv->include_all == TRUE) {
+                 /* /etc/shells */
+@@ -1784,7 +1784,7 @@ gdm_user_manager_finalize (GObject *object)
+         g_hash_table_destroy (manager->priv->sessions);
+ 
+         g_file_monitor_cancel (manager->priv->passwd_monitor);
+-        g_hash_table_destroy (manager->priv->users);
++        g_hash_table_destroy (manager->priv->users_by_name);
+ 
+         g_file_monitor_cancel (manager->priv->shells_monitor);
+         g_hash_table_destroy (manager->priv->shells);
+-- 
+1.6.5.2
+
+
+From 7bada6caaeabe92eb00eb7edc6d602c6ee01c396 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 00:20:38 -0400
+Subject: [PATCH 13/22] move local user monitoring code to its own function
+
+It was open coded in _init before.
+---
+ gui/simple-greeter/gdm-user-manager.c |   92 ++++++++++++++++++---------------
+ 1 files changed, 50 insertions(+), 42 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 9f88e99..8c97c0a 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -1586,6 +1586,55 @@ on_passwd_monitor_changed (GFileMonitor     *monitor,
+ }
+ 
+ static void
++monitor_local_users (GdmUserManager *manager)
++{
++        GFile *file;
++        GError *error;
++
++        g_debug ("Monitoring local users");
++
++        /* /etc/shells */
++        manager->priv->shells = g_hash_table_new_full (g_str_hash,
++                                                       g_str_equal,
++                                                       g_free,
++                                                       NULL);
++        reload_shells (manager);
++        file = g_file_new_for_path (_PATH_SHELLS);
++        error = NULL;
++        manager->priv->shells_monitor = g_file_monitor_file (file,
++                                                             G_FILE_MONITOR_NONE,
++                                                             NULL,
++                                                             &error);
++        if (manager->priv->shells_monitor != NULL) {
++                g_signal_connect (manager->priv->shells_monitor,
++                                  "changed",
++                                  G_CALLBACK (on_shells_monitor_changed),
++                                  manager);
++        } else {
++                g_warning ("Unable to monitor %s: %s", _PATH_SHELLS, error->message);
++                g_error_free (error);
++        }
++        g_object_unref (file);
++
++        /* /etc/passwd */
++        file = g_file_new_for_path (PATH_PASSWD);
++        manager->priv->passwd_monitor = g_file_monitor_file (file,
++                                                             G_FILE_MONITOR_NONE,
++                                                             NULL,
++                                                             &error);
++        if (manager->priv->passwd_monitor != NULL) {
++                g_signal_connect (manager->priv->passwd_monitor,
++                                  "changed",
++                                  G_CALLBACK (on_passwd_monitor_changed),
++                                  manager);
++        } else {
++                g_warning ("Unable to monitor %s: %s", PATH_PASSWD, error->message);
++                g_error_free (error);
++        }
++        g_object_unref (file);
++}
++
++static void
+ gdm_user_manager_class_init (GdmUserManagerClass *klass)
+ {
+         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
+@@ -1664,9 +1713,6 @@ gdm_set_string_list (char *value, GSList **retval)
+ static void
+ gdm_user_manager_init (GdmUserManager *manager)
+ {
+-        int            i;
+-        GFile         *file;
+-        GError        *error;
+         char          *temp;
+         gboolean       res;
+ 
+@@ -1699,45 +1745,7 @@ gdm_user_manager_init (GdmUserManager *manager)
+                                                               (GDestroyNotify) g_object_run_dispose);
+ 
+         if (manager->priv->include_all == TRUE) {
+-                /* /etc/shells */
+-                manager->priv->shells = g_hash_table_new_full (g_str_hash,
+-                                                               g_str_equal,
+-                                                               g_free,
+-                                                               NULL);
+-                reload_shells (manager);
+-                file = g_file_new_for_path (_PATH_SHELLS);
+-                error = NULL;
+-                manager->priv->shells_monitor = g_file_monitor_file (file,
+-                                                                     G_FILE_MONITOR_NONE,
+-                                                                     NULL,
+-                                                                     &error);
+-                if (manager->priv->shells_monitor != NULL) {
+-                        g_signal_connect (manager->priv->shells_monitor,
+-                                          "changed",
+-                                          G_CALLBACK (on_shells_monitor_changed),
+-                                          manager);
+-                } else {
+-                        g_warning ("Unable to monitor %s: %s", _PATH_SHELLS, error->message);
+-                        g_error_free (error);
+-                }
+-                g_object_unref (file);
+-
+-                /* /etc/passwd */
+-                file = g_file_new_for_path (PATH_PASSWD);
+-                manager->priv->passwd_monitor = g_file_monitor_file (file,
+-                                                                     G_FILE_MONITOR_NONE,
+-                                                                     NULL,
+-                                                                     &error);
+-                if (manager->priv->passwd_monitor != NULL) {
+-                        g_signal_connect (manager->priv->passwd_monitor,
+-                                          "changed",
+-                                          G_CALLBACK (on_passwd_monitor_changed),
+-                                          manager);
+-                } else {
+-                        g_warning ("Unable to monitor %s: %s", PATH_PASSWD, error->message);
+-                        g_error_free (error);
+-                }
+-                g_object_unref (file);
++                monitor_local_users (manager);
+         }
+ 
+         get_seat_proxy (manager);
+-- 
+1.6.5.2
+
+
+From ddc1fd619e022a91fdefbf2e6620b33b8f723df2 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 00:25:17 -0400
+Subject: [PATCH 14/22] rearrange gdm_user_collate
+
+This way we don't make unnecessary assignments
+---
+ gui/simple-greeter/gdm-user.c |   24 ++++++++++++------------
+ 1 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 4bb2b78..dd10f91 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -453,18 +453,6 @@ gdm_user_collate (GdmUser *user1,
+         g_return_val_if_fail (GDM_IS_USER (user1), 0);
+         g_return_val_if_fail (GDM_IS_USER (user2), 0);
+ 
+-        if (user1->real_name != NULL) {
+-                str1 = user1->real_name;
+-        } else {
+-                str1 = user1->user_name;
+-        }
+-
+-        if (user2->real_name != NULL) {
+-                str2 = user2->real_name;
+-        } else {
+-                str2 = user2->user_name;
+-        }
+-
+         num1 = user1->login_frequency;
+         num2 = user2->login_frequency;
+         g_debug ("Login freq 1=%u 2=%u", (guint)num1, (guint)num2);
+@@ -477,6 +465,18 @@ gdm_user_collate (GdmUser *user1,
+         }
+ 
+         /* if login frequency is equal try names */
++        if (user1->real_name != NULL) {
++                str1 = user1->real_name;
++        } else {
++                str1 = user1->user_name;
++        }
++
++        if (user2->real_name != NULL) {
++                str2 = user2->real_name;
++        } else {
++                str2 = user2->user_name;
++        }
++
+         if (str1 == NULL && str2 != NULL) {
+                 return -1;
+         }
+-- 
+1.6.5.2
+
+
+From a6df273f4c2226444a2dfbbaea52a8a47f7e1309 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 00:33:48 -0400
+Subject: [PATCH 15/22] Drop get_filesystem_type
+
+It's unused code.
+---
+ gui/simple-greeter/gdm-user.c |   33 ---------------------------------
+ 1 files changed, 0 insertions(+), 33 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index dd10f91..9a75274 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -523,39 +523,6 @@ check_user_file (const char *filename,
+         return TRUE;
+ }
+ 
+-static char *
+-get_filesystem_type (const char *path)
+-{
+-        GFile      *file;
+-        GFileInfo  *file_info;
+-        GError     *error;
+-        char       *filesystem_type;
+-
+-        file = g_file_new_for_path (path);
+-        error = NULL;
+-        file_info = g_file_query_filesystem_info (file,
+-                                                  G_FILE_ATTRIBUTE_FILESYSTEM_TYPE,
+-                                                  NULL,
+-                                                  &error);
+-        if (file_info == NULL) {
+-                g_warning ("Unable to query filesystem type for %s: %s", path, error->message);
+-                g_error_free (error);
+-                g_object_unref (file);
+-                return NULL;
+-        }
+-
+-        filesystem_type = g_strdup (g_file_info_get_attribute_string (file_info,
+-                                                                      G_FILE_ATTRIBUTE_FILESYSTEM_TYPE));
+-        if (filesystem_type == NULL) {
+-                g_warning ("GIO returned NULL filesystem type for %s", path);
+-        }
+-
+-        g_object_unref (file);
+-        g_object_unref (file_info);
+-
+-        return filesystem_type;
+-}
+-
+ static GdkPixbuf *
+ render_icon_from_cache (GdmUser *user,
+                         int      icon_size)
+-- 
+1.6.5.2
+
+
+From 8abc93ba8da0bdfc8ea99f33174ef18c0e626bc9 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 00:41:13 -0400
+Subject: [PATCH 16/22] Get dbus connection outside of get_seat_proxy
+
+While having a connection is a prerequisite for get_seat_proxy,
+it could potentially be useful for other purposes, so move it
+out.
+---
+ gui/simple-greeter/gdm-user-manager.c |   28 ++++++++++++++++------------
+ 1 files changed, 16 insertions(+), 12 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 8c97c0a..cec9b1e 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -972,18 +972,6 @@ get_seat_proxy (GdmUserManager *manager)
+ 
+         g_assert (manager->priv->seat_proxy == NULL);
+ 
+-        error = NULL;
+-        manager->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+-        if (manager->priv->connection == NULL) {
+-                if (error != NULL) {
+-                        g_warning ("Failed to connect to the D-Bus daemon: %s", error->message);
+-                        g_error_free (error);
+-                } else {
+-                        g_warning ("Failed to connect to the D-Bus daemon");
+-                }
+-                return;
+-        }
+-
+         manager->priv->seat_id = get_current_seat_id (manager->priv->connection);
+         if (manager->priv->seat_id == NULL) {
+                 return;
+@@ -1714,6 +1702,7 @@ static void
+ gdm_user_manager_init (GdmUserManager *manager)
+ {
+         char          *temp;
++        GError        *error;
+         gboolean       res;
+ 
+         manager->priv = GDM_USER_MANAGER_GET_PRIVATE (manager);
+@@ -1748,6 +1737,21 @@ gdm_user_manager_init (GdmUserManager *manager)
+                 monitor_local_users (manager);
+         }
+ 
++
++        g_assert (manager->priv->seat_proxy == NULL);
++
++        error = NULL;
++        manager->priv->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
++        if (manager->priv->connection == NULL) {
++                if (error != NULL) {
++                        g_warning ("Failed to connect to the D-Bus daemon: %s", error->message);
++                        g_error_free (error);
++                } else {
++                        g_warning ("Failed to connect to the D-Bus daemon");
++                }
++                return;
++        }
++
+         get_seat_proxy (manager);
+ 
+         queue_reload_users (manager);
+-- 
+1.6.5.2
+
+
+From d1470adb6df929da7d801b041b5ef3a62252c39e Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 00:53:30 -0400
+Subject: [PATCH 17/22] Rename on_proxy_destroy to on_seat_proxy_destroy
+
+---
+ gui/simple-greeter/gdm-user-manager.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index cec9b1e..8778043 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -956,8 +956,8 @@ seat_session_removed (DBusGProxy     *seat_proxy,
+ }
+ 
+ static void
+-on_proxy_destroy (DBusGProxy     *proxy,
+-                  GdmUserManager *manager)
++on_seat_proxy_destroy (DBusGProxy     *proxy,
++                       GdmUserManager *manager)
+ {
+         g_debug ("GdmUserManager: seat proxy destroyed");
+ 
+@@ -997,7 +997,7 @@ get_seat_proxy (GdmUserManager *manager)
+                 return;
+         }
+ 
+-        g_signal_connect (proxy, "destroy", G_CALLBACK (on_proxy_destroy), manager);
++        g_signal_connect (proxy, "destroy", G_CALLBACK (on_seat_proxy_destroy), manager);
+ 
+         dbus_g_proxy_add_signal (proxy,
+                                  "SessionAdded",
+-- 
+1.6.5.2
+
+
+From 8937a1e0f2e2f4361b5414f57d445e34dbd6ff67 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 01:11:27 -0400
+Subject: [PATCH 18/22] Drop unused defines
+
+---
+ gui/simple-greeter/gdm-user-manager.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 8778043..a029bdb 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -61,9 +61,6 @@
+ #define CK_SESSION_INTERFACE "org.freedesktop.ConsoleKit.Session"
+ 
+ /* Prefs Defaults */
+-#define DEFAULT_ALLOW_ROOT      TRUE
+-#define DEFAULT_MAX_ICON_SIZE   128
+-#define DEFAULT_USER_MAX_FILE   65536
+ 
+ #ifdef __sun
+ #define DEFAULT_MINIMAL_UID     100
+-- 
+1.6.5.2
+
+
+From 94328aa66bfda7dbcced49122b76ea5c56b79e0e Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 02:44:28 -0400
+Subject: [PATCH 19/22] rename update to update_from_pwent
+
+it's less ambiguous
+---
+ gui/simple-greeter/gdm-user-manager.c |    8 ++++----
+ gui/simple-greeter/gdm-user-private.h |    4 ++--
+ gui/simple-greeter/gdm-user.c         |    6 +++---
+ 3 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index a029bdb..c9954bd 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -766,7 +766,7 @@ add_new_user_for_pwent (GdmUserManager *manager,
+         g_debug ("Creating new user");
+ 
+         user = create_user (manager);
+-        _gdm_user_update (user, pwent);
++        _gdm_user_update_from_pwent (user, pwent);
+ 
+         add_user (manager, user);
+ 
+@@ -906,7 +906,7 @@ seat_session_added (DBusGProxy     *seat_proxy,
+                 g_debug ("Creating new user");
+ 
+                 user = create_user (manager);
+-                _gdm_user_update (user, pwent);
++                _gdm_user_update_from_pwent (user, pwent);
+                 is_new = TRUE;
+         } else {
+                 is_new = FALSE;
+@@ -1432,7 +1432,7 @@ reload_passwd (GdmUserManager *manager)
+ 
+                         /* Update users already in the *new* list */
+                         if (g_slist_find (new_users, user)) {
+-                                _gdm_user_update (user, pwent);
++                                _gdm_user_update_from_pwent (user, pwent);
+                                 continue;
+                         }
+ 
+@@ -1444,7 +1444,7 @@ reload_passwd (GdmUserManager *manager)
+ 
+                         /* Freeze & update users not already in the new list */
+                         g_object_freeze_notify (G_OBJECT (user));
+-                        _gdm_user_update (user, pwent);
++                        _gdm_user_update_from_pwent (user, pwent);
+ 
+                         new_users = g_slist_prepend (new_users, user);
+                 }
+diff --git a/gui/simple-greeter/gdm-user-private.h b/gui/simple-greeter/gdm-user-private.h
+index b16547a..6b1fe47 100644
+--- a/gui/simple-greeter/gdm-user-private.h
++++ b/gui/simple-greeter/gdm-user-private.h
+@@ -30,8 +30,8 @@
+ 
+ G_BEGIN_DECLS
+ 
+-void _gdm_user_update           (GdmUser             *user,
+-                                 const struct passwd *pwent);
++void _gdm_user_update_from_pwent (GdmUser             *user,
++                                  const struct passwd *pwent);
+ 
+ void _gdm_user_update_login_frequency (GdmUser *user,
+                                        guint64  login_frequency);
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 9a75274..7901fb0 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -181,7 +181,7 @@ gdm_user_finalize (GObject *object)
+ }
+ 
+ /**
+- * _gdm_user_update:
++ * _gdm_user_update_from_pwent:
+  * @user: the user object to update.
+  * @pwent: the user data to use.
+  *
+@@ -190,8 +190,8 @@ gdm_user_finalize (GObject *object)
+  * Since: 1.0
+  **/
+ void
+-_gdm_user_update (GdmUser             *user,
+-                  const struct passwd *pwent)
++_gdm_user_update_from_pwent (GdmUser             *user,
++                             const struct passwd *pwent)
+ {
+         gchar *real_name = NULL;
+         gboolean changed;
+-- 
+1.6.5.2
+
+
+From 55d5dcc3f47937496f5a3ca092a9ddd988204e49 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 03:06:37 -0400
+Subject: [PATCH 20/22] drop dirty user
+
+---
+ gui/simple-greeter/gdm-user-manager.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index c9954bd..13533ca 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -94,8 +94,6 @@ struct GdmUserManagerPrivate
+ 
+         guint                  reload_id;
+         guint                  ck_history_id;
+-
+-        guint8                 users_dirty : 1;
+ };
+ 
+ enum {
+@@ -1752,8 +1750,6 @@ gdm_user_manager_init (GdmUserManager *manager)
+         get_seat_proxy (manager);
+ 
+         queue_reload_users (manager);
+-
+-        manager->priv->users_dirty = FALSE;
+ }
+ 
+ static void
+-- 
+1.6.5.2
+
+
+From 19210562f5845caa2e54db45bece8d018d768427 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Tue, 16 Mar 2010 03:07:19 -0400
+Subject: [PATCH 21/22] Get users from account service, fallback to old way
+
+---
+ gui/simple-greeter/gdm-user-manager.c |  310 +++++++++++++++++++++++++++------
+ gui/simple-greeter/gdm-user.c         |  278 ++++++++++++++++++++++-------
+ gui/simple-greeter/gdm-user.h         |    4 +
+ gui/user-switch-applet/applet.c       |    7 +-
+ 4 files changed, 477 insertions(+), 122 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 13533ca..3eaf231 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -63,9 +63,9 @@
+ /* Prefs Defaults */
+ 
+ #ifdef __sun
+-#define DEFAULT_MINIMAL_UID     100
++#define FALLBACK_MINIMAL_UID     100
+ #else
+-#define DEFAULT_MINIMAL_UID     500
++#define FALLBACK_MINIMAL_UID     500
+ #endif
+ 
+ #ifndef _PATH_SHELLS
+@@ -76,13 +76,19 @@
+ #define DEFAULT_GLOBAL_FACE_DIR DATADIR "/faces"
+ #define DEFAULT_USER_ICON       "stock_person"
+ 
++#define ACCOUNTS_NAME      "org.freedesktop.Accounts"
++#define ACCOUNTS_PATH      "/org/freedesktop/Accounts"
++#define ACCOUNTS_INTERFACE "org.freedesktop.Accounts"
++
+ struct GdmUserManagerPrivate
+ {
+         GHashTable            *users_by_name;
++        GHashTable            *users_by_object_path;
+         GHashTable            *sessions;
+         GHashTable            *shells;
+         DBusGConnection       *connection;
+         DBusGProxy            *seat_proxy;
++        DBusGProxy            *accounts_proxy;
+         char                  *seat_id;
+ 
+         GFileMonitor          *passwd_monitor;
+@@ -92,7 +98,6 @@ struct GdmUserManagerPrivate
+         GSList                *include;
+         gboolean               include_all;
+ 
+-        guint                  reload_id;
+         guint                  ck_history_id;
+ };
+ 
+@@ -114,6 +119,8 @@ static void     gdm_user_manager_finalize   (GObject             *object);
+ static gboolean match_real_name_hrfunc (gpointer key,
+                                         gpointer value,
+                                         gpointer user);
++static void get_users_manually (GdmUserManager *manager);
++static void add_included_users (GdmUserManager *manager);
+ 
+ static gpointer user_manager_object = NULL;
+ 
+@@ -739,6 +746,7 @@ add_user (GdmUserManager *manager,
+           GdmUser        *user)
+ {
+         GdmUser *dup;
++        const char *object_path;
+ 
+         add_sessions_for_user (manager, user);
+         dup = g_hash_table_find (manager->priv->users_by_name,
+@@ -752,6 +760,10 @@ add_user (GdmUserManager *manager,
+                              g_strdup (gdm_user_get_user_name (user)),
+                              g_object_ref (user));
+ 
++        object_path = gdm_user_get_object_path (user);
++        if (object_path != NULL) {
++                g_hash_table_insert (manager->priv->users_by_object_path, (gpointer) object_path, g_object_ref (user));
++        }
+         g_signal_emit (manager, signals[USER_ADDED], 0, user);
+ }
+ 
+@@ -761,16 +773,78 @@ add_new_user_for_pwent (GdmUserManager *manager,
+ {
+         GdmUser *user;
+ 
+-        g_debug ("Creating new user");
++        g_debug ("Creating new user from password entry");
+ 
+         user = create_user (manager);
+         _gdm_user_update_from_pwent (user, pwent);
+ 
+         add_user (manager, user);
++        g_object_unref (user);
++
++        user = g_hash_table_lookup (manager->priv->users_by_name, pwent->pw_name);
+ 
+         return user;
+ }
+ 
++static void
++add_new_user_for_object_path (const char     *object_path,
++                              GdmUserManager *manager)
++{
++        GdmUser *user;
++        const char *username;
++
++        if (g_hash_table_lookup (manager->priv->users_by_object_path, object_path)) {
++                return;
++        }
++        user = gdm_user_new_from_object_path (object_path);
++
++        if (user == NULL) {
++                return;
++        }
++
++        username = gdm_user_get_user_name (user);
++        if (user_in_exclude_list (manager, username)) {
++                g_debug ("GdmUserManager: excluding user '%s'", username);
++                g_object_unref (user);
++                return;
++        }
++
++        g_signal_connect (user, "sessions-changed",
++                          G_CALLBACK (on_user_sessions_changed), manager);
++        g_signal_connect (user, "changed",
++                          G_CALLBACK (on_user_changed), manager);
++
++        add_user (manager, user);
++        g_object_unref (user);
++}
++
++static void
++on_new_user_in_accounts_service (DBusGProxy *proxy,
++                                 const char *object_path,
++                                 gpointer    user_data)
++{
++        GdmUserManager *manager = GDM_USER_MANAGER (user_data);
++
++        add_new_user_for_object_path (object_path, manager);
++}
++
++static void
++on_user_removed_in_accounts_service (DBusGProxy *proxy,
++                                     const char *object_path,
++                                     gpointer    user_data)
++{
++        GdmUserManager *manager = GDM_USER_MANAGER (user_data);
++        GdmUser *user;
++
++        user = g_hash_table_lookup (manager->priv->users_by_object_path, object_path);
++        g_object_ref (user);
++        g_signal_handlers_disconnect_by_func (user, on_user_changed, manager);
++        g_hash_table_remove (manager->priv->users_by_object_path, gdm_user_get_object_path (user));
++        g_hash_table_remove (manager->priv->users_by_name, gdm_user_get_user_name (user));
++        g_signal_emit (manager, signals[USER_REMOVED], 0, user);
++        g_object_unref (user);
++}
++
+ static char *
+ get_current_seat_id (DBusGConnection *connection)
+ {
+@@ -867,6 +941,82 @@ get_uid_from_session_id (GdmUserManager *manager,
+         return TRUE;
+ }
+ 
++static char *
++get_user_object_path_from_accounts_service (GdmUserManager *manager,
++                                            const char     *name)
++{
++        GError          *error;
++        char            *object_path;
++        gboolean         res;
++
++        error = NULL;
++        object_path = NULL;
++        res = dbus_g_proxy_call (manager->priv->accounts_proxy,
++                                 "FindUserByName",
++                                 &error,
++                                 G_TYPE_STRING,
++                                 name,
++                                 G_TYPE_INVALID,
++                                 DBUS_TYPE_G_OBJECT_PATH,
++                                 &object_path,
++                                 G_TYPE_INVALID);
++        if (! res) {
++                if (error != NULL) {
++                        g_debug ("Failed to find user %s: %s", name, error->message);
++                        g_error_free (error);
++                } else {
++                        g_debug ("Failed to find user %s", name);
++                }
++                return NULL;
++        }
++        return object_path;
++}
++
++static void
++on_list_cached_users_finished (DBusGProxy     *proxy,
++                               DBusGProxyCall *call_id,
++                               gpointer        data)
++{
++        GdmUserManager *manager = data;
++        GError *error = NULL;
++        GPtrArray *paths;
++
++        if (!dbus_g_proxy_end_call (proxy,
++                                    call_id,
++                                    &error,
++                                    dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH), &paths,
++                                    G_TYPE_INVALID)) {
++                g_debug ("ListCachedUsers failed: %s", error->message);
++                g_error_free (error);
++
++                g_object_unref (manager->priv->accounts_proxy);
++                manager->priv->accounts_proxy = NULL;
++
++                return get_users_manually (manager);
++        }
++
++        g_ptr_array_foreach (paths, (GFunc)add_new_user_for_object_path, manager);
++
++        g_ptr_array_foreach (paths, (GFunc)g_free, NULL);
++        g_ptr_array_free (paths, TRUE);
++
++        add_included_users (manager);
++
++        g_signal_emit (G_OBJECT (manager), signals[USERS_LOADED], 0);
++}
++
++static void
++get_users (GdmUserManager *manager)
++{
++        g_debug ("calling 'ListCachedUsers'");
++        dbus_g_proxy_begin_call (manager->priv->accounts_proxy,
++                                 "ListCachedUsers",
++                                 on_list_cached_users_finished,
++                                 manager,
++                                 NULL,
++                                 G_TYPE_INVALID);
++}
++
+ static void
+ seat_session_added (DBusGProxy     *seat_proxy,
+                     const char     *session_id,
+@@ -901,11 +1051,20 @@ seat_session_added (DBusGProxy     *seat_proxy,
+ 
+         user = g_hash_table_lookup (manager->priv->users_by_name, pwent->pw_name);
+         if (user == NULL) {
++                char *object_path;
++
+                 g_debug ("Creating new user");
+ 
+-                user = create_user (manager);
+-                _gdm_user_update_from_pwent (user, pwent);
+                 is_new = TRUE;
++
++                object_path = get_user_object_path_from_accounts_service (manager, pwent->pw_name);
++                if (object_path == NULL) {
++                        return;
++                }
++
++                user = gdm_user_new_from_object_path (object_path);
++                g_free (object_path);
++
+         } else {
+                 is_new = FALSE;
+         }
+@@ -915,10 +1074,14 @@ seat_session_added (DBusGProxy     *seat_proxy,
+         /* only add the user if we added a session */
+         if (is_new) {
+                 if (res) {
++                        g_signal_connect (user, "sessions-changed",
++                                          G_CALLBACK (on_user_sessions_changed),
++                                          manager);
++                        g_signal_connect (user, "changed",
++                                          G_CALLBACK (on_user_changed), manager);
+                         add_user (manager, user);
+-                } else {
+-                        g_object_unref (user);
+                 }
++                g_object_unref (user);
+         }
+ }
+ 
+@@ -1016,6 +1179,47 @@ get_seat_proxy (GdmUserManager *manager)
+ 
+ }
+ 
++static void
++on_accounts_proxy_destroy (DBusGProxy     *proxy,
++                           GdmUserManager *manager)
++{
++        g_debug ("GdmUserManager: accounts proxy destroyed");
++
++        manager->priv->accounts_proxy = NULL;
++}
++
++static void
++get_accounts_proxy (GdmUserManager *manager)
++{
++        DBusGProxy      *proxy;
++        GError          *error;
++
++        g_assert (manager->priv->accounts_proxy == NULL);
++
++        error = NULL;
++
++        proxy = dbus_g_proxy_new_for_name (manager->priv->connection,
++                                           ACCOUNTS_NAME,
++                                           ACCOUNTS_PATH,
++                                           ACCOUNTS_INTERFACE);
++
++        g_signal_connect (proxy, "destroy",
++                          G_CALLBACK (on_accounts_proxy_destroy), manager);
++
++        dbus_g_proxy_add_signal (proxy, "UserAdded",
++                                 DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
++        dbus_g_proxy_add_signal (proxy, "UserDeleted",
++                                 DBUS_TYPE_G_OBJECT_PATH, G_TYPE_INVALID);
++
++        dbus_g_proxy_connect_signal (proxy, "UserAdded",
++                                     G_CALLBACK (on_new_user_in_accounts_service),
++                                     manager, NULL);
++        dbus_g_proxy_connect_signal (proxy, "UserDeleted",
++                                     G_CALLBACK (on_user_removed_in_accounts_service),
++                                     manager, NULL);
++        manager->priv->accounts_proxy = proxy;
++}
++
+ /**
+  * gdm_manager_get_user:
+  * @manager: the manager to query.
+@@ -1038,12 +1242,28 @@ gdm_user_manager_get_user (GdmUserManager *manager,
+         user = g_hash_table_lookup (manager->priv->users_by_name, username);
+ 
+         if (user == NULL) {
+-                struct passwd *pwent;
++                if (manager->priv->accounts_proxy != NULL) {
++                        char *object_path;
+ 
+-                pwent = getpwnam (username);
++                        object_path = get_user_object_path_from_accounts_service (manager, username);
+ 
+-                if (pwent != NULL) {
+-                        user = add_new_user_for_pwent (manager, pwent);
++                        if (object_path != NULL) {
++                                add_new_user_for_object_path (object_path, manager);
++                                g_free (object_path);
++                        } else {
++                                g_object_unref (manager->priv->accounts_proxy);
++                                manager->priv->accounts_proxy = NULL;
++                        }
++
++                        user = g_hash_table_lookup (manager->priv->users_by_name, username);
++                }
++
++                if (manager->priv->accounts_proxy == NULL) {
++                        struct passwd *pwent;
++                        pwent = getpwnam (username);
++                        if (pwent != NULL) {
++                                user = add_new_user_for_pwent (manager, pwent);
++                        }
+                 }
+         }
+ 
+@@ -1054,7 +1274,6 @@ GdmUser *
+ gdm_user_manager_get_user_by_uid (GdmUserManager *manager,
+                                   uid_t           uid)
+ {
+-        GdmUser       *user;
+         struct passwd *pwent;
+ 
+         g_return_val_if_fail (GDM_IS_USER_MANAGER (manager), NULL);
+@@ -1065,13 +1284,7 @@ gdm_user_manager_get_user_by_uid (GdmUserManager *manager,
+                 return NULL;
+         }
+ 
+-        user = g_hash_table_lookup (manager->priv->users_by_name, pwent->pw_name);
+-
+-        if (user == NULL) {
+-                user = add_new_user_for_pwent (manager, pwent);
+-        }
+-
+-        return user;
++        return gdm_user_manager_get_user (manager, pwent->pw_name);
+ }
+ 
+ static void
+@@ -1407,7 +1620,7 @@ reload_passwd (GdmUserManager *manager)
+                         user = NULL;
+ 
+                         /* Skip users below MinimalUID... */
+-                        if (pwent->pw_uid < DEFAULT_MINIMAL_UID) {
++                        if (pwent->pw_uid < FALLBACK_MINIMAL_UID) {
+                                 continue;
+                         }
+ 
+@@ -1488,32 +1701,6 @@ reload_passwd (GdmUserManager *manager)
+ }
+ 
+ static void
+-reload_users (GdmUserManager *manager)
+-{
+-        reload_ck_history (manager);
+-        reload_passwd (manager);
+-}
+-
+-static gboolean
+-reload_users_timeout (GdmUserManager *manager)
+-{
+-        reload_users (manager);
+-        manager->priv->reload_id = 0;
+-
+-        return FALSE;
+-}
+-
+-static void
+-queue_reload_users (GdmUserManager *manager)
+-{
+-        if (manager->priv->reload_id > 0) {
+-                return;
+-        }
+-
+-        manager->priv->reload_id = g_idle_add ((GSourceFunc)reload_users_timeout, manager);
+-}
+-
+-static void
+ reload_shells (GdmUserManager *manager)
+ {
+         char *shell;
+@@ -1618,6 +1805,20 @@ monitor_local_users (GdmUserManager *manager)
+ }
+ 
+ static void
++get_users_manually (GdmUserManager *manager)
++{
++        g_debug ("Getting users manually");
++
++        if (manager->priv->include_all == TRUE) {
++                monitor_local_users (manager);
++        }
++
++        reload_ck_history (manager);
++        reload_passwd (manager);
++        add_included_users (manager);
++}
++
++static void
+ gdm_user_manager_class_init (GdmUserManagerClass *klass)
+ {
+         GObjectClass   *object_class = G_OBJECT_CLASS (klass);
+@@ -1692,7 +1893,6 @@ gdm_set_string_list (char *value, GSList **retval)
+         g_strfreev (temp_array);
+ }
+ 
+-
+ static void
+ gdm_user_manager_init (GdmUserManager *manager)
+ {
+@@ -1728,6 +1928,11 @@ gdm_user_manager_init (GdmUserManager *manager)
+                                                               g_free,
+                                                               (GDestroyNotify) g_object_run_dispose);
+ 
++        manager->priv->users_by_object_path = g_hash_table_new_full (g_str_hash,
++                                                                     g_str_equal,
++                                                                     NULL,
++                                                                     (GDestroyNotify) g_object_unref);
++
+         if (manager->priv->include_all == TRUE) {
+                 monitor_local_users (manager);
+         }
+@@ -1748,8 +1953,9 @@ gdm_user_manager_init (GdmUserManager *manager)
+         }
+ 
+         get_seat_proxy (manager);
++        get_accounts_proxy (manager);
+ 
+-        queue_reload_users (manager);
++        get_users (manager);
+ }
+ 
+ static void
+@@ -1781,15 +1987,11 @@ gdm_user_manager_finalize (GObject *object)
+                 manager->priv->ck_history_id = 0;
+         }
+ 
+-        if (manager->priv->reload_id > 0) {
+-                g_source_remove (manager->priv->reload_id);
+-                manager->priv->reload_id = 0;
+-        }
+-
+         g_hash_table_destroy (manager->priv->sessions);
+ 
+         g_file_monitor_cancel (manager->priv->passwd_monitor);
+         g_hash_table_destroy (manager->priv->users_by_name);
++        g_hash_table_destroy (manager->priv->users_by_object_path);
+ 
+         g_file_monitor_cancel (manager->priv->shells_monitor);
+         g_hash_table_destroy (manager->priv->shells);
+diff --git a/gui/simple-greeter/gdm-user.c b/gui/simple-greeter/gdm-user.c
+index 7901fb0..ec60851 100644
+--- a/gui/simple-greeter/gdm-user.c
++++ b/gui/simple-greeter/gdm-user.c
+@@ -26,6 +26,9 @@
+ #include <sys/stat.h>
+ #include <unistd.h>
+ 
++#include <dbus/dbus-glib.h>
++
++#include <glib.h>
+ #include <glib/gi18n.h>
+ #include <gio/gio.h>
+ #include <gtk/gtk.h>
+@@ -41,6 +44,9 @@
+ #define MAX_FILE_SIZE     65536
+ #define MINIMAL_UID       100
+ 
++#define USER_ACCOUNTS_NAME      "org.freedesktop.Accounts"
++#define USER_ACCOUNTS_INTERFACE "org.freedesktop.Accounts.User"
++
+ enum {
+         CHANGED,
+         SESSIONS_CHANGED,
+@@ -50,12 +56,15 @@ enum {
+ struct _GdmUser {
+         GObject         parent;
+ 
++        DBusGConnection *connection;
++        DBusGProxy      *accounts_proxy;
++        gchar           *object_path;
++
+         uid_t           uid;
+         char           *user_name;
+         char           *real_name;
+         char           *display_name;
+-        char           *home_dir;
+-        char           *shell;
++        gchar          *icon_file;
+         GList          *sessions;
+         gulong          login_frequency;
+ };
+@@ -66,6 +75,8 @@ typedef struct _GdmUserClass
+ } GdmUserClass;
+ 
+ static void gdm_user_finalize     (GObject      *object);
++static gboolean check_user_file (const char *filename,
++                                 gssize      max_file_size);
+ 
+ static guint signals[LAST_SIGNAL] = { 0 };
+ 
+@@ -159,10 +170,18 @@ gdm_user_class_init (GdmUserClass *class)
+ static void
+ gdm_user_init (GdmUser *user)
+ {
++        GError *error;
++
+         user->user_name = NULL;
+         user->real_name = NULL;
+         user->display_name = NULL;
+         user->sessions = NULL;
++
++        error = NULL;
++        user->connection = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
++        if (user->connection == NULL) {
++                g_warning ("Couldn't connect to system bus: %s", error->message);
++        }
+ }
+ 
+ static void
+@@ -175,6 +194,15 @@ gdm_user_finalize (GObject *object)
+         g_free (user->user_name);
+         g_free (user->real_name);
+         g_free (user->display_name);
++        g_free (user->icon_file);
++
++        if (user->accounts_proxy != NULL) {
++                g_object_unref (user->accounts_proxy);
++        }
++
++        if (user->connection != NULL) {
++                dbus_g_connection_unref (user->connection);
++        }
+ 
+         if (G_OBJECT_CLASS (gdm_user_parent_class)->finalize)
+                 (*G_OBJECT_CLASS (gdm_user_parent_class)->finalize) (object);
+@@ -198,6 +226,7 @@ _gdm_user_update_from_pwent (GdmUser             *user,
+ 
+         g_return_if_fail (GDM_IS_USER (user));
+         g_return_if_fail (pwent != NULL);
++        g_return_if_fail (user->object_path == NULL);
+ 
+         changed = FALSE;
+ 
+@@ -266,6 +295,23 @@ _gdm_user_update_from_pwent (GdmUser             *user,
+             (pwent->pw_name &&
+              user->user_name &&
+              strcmp (user->user_name, pwent->pw_name) != 0)) {
++
++                g_free (user->icon_file);
++                user->icon_file = NULL;
++                if (pwent->pw_name != NULL) {
++                        gboolean      res;
++
++                        user->icon_file = g_build_filename (GDM_CACHE_DIR, pwent->pw_name, "face", NULL);
++
++                        res = check_user_file (user->icon_file,
++                                               MAX_FILE_SIZE);
++
++                        if (!res) {
++                                g_free (user->icon_file);
++                                user->icon_file = g_build_filename (GLOBAL_FACEDIR, pwent->pw_name, NULL);
++                        }
++                }
++
+                 g_free (user->user_name);
+                 user->user_name = g_strdup (pwent->pw_name);
+                 changed = TRUE;
+@@ -523,33 +569,6 @@ check_user_file (const char *filename,
+         return TRUE;
+ }
+ 
+-static GdkPixbuf *
+-render_icon_from_cache (GdmUser *user,
+-                        int      icon_size)
+-{
+-        GdkPixbuf  *retval;
+-        char       *path;
+-        gboolean    is_autofs;
+-        gboolean    res;
+-        char       *filesystem_type;
+-
+-        path = g_build_filename (GDM_CACHE_DIR, user->user_name, "face", NULL);
+-        res = check_user_file (path,
+-                               MAX_FILE_SIZE);
+-        if (res) {
+-                retval = gdk_pixbuf_new_from_file_at_size (path,
+-                                                           icon_size,
+-                                                           icon_size,
+-                                                           NULL);
+-        } else {
+-                g_debug ("Could not access face icon %s", path);
+-                retval = NULL;
+-        }
+-        g_free (path);
+-
+-        return retval;
+-}
+-
+ static void
+ rounded_rectangle (cairo_t *cr,
+                    gdouble  aspect,
+@@ -783,55 +802,41 @@ gdm_user_render_icon (GdmUser   *user,
+ {
+         GdkPixbuf    *pixbuf;
+         GdkPixbuf    *framed;
+-        char         *path;
+-        char         *tmp;
+         gboolean      res;
++        GError       *error;
+ 
+         g_return_val_if_fail (GDM_IS_USER (user), NULL);
+         g_return_val_if_fail (icon_size > 12, NULL);
+ 
+-        path = NULL;
+-
+-        pixbuf = render_icon_from_cache (user, icon_size);
+-        if (pixbuf != NULL) {
+-                goto out;
+-        }
+-
+-        /* Try ${GlobalFaceDir}/${username} */
+-        path = g_build_filename (GLOBAL_FACEDIR, user->user_name, NULL);
+-        res = check_user_file (path,
+-                               MAX_FILE_SIZE);
+-        if (res) {
+-                pixbuf = gdk_pixbuf_new_from_file_at_size (path,
+-                                                           icon_size,
+-                                                           icon_size,
+-                                                           NULL);
+-        } else {
+-                g_debug ("Could not access global face icon %s", path);
+-                pixbuf = NULL;
++        pixbuf = NULL;
++        if (user->icon_file) {
++                res = check_user_file (user->icon_file,
++                                       MAX_FILE_SIZE);
++                if (res) {
++                        pixbuf = gdk_pixbuf_new_from_file_at_size (user->icon_file,
++                                                                   icon_size,
++                                                                   icon_size,
++                                                                   NULL);
++                } else {
++                        pixbuf = NULL;
++                }
+         }
+ 
+-        g_free (path);
+         if (pixbuf != NULL) {
+                 goto out;
+         }
+ 
+-        /* Finally, ${GlobalFaceDir}/${username}.png */
+-        tmp = g_strconcat (user->user_name, ".png", NULL);
+-        path = g_build_filename (GLOBAL_FACEDIR, tmp, NULL);
+-        g_free (tmp);
+-        res = check_user_file (path,
+-                               MAX_FILE_SIZE);
+-        if (res) {
+-                pixbuf = gdk_pixbuf_new_from_file_at_size (path,
+-                                                           icon_size,
+-                                                           icon_size,
+-                                                           NULL);
+-        } else {
+-                g_debug ("Could not access global face icon %s", path);
+-                pixbuf = NULL;
++        error = NULL;
++        pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
++
++                                           "stock_person",
++                                           icon_size,
++                                           GTK_ICON_LOOKUP_FORCE_SIZE,
++                                           &error);
++        if (error) {
++                g_warning ("%s", error->message);
++                g_error_free (error);
+         }
+-        g_free (path);
+  out:
+ 
+         if (pixbuf != NULL) {
+@@ -845,6 +850,22 @@ gdm_user_render_icon (GdmUser   *user,
+         return pixbuf;
+ }
+ 
++G_CONST_RETURN gchar *
++gdm_user_get_icon_file (GdmUser *user)
++{
++        g_return_val_if_fail (GDM_IS_USER (user), NULL);
++
++        return user->icon_file;
++}
++
++G_CONST_RETURN gchar *
++gdm_user_get_object_path (GdmUser *user)
++{
++        g_return_val_if_fail (GDM_IS_USER (user), NULL);
++
++        return user->object_path;
++}
++
+ G_CONST_RETURN char *
+ gdm_user_get_primary_session_id (GdmUser *user)
+ {
+@@ -874,3 +895,128 @@ out:
+         return primary_ssid;
+ }
+ 
++static void
++collect_props (const gchar    *key,
++               const GValue   *value,
++               GdmUser        *user)
++{
++        gboolean handled = TRUE;
++
++        if (strcmp (key, "Uid") == 0) {
++                user->uid = g_value_get_uint64 (value);
++        } else if (strcmp (key, "UserName") == 0) {
++                g_free (user->user_name);
++                user->user_name = g_value_dup_string (value);
++        } else if (strcmp (key, "RealName") == 0) {
++                g_free (user->real_name);
++                user->real_name = g_value_dup_string (value);
++        } else if (strcmp (key, "AccountType") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "Email") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "Language") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "Location") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "LoginFrequency") == 0) {
++                user->login_frequency = g_value_get_uint64 (value);
++        } else if (strcmp (key, "IconFile") == 0) {
++                g_free (user->icon_file);
++                user->icon_file = g_value_dup_string (value);
++        } else if (strcmp (key, "Locked") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "AutomaticLogin") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "PasswordMode") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "PasswordHint") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "HomeDirectory") == 0) {
++                /* ignore */
++        } else if (strcmp (key, "Shell") == 0) {
++                /* ignore */
++        } else {
++                handled = FALSE;
++        }
++
++        if (!handled) {
++                g_debug ("unhandled property %s", key);
++        }
++}
++
++static gboolean
++update_info (GdmUser *user)
++{
++        GError *error;
++        DBusGProxy *proxy;
++        GHashTable *hash_table;
++        gboolean retval;
++
++        proxy = dbus_g_proxy_new_for_name (user->connection,
++                                           USER_ACCOUNTS_NAME,
++                                           user->object_path,
++                                           DBUS_INTERFACE_PROPERTIES);
++
++        error = NULL;
++        if (!dbus_g_proxy_call (proxy,
++                                "GetAll",
++                                &error,
++                                G_TYPE_STRING,
++                                USER_ACCOUNTS_INTERFACE,
++                                G_TYPE_INVALID,
++                                dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_VALUE),
++                                &hash_table,
++                                G_TYPE_INVALID)) {
++                g_debug ("Error calling GetAll() when retrieving properties for %s: %s", user->object_path, error->message);
++                g_error_free (error);
++                retval = FALSE;
++                goto out;
++        }
++        g_hash_table_foreach (hash_table, (GHFunc) collect_props, user);
++        g_hash_table_unref (hash_table);
++
++        retval = TRUE;
++ out:
++        g_object_unref (proxy);
++        return retval;
++}
++
++static void
++changed_handler (DBusGProxy *proxy,
++                 gpointer   *data)
++{
++        GdmUser *user = GDM_USER (data);
++
++        if (update_info (user)) {
++                g_signal_emit (user, signals[CHANGED], 0);
++        }
++}
++
++GdmUser *
++gdm_user_new_from_object_path (const gchar *object_path)
++{
++        GdmUser *user;
++
++        user = (GdmUser *)g_object_new (GDM_TYPE_USER, NULL);
++        user->object_path = g_strdup (object_path);
++
++        user->accounts_proxy = dbus_g_proxy_new_for_name (user->connection,
++                                                          USER_ACCOUNTS_NAME,
++                                                          user->object_path,
++                                                          USER_ACCOUNTS_INTERFACE);
++        dbus_g_proxy_set_default_timeout (user->accounts_proxy, INT_MAX);
++        dbus_g_proxy_add_signal (user->accounts_proxy, "Changed", G_TYPE_INVALID);
++
++        dbus_g_proxy_connect_signal (user->accounts_proxy, "Changed",
++                                     G_CALLBACK (changed_handler), user, NULL);
++
++        if (!update_info (user)) {
++                goto error;
++        }
++
++        return user;
++
++ error:
++        g_object_unref (user);
++        return NULL;
++}
+diff --git a/gui/simple-greeter/gdm-user.h b/gui/simple-greeter/gdm-user.h
+index 6b51ffb..8514f2f 100644
+--- a/gui/simple-greeter/gdm-user.h
++++ b/gui/simple-greeter/gdm-user.h
+@@ -39,6 +39,9 @@ typedef struct _GdmUser GdmUser;
+ 
+ GType                 gdm_user_get_type            (void) G_GNUC_CONST;
+ 
++GdmUser              *gdm_user_new_from_object_path (const gchar *path);
++const char           *gdm_user_get_object_path      (GdmUser *user);
++
+ uid_t                 gdm_user_get_uid             (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_user_name       (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_real_name       (GdmUser   *user);
+@@ -46,6 +49,7 @@ G_CONST_RETURN char  *gdm_user_get_display_name    (GdmUser   *user);
+ guint                 gdm_user_get_num_sessions    (GdmUser   *user);
+ gboolean              gdm_user_is_logged_in        (GdmUser   *user);
+ gulong                gdm_user_get_login_frequency (GdmUser   *user);
++G_CONST_RETURN char  *gdm_user_get_icon_file       (GdmUser   *user);
+ G_CONST_RETURN char  *gdm_user_get_primary_session_id (GdmUser *user);
+ 
+ GdkPixbuf            *gdm_user_render_icon         (GdmUser   *user,
+diff --git a/gui/user-switch-applet/applet.c b/gui/user-switch-applet/applet.c
+index 89c2b69..436207d 100644
+--- a/gui/user-switch-applet/applet.c
++++ b/gui/user-switch-applet/applet.c
+@@ -800,9 +800,12 @@ on_account_activate (GtkMenuItem   *item,
+         GdkScreen *screen;
+         gboolean   res;
+ 
+-        args[0] = g_find_program_in_path ("gnome-about-me");
++        args[0] = g_find_program_in_path ("accounts-dialog");
+         if (args[0] == NULL) {
+-                return;
++                args[0] = g_find_program_in_path ("gnome-about-me");
++                if (args[0] == NULL) {
++                        return;
++                }
+         }
+         args[1] = NULL;
+ 
+-- 
+1.6.5.2
+
+
+From f615959724ef9eb2e445ab11e65aa368d08be822 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 18 Mar 2010 08:59:45 -0400
+Subject: [PATCH 22/22] Don't crash when adding multiple user switchers
+
+Before we were blowing an assertion because settings client was
+getting initialized twice.
+---
+ gui/user-switch-applet/applet.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/gui/user-switch-applet/applet.c b/gui/user-switch-applet/applet.c
+index 436207d..3b20884 100644
+--- a/gui/user-switch-applet/applet.c
++++ b/gui/user-switch-applet/applet.c
+@@ -1409,17 +1409,18 @@ fill_applet (PanelApplet *applet)
+                                      "widget \"*.gdm-user-switch-applet\" style \"gdm-user-switch-applet-style\"\n");
+                 gtk_window_set_default_icon_name ("stock_people");
+                 g_set_application_name (_("User Switch Applet"));
++
++                if (! gdm_settings_client_init (GDMCONFDIR "/gdm.schemas", "/")) {
++                        g_critical ("Unable to initialize settings client");
++                        exit (1);
++                }
++
+         }
+ 
+         adata = g_new0 (GdmAppletData, 1);
+         adata->applet = applet;
+         adata->panel_size = 24;
+ 
+-        if (! gdm_settings_client_init (GDMCONFDIR "/gdm.schemas", "/")) {
+-                g_critical ("Unable to initialize settings client");
+-                exit (1);
+-        }
+-
+         adata->client = gconf_client_get_default ();
+ 
+         gtk_widget_set_tooltip_text (GTK_WIDGET (applet), _("Change account settings and status"));
+-- 
+1.6.5.2
+

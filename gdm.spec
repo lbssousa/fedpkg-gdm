@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.30.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -91,6 +91,9 @@ Provides: service(graphical-login) = %{name}
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
 
+# https://bugzilla.gnome.org/show_bug.cgi?id=610179
+Patch3: accounts-service.patch
+
 Patch96: gdm-multistack.patch
 # Fedora-specific
 Patch97: gdm-bubble-location.patch
@@ -135,6 +138,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
+%patch3 -p1 -b .accounts-service
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -379,6 +383,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Apr 27 2010 Ray Strode <rstrode@redhat.com> 2.30.2-2
+- Update multistack patch
+- Add accounts service patch
+- Update plymouth patch
+
 * Tue Apr 27 2010 Matthias Clasen <mclasen@redhat.com> 2.30.2-1
 - Update to 2.30.2
 - Spec file cleanups
