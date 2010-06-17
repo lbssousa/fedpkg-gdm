@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.30.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -35,9 +35,6 @@ Source10: polkit-gnome-authentication-agent-1.desktop
 
 Requires(pre): /usr/sbin/useradd
 
-Requires: gtk2 >= 0:%{gtk2_version}
-Requires: libglade2 >= 0:%{libglade2_version}
-Requires: libgnomeui >= 0:%{libgnomeui_version}
 Requires: pam >= 0:%{pam_version}
 Requires: /sbin/nologin
 Requires: system-logos
@@ -383,6 +380,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Jun 16 2010 Matthias Clasen <mclasen@redhat.com> 2.30.2-3
+- Kill explicit library deps
+
 * Tue Apr 27 2010 Ray Strode <rstrode@redhat.com> 2.30.2-2
 - Update multistack patch
 - Add accounts service patch
