@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.30.2
-Release: 3%{?dist}
+Version: 2.31.90
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -88,16 +88,11 @@ Provides: service(graphical-login) = %{name}
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
 
-# https://bugzilla.gnome.org/show_bug.cgi?id=610179
-Patch3: accounts-service.patch
-
 Patch96: gdm-multistack.patch
 # Fedora-specific
 Patch97: gdm-bubble-location.patch
 Patch98: tray-padding.patch
 Patch99: gdm-2.23.1-fedora-logo.patch
-
-Patch101: gdm-libs.patch
 
 %package user-switch-applet
 Summary:   GDM User Switcher Panel Applet
@@ -135,12 +130,10 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch3 -p1 -b .accounts-service
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
 %patch99 -p1 -b .fedora-logo
-%patch101 -p1 -b .libs
 
 autoreconf -i -f
 
@@ -281,8 +274,6 @@ if [ $1 -ge 2 -a -f $custom ] && grep -q /etc/X11/gdm $custom ; then
    sed -i -e 's@/etc/X11/gdm@/etc/gdm@g' $custom
 fi
 
-/usr/sbin/gdm-safe-restart >/dev/null 2>&1 || :
-
 %preun
 %gconf_schema_remove gdm-simple-greeter
 
@@ -331,9 +322,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libexecdir}/gdm-xdmcp-chooser-slave
 %{_sbindir}/gdm
 %{_sbindir}/gdm-binary
-%{_sbindir}/gdm-restart
-%{_sbindir}/gdm-safe-restart
-%{_sbindir}/gdm-stop
 %{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
 %{_datadir}/gdm/*.ui
@@ -380,6 +368,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Aug 17 2010 Ray Strode <rstrode@redhat.com> 2.31.90-1
+- Update to 2.31.90
+
 * Wed Jun 16 2010 Matthias Clasen <mclasen@redhat.com> 2.30.2-3
 - Kill explicit library deps
 
