@@ -301,7 +301,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %config %{_sysconfdir}/pam.d/gdm-password
 # not config files
 %{_sysconfdir}/gdm/Xsession
-%{_sysconfdir}/gdm/gdm.schemas
+%{_datadir}/gdm/gdm.schemas
 %{_sysconfdir}/dbus-1/system.d/gdm.conf
 %dir %{_sysconfdir}/gdm/Init
 %dir %{_sysconfdir}/gdm/PreSession
