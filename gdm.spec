@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.32.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -80,7 +80,7 @@ BuildRequires: check-devel
 BuildRequires: iso-codes-devel
 BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel >= 4.0
-BuildRequires: DeviceKit-power-devel >= 008
+BuildRequires: upower-devel >= 0.9.7
 BuildRequires: libXdmcp-devel
 
 Provides: service(graphical-login) = %{name}
@@ -368,6 +368,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Nov 15 2010 Dan Williams <dcbw@redhat.com> 2.32.0-2
+- Fix upower build requirement
+
 * Wed Sep 29 2010 Ray Strode <rstrode@redhat.com> 2.32.0-1
 - Update to 2.32.0
 
