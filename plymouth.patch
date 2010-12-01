@@ -222,7 +222,7 @@ index ba10386..3ec21e9 100644
 +        char *vt;
 +
 +        g_free (server->priv->command);
-+        server->priv->command = g_strdup (X_SERVER " -nr -verbose");
++        server->priv->command = g_strdup (X_SERVER " -background none -verbose");
 +        vt = get_active_vt_as_string ();
 +        res = gdm_server_spawn (server, vt);
 +        g_free (vt);

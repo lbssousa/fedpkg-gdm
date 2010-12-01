@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.32.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -82,6 +82,7 @@ BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel >= 4.0
 BuildRequires: upower-devel >= 0.9.7
 BuildRequires: libXdmcp-devel
+BuildRequires: dbus-glib-devel
 
 Provides: service(graphical-login) = %{name}
 
@@ -368,6 +369,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Dec 01 2010 Peter Hutterer <peter.hutterer@redhat.com> 1:2.32.0-3
+- plymouth.patch: xserver 1.10 takes "-background none" root argument
+  instead of the fedora-specific "-nr".
+- Add missing BuildRequires for dbus-glib-devel
+
 * Mon Nov 15 2010 Dan Williams <dcbw@redhat.com> 2.32.0-2
 - Fix upower build requirement
 
