@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.32.0
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -88,6 +88,7 @@ Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
+Patch10: gdm-2.32.0-maybe-set-is-loaded.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -131,6 +132,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
+%patch10 -p1 -b .maybe-set-is-loaded
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -369,6 +371,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Dec 15 2010 Christopher Aillon <caillon@redhat.com> 2.32.0-4
+- Add maybe-set-is-loaded.patch to ensure we end up with a loaded user
+
 * Wed Dec 01 2010 Peter Hutterer <peter.hutterer@redhat.com> 1:2.32.0-3
 - plymouth.patch: xserver 1.10 takes "-background none" root argument
   instead of the fedora-specific "-nr".

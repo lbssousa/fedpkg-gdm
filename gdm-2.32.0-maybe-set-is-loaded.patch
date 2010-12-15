@@ -1,0 +1,82 @@
+3 patches from upstream to fix issue with GDM user list sometimes not loading properly
+
+
+From 45e1f603f7b77644c7d4fed2bd0fae5e9b586f55 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Fri, 08 Oct 2010 01:47:51 +0000
+Subject: user-manager: fixes for when consolekit is unavailable
+
+Part of the user manager load sequence involves communicating
+with ConsoleKit.  If ConsoleKit is unavailable, we need to
+properly finish the sequence so that the user manager
+becomes accessible in a "degraded" mode.
+---
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 7e7719a..112116c 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -609,6 +609,7 @@ on_get_seat_id_finished (DBusGProxy     *proxy,
+                                  "current session");
+                 }
+                 unload_seat (manager);
++                maybe_set_is_loaded (manager);
+                 return;
+         }
+ 
+@@ -918,6 +919,7 @@ on_get_current_session_finished (DBusGProxy     *proxy,
+                         g_debug ("Failed to identify the current session");
+                 }
+                 unload_seat (manager);
++                maybe_set_is_loaded (manager);
+                 return;
+         }
+ 
+--
+cgit v0.8.3.1
+
+From 68fbf55992773124b4f79118d4a1564c737a3195 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Sun, 10 Oct 2010 19:47:47 +0000
+Subject: user-manager: add forward declaration
+
+This fixes a compiler warning.
+---
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 112116c..6705acc 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -229,6 +229,7 @@ static void     fetch_user_locally             (GdmUserManager *manager,
+                                                 const char     *username);
+ static void     fetch_user_incrementally       (GdmUserManagerFetchUserRequest *request);
+ 
++static void     maybe_set_is_loaded            (GdmUserManager *manager);
+ static gpointer user_manager_object = NULL;
+ 
+ G_DEFINE_TYPE (GdmUserManager, gdm_user_manager, G_TYPE_OBJECT)
+--
+cgit v0.8.3.1
+
+From efda830b8b978b96cd6a5923b3c1066250a31ac3 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 06 Dec 2010 15:46:28 +0000
+Subject: user-manager: maybe set is loaded ListCachedUsers
+
+This is another asynchronous fix, needed to make sure
+the race of competing conditions properly end up with
+a loaded user.
+---
+diff --git a/gui/simple-greeter/gdm-user-manager.c b/gui/simple-greeter/gdm-user-manager.c
+index 6705acc..c631989 100644
+--- a/gui/simple-greeter/gdm-user-manager.c
++++ b/gui/simple-greeter/gdm-user-manager.c
+@@ -1198,6 +1198,8 @@ on_list_cached_users_finished (DBusGProxy     *proxy,
+                 return;
+         }
+ 
++        maybe_set_is_loaded (manager);
++
+         g_ptr_array_foreach (paths, (GFunc)add_new_user_for_object_path, manager);
+ 
+         g_ptr_array_foreach (paths, (GFunc)g_free, NULL);
+--
+cgit v0.8.3.1
