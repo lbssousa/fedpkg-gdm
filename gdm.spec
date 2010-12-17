@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.32.0
-Release: 4%{?dist}
+Version: 2.91.4
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -88,7 +88,6 @@ Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 Patch2: plymouth.patch
-Patch10: gdm-2.32.0-maybe-set-is-loaded.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -132,7 +131,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch10 -p1 -b .maybe-set-is-loaded
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -350,6 +348,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 %attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
+%{_sysconfdir}/dconf/profile/gdm
+%{_sysconfdir}/dconf/db/gdm
+
 
 %files user-switch-applet
 %defattr(-, root, root)
@@ -371,6 +372,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Dec 17 2010 Ray Strode <rstrode@redhat.com> 2.91.4-1
+- Update to 2.91.4
+
 * Wed Dec 15 2010 Christopher Aillon <caillon@redhat.com> 2.32.0-4
 - Add maybe-set-is-loaded.patch to ensure we end up with a loaded user
 
