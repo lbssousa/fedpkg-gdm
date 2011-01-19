@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -87,7 +87,9 @@ BuildRequires: dbus-glib-devel
 Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
+
 Patch2: plymouth.patch
+Patch3: icon-fix.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -131,6 +133,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
+%patch3 -p1 -b .icon-fix
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -372,6 +375,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Jan 19 2011 Ray Strode <rstrode@redhat.com> 2.91.4-2
+- Be more aggresive about loading icons
+  (right now we fail, which combined with fatal criticals
+  gives us crashes)
+
 * Fri Dec 17 2010 Ray Strode <rstrode@redhat.com> 2.91.4-1
 - Update to 2.91.4
 
