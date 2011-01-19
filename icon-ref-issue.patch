@@ -1,0 +1,26 @@
+From 9663f0e3a47231aa95d076f9177b1e9460715372 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Wed, 19 Jan 2011 13:32:28 -0500
+Subject: [PATCH] user-chooser-widget: fix ref counting issue on user pixbuf
+
+---
+ gui/simple-greeter/gdm-user-chooser-widget.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/gui/simple-greeter/gdm-user-chooser-widget.c b/gui/simple-greeter/gdm-user-chooser-widget.c
+index 6d03c38..bd2d070 100644
+--- a/gui/simple-greeter/gdm-user-chooser-widget.c
++++ b/gui/simple-greeter/gdm-user-chooser-widget.c
+@@ -949,7 +949,8 @@ update_icons (GdmChooserWidget *widget,
+               IconUpdateData   *data)
+ {
+         if (data->old_icon == *image) {
+-                *image = data->new_icon;
++                g_object_unref (*image);
++                *image = g_object_ref (data->new_icon);
+                 return TRUE;
+         }
+ 
+-- 
+1.7.3.4
+
