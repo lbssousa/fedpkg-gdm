@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.4
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -377,6 +377,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Jan 19 2011 Ray Strode <rstrode@redhat.com> 2.91.4-5
+- Fix swapped LHS and RHS in more-aggressive-about-loading-icons
+  patch
+
 * Wed Jan 19 2011 Ray Strode <rstrode@redhat.com> 2.91.4-4
 - Update previous patch to handle NULL better
 
