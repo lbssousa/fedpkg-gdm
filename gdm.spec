@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.4
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -336,7 +336,13 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
 %{_libdir}/libgdm*.so*
+%dir %{_libdir}/gdm
+%dir %{_libdir}/gdm/simple-greeter
+%dir %{_libdir}/gdm/simple-greeter/plugins
 %{_libdir}/gdm/simple-greeter/plugins/password.so
+%dir %{_datadir}/gdm/simple-greeter
+%dir %{_datadir}/gdm/simple-greeter/extensions
+%dir %{_datadir}/gdm/simple-greeter/extensions/password
 %{_datadir}/gdm/simple-greeter/extensions/password/page.ui
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/autostart
@@ -344,7 +350,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %config %{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/spool/gdm
-%dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
 %attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
@@ -366,6 +371,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %files plugin-smartcard
 %defattr(-, root, root)
 %config %{_sysconfdir}/pam.d/gdm-smartcard
+%dir %{_datadir}/gdm/simple-greeter/extensions/smartcard
 %{_datadir}/gdm/simple-greeter/extensions/smartcard/page.ui
 %{_libdir}/gdm/simple-greeter/plugins/smartcard.so
 %{_libexecdir}/gdm-smartcard-worker
@@ -373,10 +379,14 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %files plugin-fingerprint
 %defattr(-, root, root)
 %config %{_sysconfdir}/pam.d/gdm-fingerprint
+%dir %{_datadir}/gdm/simple-greeter/extensions/fingerprint
 %{_datadir}/gdm/simple-greeter/extensions/fingerprint/page.ui
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Sat Jan 29 2011 Ville Skyttä <ville.skytta@iki.fi> - 1:2.91.4-6
+- Dir ownership fixes.
+
 * Wed Jan 19 2011 Ray Strode <rstrode@redhat.com> 2.91.4-5
 - Fix swapped LHS and RHS in more-aggressive-about-loading-icons
   patch
