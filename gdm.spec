@@ -1,6 +1,6 @@
 %define libauditver 1.0.6
 %define pango_version 1.2.0
-%define gtk2_version 2.6.0
+%define gtk3_version 2.99.2
 %define libglade2_version 2.0.0
 %define libgnomeui_version 2.2.0
 %define scrollkeeper_version 0.3.4
@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.91.4
-Release: 6%{?dist}
+Version: 2.91.6
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -55,7 +55,7 @@ Requires: libXau >= 1.0.4-4
 BuildRequires: pkgconfig(libcanberra-gtk)
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
-BuildRequires: gtk2-devel >= 0:%{gtk2_version}
+BuildRequires: gtk3-devel >= 0:%{gtk3_version}
 BuildRequires: libglade2-devel >= 0:%{libglade2_version}
 BuildRequires: libgnomeui-devel >= 0:%{libgnomeui_version}
 BuildRequires: pam-devel >= 0:%{pam_version}
@@ -89,21 +89,12 @@ Provides: service(graphical-login) = %{name}
 Requires: audit-libs >= %{libauditver}
 
 Patch2: plymouth.patch
-Patch3: icon-fix.patch
-Patch4: icon-ref-issue.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
 Patch97: gdm-bubble-location.patch
 Patch98: tray-padding.patch
 Patch99: gdm-2.23.1-fedora-logo.patch
-
-%package user-switch-applet
-Summary:   GDM User Switcher Panel Applet
-Group:     User Interface/Desktops
-Requires:  gdm >= 0:2.21.9-0
-Obsoletes: fast-user-switch-applet
-Provides:  fast-user-switch-applet = %{epoch}:%{version}-%{release}
 
 %package plugin-smartcard
 Summary:   GDM smartcard plugin
@@ -121,10 +112,6 @@ Requires:  fprintd-pam
 GDM provides the graphical login screen, shown shortly after boot up,
 log out, and when user-switching.
 
-%description user-switch-applet
-The GDM user switcher applet provides a mechanism for changing among
-multiple simulanteous logged in users.
-
 %description plugin-smartcard
 The GDM smartcard plugin provides functionality necessary to use a smart card with GDM.
 
@@ -134,8 +121,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch3 -p1 -b .icon-fix
-%patch4 -p1 -b .icon-ref-issue
 %patch96 -p1 -b .multistack
 %patch97 -p1 -b .bubble-location
 %patch98 -p1 -b .tray-padding
@@ -347,7 +332,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/autostart
 %dir %{_datadir}/gdm/autostart/LoginWindow
-%config %{_datadir}/gdm/autostart/LoginWindow/*
+%{_datadir}/gdm/autostart/LoginWindow/*
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/spool/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
@@ -360,13 +345,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
 %{_sysconfdir}/dconf/profile/gdm
 %{_sysconfdir}/dconf/db/gdm
-
-
-%files user-switch-applet
-%defattr(-, root, root)
-%{_libexecdir}/gdm-user-switch-applet
-%{_libdir}/bonobo/servers/GNOME_FastUserSwitchApplet.server
-%{_datadir}/gnome-2.0/ui/GNOME_FastUserSwitchApplet.xml
 
 %files plugin-smartcard
 %defattr(-, root, root)
@@ -384,6 +362,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Feb 02 2011 Ray Strode <rstrode@redhat.com> 2.91.6-1
+- Update to 2.91.6
+
 * Sat Jan 29 2011 Ville Skyttä <ville.skytta@iki.fi> - 1:2.91.4-6
 - Dir ownership fixes.
 
