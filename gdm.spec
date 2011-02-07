@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -89,6 +89,7 @@ Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 
+Patch1: 0001-Make-sure-to-disable-g-s-d-plugins-in-greeter.patch
 Patch2: plymouth.patch
 Patch3: fix-theme-related-crash.patch
 
@@ -120,6 +121,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 
 %prep
 %setup -q
+%patch1 -p1 -b .gsd-plugins
 %patch2 -p1 -b .plymouth
 %patch3 -p1 -b .fix-theme-related-crash
 %patch96 -p1 -b .multistack
@@ -361,6 +363,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Feb 07 2011 Bastien Nocera <bnocera@redhat.com> 2.91.6-3
+- Really disable gnome-settings-daemon plugins in the greeter
+
 * Fri Feb 04 2011 Ray Strode <rstrode@redhat.com> 2.91.6-2
 - Drop some unimportant patches
 - Attempt to fix bug 674978 (theme related crash)
