@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -48,7 +48,6 @@ Requires: gnome-session
 Requires: polkit-gnome
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
-Requires: plymouth-gdm-hooks
 Requires: pulseaudio-gdm-hooks
 # We need 1.0.4-5 since it lets us use "localhost" in auth cookies
 Requires: libXau >= 1.0.4-4
@@ -363,6 +362,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Wed Feb 09 2011 Christopher Aillon <caillon@redhat.com> - 2.91.6-5
+- Drop the requires on plymouth-gdm-hooks since it no longer exists
+
 * Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:2.91.6-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
