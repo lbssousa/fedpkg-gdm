@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -362,6 +362,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Feb 11 2011 Matthias Clasen <mclasen@redhat.com> - 2.91.6-6
+- Rebuild against newer gtk
+
 * Wed Feb 09 2011 Christopher Aillon <caillon@redhat.com> - 2.91.6-5
 - Drop the requires on plymouth-gdm-hooks since it no longer exists
 
