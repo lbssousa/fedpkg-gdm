@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 7%{?dist}
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -364,6 +364,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Feb 14 2011 Ray Strode <rstrode@redhat.com> 2.91.6-8
+- Do build with pam stack changes need to get ecryptfs
+  working.
+  Resolves: #665061
+
 * Mon Feb 14 2011 Ray Strode <rstrode@redhat.com> 2.91.6-7
 - Fix crasher and rendering glitches
   Resolves: #674978
