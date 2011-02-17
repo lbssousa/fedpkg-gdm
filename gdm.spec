@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 8%{?dist}
+Release: 9%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -366,7 +366,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
-* Thu Feb 17 2011 Ray Strode <rstrode@redhat.com> 2.91.6-8
+* Thu Feb 17 2011 Ray Strode <rstrode@redhat.com> 2.91.6-9
 - Add back session chooser
   Resolves: #539638
 
