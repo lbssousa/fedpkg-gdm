@@ -92,6 +92,7 @@ Patch1: 0001-Make-sure-to-disable-g-s-d-plugins-in-greeter.patch
 Patch2: plymouth.patch
 Patch3: fix-theme-related-crash.patch
 Patch4: fix-crasher.patch
+Patch5: add-session-chooser.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -125,6 +126,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch2 -p1 -b .plymouth
 %patch3 -p1 -b .fix-theme-related-crash
 %patch4 -p1 -b .fix-crasher
+%patch5 -p1 -b .add-session-chooser
 %patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
@@ -364,6 +366,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Thu Feb 17 2011 Ray Strode <rstrode@redhat.com> 2.91.6-8
+- Add back session chooser
+  Resolves: #539638
+
 * Mon Feb 14 2011 Ray Strode <rstrode@redhat.com> 2.91.6-8
 - Do build with pam stack changes need to get ecryptfs
   working.
