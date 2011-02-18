@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 9%{?dist}
+Release: 10%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -42,6 +42,7 @@ Requires: xorg-x11-server-utils
 Requires: setxkbmap
 Requires: xorg-x11-xinit
 Requires: ConsoleKit >= %{consolekit_version}
+Requires: accountsservice
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
 Requires: gnome-session
@@ -93,6 +94,7 @@ Patch2: plymouth.patch
 Patch3: fix-theme-related-crash.patch
 Patch4: fix-crasher.patch
 Patch5: add-session-chooser.patch
+Patch6: move-to-accounts-library.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -127,6 +129,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch3 -p1 -b .fix-theme-related-crash
 %patch4 -p1 -b .fix-crasher
 %patch5 -p1 -b .add-session-chooser
+%patch6 -p1 -b .move-to-accounts-library
 %patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
@@ -366,6 +369,13 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Feb 18 2011 Ray Strode <rstrode@redhat.com> 2.91.6-10
+- Fix user list async bugs by dropping async code and
+  moving to accounts service library
+  Resolves: #678236
+- Add requires for accounts service to spec since it isn't
+  optional (and hasn't been for a while)
+
 * Thu Feb 17 2011 Ray Strode <rstrode@redhat.com> 2.91.6-9
 - Add back session chooser
   Resolves: #539638
