@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 2.91.6
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -95,6 +95,7 @@ Patch3: fix-theme-related-crash.patch
 Patch4: fix-crasher.patch
 Patch5: add-session-chooser.patch
 Patch6: move-to-accounts-library.patch
+Patch7: fix-empty-user-list.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -130,6 +131,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %patch4 -p1 -b .fix-crasher
 %patch5 -p1 -b .add-session-chooser
 %patch6 -p1 -b .move-to-accounts-library
+%patch7 -p1 -b .fix-empty-user-list
 %patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
@@ -369,6 +371,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Feb 22 2011 Ray Strode <rstrode@redhat.com> 2.91.6-11
+- Dropping async code didn't work.  The bug was still
+  around.  This commit should fix it.
+
 * Fri Feb 18 2011 Ray Strode <rstrode@redhat.com> 2.91.6-10
 - Fix user list async bugs by dropping async code and
   moving to accounts service library
