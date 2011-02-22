@@ -95,7 +95,7 @@ Patch3: fix-theme-related-crash.patch
 Patch4: fix-crasher.patch
 Patch5: add-session-chooser.patch
 Patch6: move-to-accounts-library.patch
-Patch7: fix-empty-user-list.patch
+Patch7: fix-empty-userlist.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
