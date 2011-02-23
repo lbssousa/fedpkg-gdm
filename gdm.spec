@@ -14,14 +14,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.91.6
-Release: 11%{?dist}
+Version: 2.91.91
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/2.32/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.91/gdm-%{version}.tar.bz2
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdm-password.pam
@@ -89,13 +89,7 @@ Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 
-Patch1: 0001-Make-sure-to-disable-g-s-d-plugins-in-greeter.patch
 Patch2: plymouth.patch
-Patch3: fix-theme-related-crash.patch
-Patch4: fix-crasher.patch
-Patch5: add-session-chooser.patch
-Patch6: move-to-accounts-library.patch
-Patch7: fix-empty-userlist.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -125,13 +119,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 
 %prep
 %setup -q
-%patch1 -p1 -b .gsd-plugins
 %patch2 -p1 -b .plymouth
-%patch3 -p1 -b .fix-theme-related-crash
-%patch4 -p1 -b .fix-crasher
-%patch5 -p1 -b .add-session-chooser
-%patch6 -p1 -b .move-to-accounts-library
-%patch7 -p1 -b .fix-empty-user-list
 %patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
