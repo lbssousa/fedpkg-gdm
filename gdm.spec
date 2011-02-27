@@ -56,12 +56,9 @@ BuildRequires: pkgconfig(libcanberra-gtk)
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk3-devel >= 0:%{gtk3_version}
-BuildRequires: libglade2-devel >= 0:%{libglade2_version}
-BuildRequires: libgnomeui-devel >= 0:%{libgnomeui_version}
 BuildRequires: pam-devel >= 0:%{pam_version}
 BuildRequires: fontconfig >= 0:%{fontconfig_version}
 BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
-BuildRequires: gail-devel >= 0:%{gail_version}
 BuildRequires: libtool automake autoconf
 BuildRequires: libattr-devel
 BuildRequires: gettext
