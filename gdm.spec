@@ -75,7 +75,6 @@ BuildRequires: ConsoleKit
 BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
-BuildRequires: gnome-panel-devel
 BuildRequires: libxklavier-devel >= 4.0
 BuildRequires: upower-devel >= 0.9.7
 BuildRequires: libXdmcp-devel
