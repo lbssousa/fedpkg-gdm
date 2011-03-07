@@ -14,7 +14,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.91.91
+Version: 2.91.92
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
