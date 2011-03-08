@@ -14,7 +14,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.91.92
+Version: 2.91.93
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
@@ -356,6 +356,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Mar 08 2011 Ray Strode <rstrode@redhat.com> 2.91.93-1
+- Update to 2.91.93
+
 * Tue Feb 22 2011 Ray Strode <rstrode@redhat.com> 2.91.6-11
 - Dropping async code didn't work.  The bug was still
   around.  This commit should fix it.

@@ -1,7 +1,7 @@
-From cb6174633c0537f5e3faa184696b2ca9f3fc1265 Mon Sep 17 00:00:00 2001
+From 20991d66702c7337d23313f3429468c4a2f6be49 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 22 Jul 2010 13:38:09 -0400
-Subject: [PATCH 01/35] Revert "Don't wait a mandatory 2 seconds when resetting greeter"
+Subject: [PATCH 01/20] Revert "Don't wait a mandatory 2 seconds when resetting greeter"
 
 This reverts commit 83552f19154bf5689b395a76c1a9931b2558f41b.
 
@@ -12,10 +12,10 @@ long enough.  A better fix would belong in the greeter.
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index e6b3c98..9ea5bc9 100644
+index 3e0ed5c..fbec0a9 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
-@@ -294,7 +294,7 @@ queue_greeter_reset (GdmSimpleSlave *slave)
+@@ -285,7 +285,7 @@ queue_greeter_reset (GdmSimpleSlave *slave)
                  return;
          }
  
@@ -28,139 +28,10 @@ index e6b3c98..9ea5bc9 100644
 1.7.4.1
 
 
-From 6a0034da0304ce1780e8b1932e95e42d897e1485 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 7 Jul 2010 17:16:38 -0400
-Subject: [PATCH 02/35] Don't set list-visible unless the widget is visible
-
-list-visible is a special property that means the
-list part of the chooser widget is visible.  We need
-to make sure we only report it visible when the
-chooser itself is visible otherwise the property is
-a lie.
-
-This fixes focus handling when the conversation list
-isn't visible to begin with.
----
- gui/simple-greeter/gdm-chooser-widget.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-chooser-widget.c b/gui/simple-greeter/gdm-chooser-widget.c
-index ebbfdb9..e81bd77 100644
---- a/gui/simple-greeter/gdm-chooser-widget.c
-+++ b/gui/simple-greeter/gdm-chooser-widget.c
-@@ -699,7 +699,7 @@ update_chooser_visibility (GdmChooserWidget *widget)
- 
-         if (gdm_chooser_widget_get_number_of_items (widget) > 0) {
-                 gtk_widget_show (widget->priv->frame);
--                set_chooser_list_visible (widget, TRUE);
-+                set_chooser_list_visible (widget, gtk_widget_get_visible (widget));
-         } else {
-                 gtk_widget_hide (widget->priv->frame);
-                 set_chooser_list_visible (widget, FALSE);
--- 
-1.7.4.1
-
-
-From 57b65cbf3d5398c055f91da5865fd967f9b1a623 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Mon, 28 Jun 2010 14:35:35 -0400
-Subject: [PATCH 03/35] Add user chooser to ui file
-
-Before it was getting added manually from the source code.
-
-This way is a lot cleaner.
----
- gui/simple-greeter/gdm-greeter-login-window.c  |   23 ++++++++++++++++-------
- gui/simple-greeter/gdm-greeter-login-window.ui |    9 ++++++++-
- 2 files changed, 24 insertions(+), 8 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index c220dc4..a64bbc2 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.c
-+++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -1270,6 +1270,17 @@ create_computer_info (GdmGreeterLoginWindow *login_window)
- 
- 
- static void
-+register_custom_types (GdmGreeterLoginWindow *login_window)
-+{
-+        GType types[] = { GDM_TYPE_USER_CHOOSER_WIDGET };
-+        int i;
-+
-+        for (i = 0; i < G_N_ELEMENTS (types); i++) {
-+                g_debug ("Registering type '%s'", g_type_name (types[i]));
-+        }
-+}
-+
-+static void
- load_theme (GdmGreeterLoginWindow *login_window)
- {
-         GtkWidget *entry;
-@@ -1280,6 +1291,8 @@ load_theme (GdmGreeterLoginWindow *login_window)
- 
-         gdm_profile_start (NULL);
- 
-+        register_custom_types (login_window);
-+
-         login_window->priv->builder = gtk_builder_new ();
-         if (!gtk_builder_add_from_file (login_window->priv->builder, UIDIR "/" UI_XML_FILE, &error)) {
-                 g_warning ("Couldn't load builder file: %s", error->message);
-@@ -1313,16 +1326,10 @@ load_theme (GdmGreeterLoginWindow *login_window)
-         box = GTK_WIDGET (gtk_builder_get_object (login_window->priv->builder, "window-frame"));
-         gtk_container_add (GTK_CONTAINER (login_window), box);
- 
--        /* FIXME: user and session chooser should get loaded from ui file instead
--         */
--        login_window->priv->user_chooser = gdm_user_chooser_widget_new ();
--        box = GTK_WIDGET (gtk_builder_get_object (login_window->priv->builder, "selection-box"));
--        gtk_box_pack_start (GTK_BOX (box), login_window->priv->user_chooser, TRUE, TRUE, 0);
--        gtk_box_reorder_child (GTK_BOX (box), login_window->priv->user_chooser, 0);
-+        login_window->priv->user_chooser = GTK_WIDGET (gtk_builder_get_object (login_window->priv->builder, "user-chooser"));
- 
-         gdm_user_chooser_widget_set_show_only_chosen (GDM_USER_CHOOSER_WIDGET (login_window->priv->user_chooser), TRUE);
- 
--
-         g_signal_connect (login_window->priv->user_chooser,
-                           "loaded",
-                           G_CALLBACK (on_users_loaded),
-@@ -1341,6 +1348,8 @@ load_theme (GdmGreeterLoginWindow *login_window)
-                                  G_CALLBACK (on_user_chooser_visibility_changed),
-                                  login_window);
- 
-+        /* FIXME: session chooser should get loaded from ui file instead
-+         */
-         login_window->priv->session_option_widget = gdm_session_option_widget_new ();
-         box = GTK_WIDGET (gtk_builder_get_object (login_window->priv->builder, "buttonbox"));
-         g_object_set (G_OBJECT (login_window->priv->session_option_widget),
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.ui b/gui/simple-greeter/gdm-greeter-login-window.ui
-index 8409166..7ce166b 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.ui
-+++ b/gui/simple-greeter/gdm-greeter-login-window.ui
-@@ -160,7 +160,14 @@
-                         <property name="visible">True</property>
-                         <property name="spacing">10</property>
-                         <child>
--                          <placeholder/>
-+                          <object class="GdmUserChooserWidget" id="user-chooser">
-+                            <property name="visible">False</property>
-+                          </object>
-+                          <packing>
-+                            <property name="expand">True</property>
-+                            <property name="fill">True</property>
-+                            <property name="position">0</property>
-+                          </packing>
-                         </child>
-                         <child>
-                           <object class="GtkHBox" id="auth-input-box">
--- 
-1.7.4.1
-
-
-From 0dfa3a4d8cfb883714b06ab66416ad31979001fd Mon Sep 17 00:00:00 2001
+From 9c4009493d4c55c56a573519d87d237033dd4db8 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 14:05:20 -0500
-Subject: [PATCH 04/35] Add new api to ask when chooser widget is done loading items
+Subject: [PATCH 02/20] Add new api to ask when chooser widget is done loading items
 
 ---
  gui/simple-greeter/gdm-chooser-widget.c |    8 ++++++++
@@ -213,185 +84,10 @@ index 11a6456..3f6fea3 100644
 1.7.4.1
 
 
-From 7cd9d470d4c178c95adc18732907950986cc09ba Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Fri, 6 Mar 2009 11:19:40 -0500
-Subject: [PATCH 05/35] Create session settings object up front
-
-This allows us to set language, session, etc,
-before the PAM conversation is started.
----
- daemon/gdm-session-worker.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 617c69c..ee8a0f7 100644
---- a/daemon/gdm-session-worker.c
-+++ b/daemon/gdm-session-worker.c
-@@ -1972,8 +1972,6 @@ do_setup (GdmSessionWorker *worker)
-         GError  *error;
-         gboolean res;
- 
--        worker->priv->user_settings = gdm_session_settings_new ();
--
-         g_signal_connect_swapped (worker->priv->user_settings,
-                                   "notify::language-name",
-                                   G_CALLBACK (on_saved_language_name_read),
-@@ -2631,6 +2629,7 @@ gdm_session_worker_init (GdmSessionWorker *worker)
- {
- 
-         worker->priv = GDM_SESSION_WORKER_GET_PRIVATE (worker);
-+        worker->priv->user_settings = gdm_session_settings_new ();
- }
- 
- static void
--- 
-1.7.4.1
-
-
-From d3b746c537a971907ad8d33a876a307367fa38bf Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Tue, 13 Jul 2010 22:42:43 -0400
-Subject: [PATCH 06/35] disconnect signal handlers in destroy session
-
-We don't want them firing as part of object destruction
----
- daemon/gdm-simple-slave.c |  100 ++++++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 90 insertions(+), 10 deletions(-)
-
-diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 9ea5bc9..d37cc79 100644
---- a/daemon/gdm-simple-slave.c
-+++ b/daemon/gdm-simple-slave.c
-@@ -104,6 +104,7 @@ static void     gdm_simple_slave_finalize       (GObject             *object);
- G_DEFINE_TYPE (GdmSimpleSlave, gdm_simple_slave, GDM_TYPE_SLAVE)
- 
- static void create_new_session (GdmSimpleSlave *slave);
-+static void destroy_session    (GdmSimpleSlave *slave);
- static void start_greeter      (GdmSimpleSlave *slave);
- 
- static void
-@@ -238,16 +239,6 @@ add_user_authorization (GdmSimpleSlave *slave,
- }
- 
- static void
--destroy_session (GdmSimpleSlave *slave)
--{
--        if (slave->priv->session != NULL) {
--                gdm_session_close (GDM_SESSION (slave->priv->session));
--                g_object_unref (slave->priv->session);
--                slave->priv->session = NULL;
--        }
--}
--
--static void
- reset_session (GdmSimpleSlave *slave)
- {
-         destroy_session (slave);
-@@ -834,6 +825,95 @@ create_new_session (GdmSimpleSlave *slave)
- }
- 
- static void
-+destroy_session (GdmSimpleSlave *slave)
-+{
-+        if (slave->priv->session == NULL) {
-+                return;
-+        }
-+
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_conversation_started),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_setup_complete),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_setup_failed),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_reset_complete),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_reset_failed),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_authenticated),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_authentication_failed),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_authorized),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_authorization_failed),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_accredited),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_accreditation_failed),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_opened),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_open_failed),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_info),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_problem),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_info_query),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_secret_info_query),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_started),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_exited),
-+                                              slave);
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_died),
-+                                              slave);
-+#if 0
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_closed),
-+                                              slave);
-+#endif
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_session_selected_user_changed),
-+                                              slave);
-+
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_default_language_name_changed),
-+                                              slave);
-+
-+        g_signal_handlers_disconnect_by_func (slave->priv->session,
-+                                              G_CALLBACK (on_default_session_name_changed),
-+                                              slave);
-+
-+        gdm_session_close (GDM_SESSION (slave->priv->session));
-+        g_object_unref (slave->priv->session);
-+        slave->priv->session = NULL;
-+}
-+
-+static void
- on_greeter_session_start (GdmGreeterSession *greeter,
-                           GdmSimpleSlave    *slave)
- {
--- 
-1.7.4.1
-
-
-From 6ce665d3294f3dd010be645aea6e87455b5acedc Mon Sep 17 00:00:00 2001
+From 88f4bdeab75647ca666757e70bef30eae2f2ad57 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 11:00:08 -0500
-Subject: [PATCH 07/35] Introduce new Conversation object
+Subject: [PATCH 03/20] Introduce new Conversation object
 
 We want to eventually support having multiple
 simultaneous PAM conversations in one login
@@ -1407,7 +1103,7 @@ index a1e885d..202da36 100644
                                                    const char *service_name);
  void     gdm_session_setup_for_user              (GdmSession *session,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index d37cc79..541571e 100644
+index fbec0a9..eb24e74 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -243,7 +243,6 @@ reset_session (GdmSimpleSlave *slave)
@@ -1418,9 +1114,9 @@ index d37cc79..541571e 100644
  }
  
  static gboolean
-@@ -1025,8 +1024,6 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
- 
-         g_debug ("GdmSimpleSlave: Greeter connected");
+@@ -1043,8 +1042,6 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
+                 return;
+         }
  
 -        gdm_session_start_conversation (GDM_SESSION (slave->priv->session));
 -
@@ -1458,10 +1154,10 @@ index 8bed085..9bfda86 100644
 1.7.4.1
 
 
-From 13038c2e9e1991842cada2eb40e7226e98ba35f1 Mon Sep 17 00:00:00 2001
+From 9fc55e09cfaf43d073865a8766ceae5c2cef4e60 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Feb 2009 10:55:03 -0500
-Subject: [PATCH 08/35] Rename session worker to the service it's managing
+Subject: [PATCH 04/20] Rename session worker to the service it's managing
 
 This way when we're running multiple PAM conversations at once
 it will be obvious which worker is managing which conversation.
@@ -1647,10 +1343,10 @@ index d24f025..4833f23 100644
 1.7.4.1
 
 
-From bfe15f99aa79be54f7b7b5b2623cc695e78d5c23 Mon Sep 17 00:00:00 2001
+From e225e66238a518f8d0f784e46003de8681cd8a29 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 13:01:48 -0500
-Subject: [PATCH 09/35] Make greeter/autologin session explicitly request PAM conversation
+Subject: [PATCH 05/20] Make greeter/autologin session explicitly request PAM conversation
 
 Now the greeter (and also the autologin code) has to say what
 PAM stack it wants the slave to run.  When that stack is ready,
@@ -1818,7 +1514,7 @@ index 7872201..d4fc9dd 100644
                                                                const char       *text);
  void                gdm_greeter_server_default_language_name_changed (GdmGreeterServer *greeter_server,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 541571e..c87c602 100644
+index eb24e74..907d54e 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -616,6 +616,7 @@ on_session_secret_info_query (GdmSession     *session,
@@ -1899,7 +1595,7 @@ index 541571e..c87c602 100644
  on_greeter_begin_verification (GdmGreeterServer *greeter_server,
                                 GdmSimpleSlave   *slave)
  {
-@@ -1132,6 +1163,10 @@ start_greeter (GdmSimpleSlave *slave)
+@@ -1156,6 +1187,10 @@ start_greeter (GdmSimpleSlave *slave)
  
          slave->priv->greeter_server = gdm_greeter_server_new (display_id);
          g_signal_connect (slave->priv->greeter_server,
@@ -2008,10 +1704,10 @@ index 7be5acd..ed20884 100644
 1.7.4.1
 
 
-From 0d89da61cafddf5df37e4a93839ae7a74e2ec0c7 Mon Sep 17 00:00:00 2001
+From 04d5f558753e4a6685ce31f3b89402484f707086 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 15:18:31 -0500
-Subject: [PATCH 10/35] Store multiple conversations in the session
+Subject: [PATCH 06/20] Store multiple conversations in the session
 
 We keep multiple conversations in the session now, keyed off of
 PAM service is at the other end.  Much of the guts still
@@ -2020,19 +1716,19 @@ only operate on the first conversation added though.
  daemon/gdm-factory-slave.c               |   69 +++-
  daemon/gdm-greeter-server.c              |  134 ++++++--
  daemon/gdm-greeter-server.h              |   19 +-
- daemon/gdm-product-slave.c               |  264 ++++++++++++---
- daemon/gdm-session-direct.c              |  564 ++++++++++++++++++++----------
+ daemon/gdm-product-slave.c               |  264 +++++++++++---
+ daemon/gdm-session-direct.c              |  599 +++++++++++++++++++++---------
  daemon/gdm-session-private.h             |   28 ++-
  daemon/gdm-session-relay.c               |  135 ++++++--
  daemon/gdm-session-worker.c              |   27 ++
  daemon/gdm-session.c                     |  203 +++++++----
  daemon/gdm-session.h                     |   60 +++-
- daemon/gdm-simple-slave.c                |  114 +++++--
+ daemon/gdm-simple-slave.c                |  120 +++++--
  daemon/test-session.c                    |   22 +-
  gui/simple-greeter/gdm-greeter-client.c  |  188 ++++++++--
  gui/simple-greeter/gdm-greeter-client.h  |   16 +-
  gui/simple-greeter/gdm-greeter-session.c |   11 +-
- 15 files changed, 1380 insertions(+), 474 deletions(-)
+ 15 files changed, 1420 insertions(+), 475 deletions(-)
 
 diff --git a/daemon/gdm-factory-slave.c b/daemon/gdm-factory-slave.c
 index 9bae550..9e435f9 100644
@@ -3143,7 +2839,7 @@ index 84d5c49..af1c480 100644
  
  static void
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index 5b30ecd..f91eff3 100644
+index 5b30ecd..15a018f 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
 @@ -87,9 +87,10 @@ struct _GdmSessionDirectPrivate
@@ -3172,7 +2868,7 @@ index 5b30ecd..f91eff3 100644
 +        conversation = g_hash_table_lookup (session->priv->conversations, service_name);
 +
 +        if (conversation == NULL) {
-+                g_warning ("Tried to look up non-existant conversation");
++                g_warning ("Tried to look up non-existent conversation %s", service_name);
 +        }
 +
 +        return conversation;
@@ -3992,7 +3688,7 @@ index 5b30ecd..f91eff3 100644
 +free_conversation (GdmSessionConversation *conversation)
 +{
 +        if (conversation->job != NULL) {
-+                g_warning ("Freeing conversation with active job");
++                g_warning ("Freeing conversation '%s' with active job", conversation->service_name);
 +        }
 +
 +        g_free (conversation->service_name);
@@ -4078,12 +3774,11 @@ index 5b30ecd..f91eff3 100644
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
 +        GdmSessionConversation *conversation;
- 
-         g_return_if_fail (session != NULL);
- 
-         g_debug ("GdmSessionDirect: starting conversation");
- 
--        impl->priv->conversation = start_conversation (impl, service_name);
++
++        g_return_if_fail (session != NULL);
++
++        g_debug ("GdmSessionDirect: starting conversation %s", service_name);
++
 +        conversation = start_conversation (impl, service_name);
 +
 +        g_hash_table_insert (impl->priv->conversations,
@@ -4096,13 +3791,15 @@ index 5b30ecd..f91eff3 100644
 +{
 +        GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
 +        GdmSessionConversation *conversation;
-+
-+        g_return_if_fail (session != NULL);
-+
-+        g_debug ("GdmSessionDirect: stopping conversation");
+ 
+         g_return_if_fail (session != NULL);
+ 
+-        g_debug ("GdmSessionDirect: starting conversation");
++        g_debug ("GdmSessionDirect: stopping conversation %s", service_name);
 +
 +        conversation = find_conversation_by_name (impl, service_name);
-+
+ 
+-        impl->priv->conversation = start_conversation (impl, service_name);
 +        if (conversation != NULL) {
 +                stop_conversation (conversation);
 +                g_hash_table_remove (impl->priv->conversations, service_name);
@@ -4255,7 +3952,7 @@ index 5b30ecd..f91eff3 100644
  }
  
  static const char *
-@@ -2079,17 +2234,22 @@ setup_session_environment (GdmSessionDirect *session)
+@@ -2079,17 +2234,63 @@ setup_session_environment (GdmSessionDirect *session)
  }
  
  static void
@@ -4276,17 +3973,72 @@ index 5b30ecd..f91eff3 100644
  
  static void
 -gdm_session_direct_start_session (GdmSession *session)
++stop_all_other_conversations (GdmSessionDirect        *session,
++                              GdmSessionConversation  *conversation_to_keep)
++{
++        GHashTableIter iter;
++        gpointer key, value;
++
++        if (session->priv->conversations == NULL) {
++                return;
++        }
++
++        if (conversation_to_keep == NULL) {
++                g_debug ("GdmSessionDirect: Stopping all conversations");
++        } else {
++                g_debug ("GdmSessionDirect: Stopping all conversations "
++                         "except for %s", conversation_to_keep->service_name);
++        }
++
++        g_hash_table_iter_init (&iter, session->priv->conversations);
++        while (g_hash_table_iter_next (&iter, &key, &value)) {
++                GdmSessionConversation *conversation;
++
++                conversation = (GdmSessionConversation *) value;
++
++                if (conversation == conversation_to_keep) {
++                        g_hash_table_iter_steal (&iter);
++                        g_free (key);
++                } else {
++                        stop_conversation (conversation);
++                }
++        }
++
++        g_hash_table_remove_all (session->priv->conversations);
++
++        if (conversation_to_keep != NULL) {
++                g_hash_table_insert (session->priv->conversations,
++                                     g_strdup (conversation_to_keep->service_name),
++                                     conversation_to_keep);
++        }
++}
++
++static void
 +gdm_session_direct_start_session (GdmSession *session,
 +                                  const char *service_name)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
          GdmSessionConversation *conversation;
-@@ -2109,15 +2269,38 @@ gdm_session_direct_start_session (GdmSession *session)
- 
-         g_free (command);
+@@ -2099,6 +2300,16 @@ gdm_session_direct_start_session (GdmSession *session)
+         g_return_if_fail (session != NULL);
+         g_return_if_fail (impl->priv->is_running == FALSE);
  
 +        conversation = find_conversation_by_name (impl, service_name);
 +
++        if (conversation == NULL) {
++                g_warning ("GdmSessionDirect: Tried to start session of "
++                           "nonexistent conversation %s", service_name);
++                return;
++        }
++
++        stop_all_other_conversations (impl, conversation);
++
+         command = get_session_command (impl);
+ 
+         if (gdm_session_direct_bypasses_xsession (impl)) {
+@@ -2110,14 +2321,19 @@ gdm_session_direct_start_session (GdmSession *session)
+         g_free (command);
+ 
          setup_session_environment (impl);
 -        send_environment (impl);
 +        send_environment (impl, conversation);
@@ -4299,30 +4051,14 @@ index 5b30ecd..f91eff3 100644
  static void
 +stop_all_conversations (GdmSessionDirect *session)
 +{
-+        GHashTableIter iter;
-+        gpointer key, value;
-+
-+        if (session->priv->conversations == NULL) {
-+                return;
-+        }
-+
-+        g_hash_table_iter_init (&iter, session->priv->conversations);
-+        while (g_hash_table_iter_next (&iter, &key, &value)) {
-+                GdmSessionConversation *conversation;
-+
-+                conversation = (GdmSessionConversation *) value;
-+
-+                stop_conversation (conversation);
-+        }
-+
-+        g_hash_table_remove_all (session->priv->conversations);
++        stop_all_other_conversations (session, NULL);
 +}
 +
 +static void
  gdm_session_direct_close (GdmSession *session)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
-@@ -2134,6 +2317,13 @@ gdm_session_direct_close (GdmSession *session)
+@@ -2134,6 +2350,13 @@ gdm_session_direct_close (GdmSession *session)
                                             impl->priv->display_device);
          }
  
@@ -4336,7 +4072,7 @@ index 5b30ecd..f91eff3 100644
          g_free (impl->priv->selected_user);
          impl->priv->selected_user = NULL;
  
-@@ -2160,6 +2350,7 @@ gdm_session_direct_close (GdmSession *session)
+@@ -2160,6 +2383,7 @@ gdm_session_direct_close (GdmSession *session)
  
  static void
  gdm_session_direct_answer_query  (GdmSession *session,
@@ -4344,7 +4080,7 @@ index 5b30ecd..f91eff3 100644
                                    const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
-@@ -2167,7 +2358,7 @@ gdm_session_direct_answer_query  (GdmSession *session,
+@@ -2167,7 +2391,7 @@ gdm_session_direct_answer_query  (GdmSession *session,
  
          g_return_if_fail (session != NULL);
  
@@ -4353,7 +4089,7 @@ index 5b30ecd..f91eff3 100644
  
          answer_pending_query (conversation, text);
  }
-@@ -2175,11 +2366,9 @@ gdm_session_direct_answer_query  (GdmSession *session,
+@@ -2175,11 +2399,9 @@ gdm_session_direct_answer_query  (GdmSession *session,
  static void
  gdm_session_direct_cancel  (GdmSession *session)
  {
@@ -4366,7 +4102,7 @@ index 5b30ecd..f91eff3 100644
  }
  
  char *
-@@ -2251,7 +2440,8 @@ gdm_session_direct_select_session (GdmSession *session,
+@@ -2251,7 +2473,8 @@ gdm_session_direct_select_session (GdmSession *session,
                                     const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -4376,7 +4112,7 @@ index 5b30ecd..f91eff3 100644
  
          g_free (impl->priv->selected_session);
  
-@@ -2261,9 +2451,15 @@ gdm_session_direct_select_session (GdmSession *session,
+@@ -2261,9 +2484,15 @@ gdm_session_direct_select_session (GdmSession *session,
                  impl->priv->selected_session = g_strdup (text);
          }
  
@@ -4395,7 +4131,7 @@ index 5b30ecd..f91eff3 100644
  }
  
  static void
-@@ -2271,7 +2467,8 @@ gdm_session_direct_select_language (GdmSession *session,
+@@ -2271,7 +2500,8 @@ gdm_session_direct_select_language (GdmSession *session,
                                      const char *text)
  {
          GdmSessionDirect *impl = GDM_SESSION_DIRECT (session);
@@ -4405,7 +4141,7 @@ index 5b30ecd..f91eff3 100644
  
          g_free (impl->priv->selected_language);
  
-@@ -2281,9 +2478,15 @@ gdm_session_direct_select_language (GdmSession *session,
+@@ -2281,9 +2511,15 @@ gdm_session_direct_select_language (GdmSession *session,
                  impl->priv->selected_language = g_strdup (text);
          }
  
@@ -4424,7 +4160,7 @@ index 5b30ecd..f91eff3 100644
  }
  
  static void
-@@ -2543,6 +2746,7 @@ static void
+@@ -2543,6 +2779,7 @@ static void
  gdm_session_iface_init (GdmSessionIface *iface)
  {
          iface->start_conversation = gdm_session_direct_start_conversation;
@@ -4949,10 +4685,10 @@ index d559c71..50f1140 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index ee8a0f7..c83de15 100644
+index 299c8be..b11b46e 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2566,6 +2566,28 @@ worker_dbus_filter_function (DBusConnection *connection,
+@@ -2591,6 +2591,28 @@ worker_dbus_filter_function (DBusConnection *connection,
          return DBUS_HANDLER_RESULT_HANDLED;
  }
  
@@ -4981,7 +4717,7 @@ index ee8a0f7..c83de15 100644
  static GObject *
  gdm_session_worker_constructor (GType                  type,
                                  guint                  n_construct_properties,
-@@ -2592,6 +2614,11 @@ gdm_session_worker_constructor (GType                  type,
+@@ -2617,6 +2639,11 @@ gdm_session_worker_constructor (GType                  type,
                  exit (1);
          }
  
@@ -5665,7 +5401,7 @@ index 202da36..9e72f89 100644
  void     gdm_session_select_session              (GdmSession *session,
                                                    const char *session_name);
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index c87c602..396007f 100644
+index 907d54e..e881e59 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -75,6 +75,8 @@ struct GdmSimpleSlavePrivate
@@ -5948,7 +5684,7 @@ index c87c602..396007f 100644
 +        gboolean res;
 +        g_debug ("GdmSimpleSlave: conversation stopped");
 +
-+        if (slave->priv->greeter_server != NULL) {
++        if (slave->priv->greeter != NULL) {
 +                res = gdm_greeter_server_conversation_stopped (slave->priv->greeter_server,
 +                                                               service_name);
 +                if (! res) {
@@ -5982,7 +5718,16 @@ index c87c602..396007f 100644
                                                G_CALLBACK (on_session_setup_complete),
                                                slave);
          g_signal_handlers_disconnect_by_func (slave->priv->session,
-@@ -978,11 +1025,12 @@ on_greeter_start_conversation (GdmGreeterServer *greeter_server,
+@@ -972,17 +1019,24 @@ on_greeter_start_conversation (GdmGreeterServer *greeter_server,
+                                GdmSimpleSlave   *slave)
+ {
+         g_debug ("GdmSimpleSlave: starting conversation with '%s' pam service'", service_name);
++        if (slave->priv->greeter_reset_id > 0) {
++                return;
++        }
+         gdm_session_start_conversation (GDM_SESSION (slave->priv->session),
+                                         service_name);
+ }
  
  static void
  on_greeter_begin_verification (GdmGreeterServer *greeter_server,
@@ -5990,13 +5735,16 @@ index c87c602..396007f 100644
                                 GdmSimpleSlave   *slave)
  {
          g_debug ("GdmSimpleSlave: begin verification");
++        if (slave->priv->greeter_reset_id > 0) {
++                return;
++        }
          gdm_session_setup (GDM_SESSION (slave->priv->session),
 -                           "gdm");
 +                           service_name);
  }
  
  static void
-@@ -998,21 +1046,23 @@ on_greeter_begin_auto_login (GdmGreeterServer *greeter_server,
+@@ -1001,6 +1055,7 @@ on_greeter_begin_auto_login (GdmGreeterServer *greeter_server,
  
  static void
  on_greeter_begin_verification_for_user (GdmGreeterServer *greeter_server,
@@ -6004,7 +5752,9 @@ index c87c602..396007f 100644
                                          const char       *username,
                                          GdmSimpleSlave   *slave)
  {
-         g_debug ("GdmSimpleSlave: begin verification");
+@@ -1009,19 +1064,20 @@ on_greeter_begin_verification_for_user (GdmGreeterServer *greeter_server,
+                 return;
+         }
          gdm_session_setup_for_user (GDM_SESSION (slave->priv->session),
 -                                    "gdm",
 +                                    service_name,
@@ -6017,12 +5767,15 @@ index c87c602..396007f 100644
                     const char       *text,
                     GdmSimpleSlave   *slave)
  {
+         if (slave->priv->greeter_reset_id > 0) {
+                 return;
+         }
 -        gdm_session_answer_query (GDM_SESSION (slave->priv->session), text);
 +        gdm_session_answer_query (GDM_SESSION (slave->priv->session), service_name, text);
  }
  
  static void
-@@ -1084,18 +1134,20 @@ on_greeter_disconnected (GdmGreeterServer *greeter_server,
+@@ -1102,6 +1158,7 @@ on_greeter_disconnected (GdmGreeterServer *greeter_server,
  
  static void
  on_start_session_when_ready (GdmGreeterServer *session,
@@ -6030,6 +5783,7 @@ index c87c602..396007f 100644
                               GdmSimpleSlave   *slave)
  {
          g_debug ("GdmSimpleSlave: Will start session when ready");
+@@ -1111,12 +1168,13 @@ on_start_session_when_ready (GdmGreeterServer *session,
          slave->priv->start_session_when_ready = TRUE;
  
          if (slave->priv->waiting_to_start_session) {
@@ -6615,70 +6369,39 @@ index ed20884..16f8db5 100644
 1.7.4.1
 
 
-From e7eb4287ec47510a1fc9fbee19e44e1896d21726 Mon Sep 17 00:00:00 2001
+From e26a7dfc7623ab0f03b55e066a9e4747c1314740 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 28 Oct 2009 16:05:14 -0400
-Subject: [PATCH 11/35] Return a different error code for "service won't work" than "auth failed"
+Date: Fri, 6 Nov 2009 13:35:26 -0500
+Subject: [PATCH 07/20] Don't delay login for passwd -d users
 
-If we bubble it up to the greeter then we should be able to have
-a more sensible UI when e.g. fingerprinting isn't enabled.
+Before we'd delay login if timed login was enabled, but
+we should have been checking if it was the reason login
+was happening.
 ---
- daemon/gdm-session-worker.c |   14 +++++++++++---
- daemon/gdm-session-worker.h |    1 +
- 2 files changed, 12 insertions(+), 3 deletions(-)
+ gui/simple-greeter/gdm-greeter-login-window.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index c83de15..95bb792 100644
---- a/daemon/gdm-session-worker.c
-+++ b/daemon/gdm-session-worker.c
-@@ -1060,8 +1060,8 @@ gdm_session_worker_initialize_pam (GdmSessionWorker *worker,
+diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
+index abd6707..f484ee6 100644
+--- a/gui/simple-greeter/gdm-greeter-login-window.c
++++ b/gui/simple-greeter/gdm-greeter-login-window.c
+@@ -855,7 +855,7 @@ gdm_greeter_login_window_start_session_when_ready (GdmGreeterLoginWindow *login_
+                  * so they can pick language/session.  Will need to refactor things
+                  * a bit so we can share code with timed login.
                   */
-                 g_set_error (error,
-                              GDM_SESSION_WORKER_ERROR,
--                             GDM_SESSION_WORKER_ERROR_AUTHENTICATING,
--                             _("error initiating conversation with authentication system: %s"),
-+                             GDM_SESSION_WORKER_ERROR_SERVICE_UNAVAILABLE,
-+                             _("error initiating conversation with authentication system - %s"),
-                              error_code == PAM_ABORT? _("general failure") :
-                              error_code == PAM_BUF_ERR? _("out of memory") :
-                              error_code == PAM_SYSTEM_ERR? _("application programmer error") :
-@@ -1172,7 +1172,15 @@ gdm_session_worker_authenticate_user (GdmSessionWorker *worker,
-         /* blocking call, does the actual conversation */
-         error_code = pam_authenticate (worker->priv->pam_handle, authentication_flags);
+-                if (!login_window->priv->timed_login_enabled) {
++                if (strcmp (service_name, "gdm-autologin") != 0) {
  
--        if (error_code != PAM_SUCCESS) {
-+        if (error_code == PAM_AUTHINFO_UNAVAIL) {
-+                g_debug ("GdmSessionWorker: authentication service unavailable");
-+
-+                g_set_error (error,
-+                             GDM_SESSION_WORKER_ERROR,
-+                             GDM_SESSION_WORKER_ERROR_SERVICE_UNAVAILABLE,
-+                             "%s", pam_strerror (worker->priv->pam_handle, error_code));
-+                goto out;
-+        } else if (error_code != PAM_SUCCESS) {
-                 g_debug ("GdmSessionWorker: authentication returned %d: %s", error_code, pam_strerror (worker->priv->pam_handle, error_code));
- 
-                 /*
-diff --git a/daemon/gdm-session-worker.h b/daemon/gdm-session-worker.h
-index ee5465a..b1c8285 100644
---- a/daemon/gdm-session-worker.h
-+++ b/daemon/gdm-session-worker.h
-@@ -41,6 +41,7 @@ typedef enum _GdmSessionWorkerError {
-         GDM_SESSION_WORKER_ERROR_OPENING_MESSAGE_PIPE,
-         GDM_SESSION_WORKER_ERROR_COMMUNICATING,
-         GDM_SESSION_WORKER_ERROR_WORKER_DIED,
-+        GDM_SESSION_WORKER_ERROR_SERVICE_UNAVAILABLE,
-         GDM_SESSION_WORKER_ERROR_AUTHENTICATING,
-         GDM_SESSION_WORKER_ERROR_AUTHORIZING,
-         GDM_SESSION_WORKER_ERROR_OPENING_LOG_FILE,
+                         g_debug ("GdmGreeterLoginWindow: Okay, we'll start the session anyway,"
+                                  "because the user isn't ever going to get an opportunity to"
 -- 
 1.7.4.1
 
 
-From 1f668f44072337c6d2d2b926cca821521111e67f Mon Sep 17 00:00:00 2001
+From c6f6fb248f0eea2f56f38c345f17a187a90903b6 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:32:00 -0400
-Subject: [PATCH 12/35] Emit "service-unavailable" from session when pam service refuses to work
+Subject: [PATCH 08/20] Emit "service-unavailable" from session when pam service refuses to work
 
 ---
  daemon/gdm-session-direct.c  |   26 +++++++++++++++++++++++---
@@ -6690,7 +6413,7 @@ Subject: [PATCH 12/35] Emit "service-unavailable" from session when pam service 
  6 files changed, 103 insertions(+), 10 deletions(-)
 
 diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index f91eff3..9268bc5 100644
+index 15a018f..23812d2 100644
 --- a/daemon/gdm-session-direct.c
 +++ b/daemon/gdm-session-direct.c
 @@ -281,9 +281,27 @@ on_session_exited (GdmSession *session,
@@ -6805,10 +6528,10 @@ index 50f1140..f76fa6f 100644
                                 "    </method>\n"
                                 "    <method name=\"SetupFailed\">\n"
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 95bb792..e1ec7ce 100644
+index b11b46e..f0056ac 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2015,9 +2015,16 @@ do_setup (GdmSessionWorker *worker)
+@@ -1994,9 +1994,16 @@ do_setup (GdmSessionWorker *worker)
                                                   worker->priv->display_device,
                                                   &error);
          if (! res) {
@@ -6828,7 +6551,7 @@ index 95bb792..e1ec7ce 100644
                  g_error_free (error);
                  return;
          }
-@@ -2038,10 +2045,18 @@ do_authenticate (GdmSessionWorker *worker)
+@@ -2017,10 +2024,18 @@ do_authenticate (GdmSessionWorker *worker)
                                                      worker->priv->password_is_required,
                                                      &error);
          if (! res) {
@@ -6914,10 +6637,10 @@ index 9e72f89..ab16031 100644
 1.7.4.1
 
 
-From fd563fd2e3f2cc842342fe5caf22461ab6a789fd Mon Sep 17 00:00:00 2001
+From 0c11fbaa2f638db02df3c9a2289451fbb479e415 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:38:52 -0400
-Subject: [PATCH 13/35] Bubble service-unavailable up to greeter
+Subject: [PATCH 09/20] Bubble service-unavailable up to greeter
 
 ---
  daemon/gdm-greeter-server.c |   13 +++++++++++--
@@ -6967,7 +6690,7 @@ index 9015c26..52ce9fc 100644
  gboolean            gdm_greeter_server_ready                 (GdmGreeterServer *greeter_server,
                                                                const char       *service_name);
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 396007f..7d967b3 100644
+index e881e59..abf2842 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -264,22 +264,6 @@ greeter_reset_timeout (GdmSimpleSlave *slave)
@@ -7048,10 +6771,10 @@ index 396007f..7d967b3 100644
 1.7.4.1
 
 
-From ac34ed317780d34fd8852efeb498b720e9bba79f Mon Sep 17 00:00:00 2001
+From d819fa6c1f0b2d19169fa685247b9ea9368dadf4 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:46:39 -0400
-Subject: [PATCH 14/35] Catch service-unavailable from server in client and propagate it
+Subject: [PATCH 10/20] Catch service-unavailable from server in client and propagate it
 
 ---
  gui/simple-greeter/gdm-greeter-client.c |   20 ++++++++++++++++++++
@@ -7127,164 +6850,10 @@ index 868b496..63bd4b5 100644
 1.7.4.1
 
 
-From c32c10203f5b80a79f3982e7ac6c275032db7b09 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Thu, 5 Feb 2009 15:20:25 -0500
-Subject: [PATCH 15/35] Queue a greeter reset when the user clicks cancel
-
----
- daemon/gdm-simple-slave.c |   31 +++++++++++++++++++++++++++++++
- 1 files changed, 31 insertions(+), 0 deletions(-)
-
-diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 7d967b3..2ecf0a4 100644
---- a/daemon/gdm-simple-slave.c
-+++ b/daemon/gdm-simple-slave.c
-@@ -1011,6 +1011,9 @@ on_greeter_start_conversation (GdmGreeterServer *greeter_server,
-                                GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: starting conversation with '%s' pam service'", service_name);
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_start_conversation (GDM_SESSION (slave->priv->session),
-                                         service_name);
- }
-@@ -1021,6 +1024,9 @@ on_greeter_begin_verification (GdmGreeterServer *greeter_server,
-                                GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: begin verification");
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_setup (GDM_SESSION (slave->priv->session),
-                            service_name);
- }
-@@ -1031,6 +1037,9 @@ on_greeter_begin_auto_login (GdmGreeterServer *greeter_server,
-                              GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: begin auto login for user '%s'", username);
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_setup_for_user (GDM_SESSION (slave->priv->session),
-                                     "gdm-autologin",
-                                     username);
-@@ -1043,6 +1052,9 @@ on_greeter_begin_verification_for_user (GdmGreeterServer *greeter_server,
-                                         GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: begin verification");
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_setup_for_user (GDM_SESSION (slave->priv->session),
-                                     service_name,
-                                     username);
-@@ -1054,6 +1066,9 @@ on_greeter_answer (GdmGreeterServer *greeter_server,
-                    const char       *text,
-                    GdmSimpleSlave   *slave)
- {
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_answer_query (GDM_SESSION (slave->priv->session), service_name, text);
- }
- 
-@@ -1062,6 +1077,9 @@ on_greeter_session_selected (GdmGreeterServer *greeter_server,
-                              const char       *text,
-                              GdmSimpleSlave   *slave)
- {
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_select_session (GDM_SESSION (slave->priv->session), text);
- }
- 
-@@ -1070,6 +1088,9 @@ on_greeter_language_selected (GdmGreeterServer *greeter_server,
-                               const char       *text,
-                               GdmSimpleSlave   *slave)
- {
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         gdm_session_select_language (GDM_SESSION (slave->priv->session), text);
- }
- 
-@@ -1086,6 +1107,7 @@ on_greeter_cancel (GdmGreeterServer *greeter_server,
-                    GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: Greeter cancelled");
-+
-         queue_greeter_reset (slave);
- }
- 
-@@ -1096,6 +1118,9 @@ on_greeter_connected (GdmGreeterServer *greeter_server,
-         gboolean display_is_local;
- 
-         g_debug ("GdmSimpleSlave: Greeter connected");
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
- 
-         g_object_get (slave,
-                       "display-is-local", &display_is_local,
-@@ -1130,6 +1155,9 @@ on_start_session_when_ready (GdmGreeterServer *session,
-                              GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: Will start session when ready");
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         slave->priv->start_session_when_ready = TRUE;
- 
-         if (slave->priv->waiting_to_start_session) {
-@@ -1143,6 +1171,9 @@ on_start_session_later (GdmGreeterServer *session,
-                         GdmSimpleSlave   *slave)
- {
-         g_debug ("GdmSimpleSlave: Will start session when ready and told");
-+        if (slave->priv->greeter_reset_id > 0) {
-+                return;
-+        }
-         slave->priv->start_session_when_ready = FALSE;
- }
- 
--- 
-1.7.4.1
-
-
-From 396aea4986667c9bf4630d160d205857c7b08ff7 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Fri, 6 Nov 2009 13:35:26 -0500
-Subject: [PATCH 16/35] Don't delay login for passwd -d users
-
-Before we'd delay login if timed login was enabled, but
-we should have been checking if it was the reason login
-was happening.
----
- gui/simple-greeter/gdm-greeter-login-window.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index a64bbc2..d689d91 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.c
-+++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -851,7 +851,7 @@ gdm_greeter_login_window_start_session_when_ready (GdmGreeterLoginWindow *login_
-                  * so they can pick language/session.  Will need to refactor things
-                  * a bit so we can share code with timed login.
-                  */
--                if (!login_window->priv->timed_login_enabled) {
-+                if (strcmp (service_name, "gdm-autologin") != 0) {
- 
-                         g_debug ("GdmGreeterLoginWindow: Okay, we'll start the session anyway,"
-                                  "because the user isn't ever going to get an opportunity to"
--- 
-1.7.4.1
-
-
-From dfa1e81d90f0946cb487fe58eba6e967d300f461 Mon Sep 17 00:00:00 2001
+From aa349c3a6b953548f15472f3c3f73dd9548c5d0e Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 30 Jan 2009 23:57:31 -0500
-Subject: [PATCH 17/35] Add a plugin based extension system to greeter
+Subject: [PATCH 11/20] Add a plugin based extension system to greeter
 
 This allows plugins to drive which PAM conversations
 get run.  This commit just adds one plugin "password"
@@ -7296,7 +6865,7 @@ run.
  gui/simple-greeter/Makefile.am                     |   21 +
  gui/simple-greeter/gdm-greeter-client.c            |   21 +
  gui/simple-greeter/gdm-greeter-client.h            |    2 +
- gui/simple-greeter/gdm-greeter-login-window.c      | 1060 +++++++++++++++++---
+ gui/simple-greeter/gdm-greeter-login-window.c      | 1078 +++++++++++++++++---
  gui/simple-greeter/gdm-greeter-login-window.h      |   33 +-
  gui/simple-greeter/gdm-greeter-login-window.ui     |   67 +-
  gui/simple-greeter/gdm-greeter-plugin.c            |  254 +++++
@@ -7304,7 +6873,7 @@ run.
  gui/simple-greeter/gdm-greeter-session.c           |  160 +++-
  gui/simple-greeter/gdm-plugin-manager.c            |  478 +++++++++
  gui/simple-greeter/gdm-plugin-manager.h            |   66 ++
- gui/simple-greeter/gdm-task-list.c                 |  385 +++++++
+ gui/simple-greeter/gdm-task-list.c                 |  390 +++++++
  gui/simple-greeter/gdm-task-list.h                 |   85 ++
  gui/simple-greeter/gdm-user-chooser-widget.c       |   23 +-
  gui/simple-greeter/libgdmsimplegreeter/Makefile.am |   48 +
@@ -7317,13 +6886,13 @@ run.
  .../libgdmsimplegreeter/gdmsimplegreeter.pc.in     |   11 +
  gui/simple-greeter/plugins/Makefile.am             |    1 +
  gui/simple-greeter/plugins/password/Makefile.am    |   52 +
- .../plugins/password/gdm-password-extension.c      |  328 ++++++
+ .../plugins/password/gdm-password-extension.c      |  337 ++++++
  .../plugins/password/gdm-password-extension.h      |   56 +
  .../plugins/password/gdm-password.pam              |   19 +
- gui/simple-greeter/plugins/password/page.ui        |   57 ++
+ gui/simple-greeter/plugins/password/page.ui        |   57 +
  gui/simple-greeter/plugins/password/plugin.c       |   40 +
  po/POTFILES.in                                     |    1 +
- 32 files changed, 3743 insertions(+), 253 deletions(-)
+ 32 files changed, 3770 insertions(+), 258 deletions(-)
  create mode 100644 gui/simple-greeter/gdm-greeter-plugin.c
  create mode 100644 gui/simple-greeter/gdm-greeter-plugin.h
  create mode 100644 gui/simple-greeter/gdm-plugin-manager.c
@@ -7356,7 +6925,7 @@ index d5455e1..d8a9e72 100644
  VOID:DOUBLE
 +BOOLEAN:STRING
 diff --git a/configure.ac b/configure.ac
-index 1f5acb3..0370d47 100644
+index 2e7e440..29e3965 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -18,6 +18,22 @@ AC_PROG_CXX
@@ -7574,7 +7143,7 @@ index 63bd4b5..8ff559c 100644
          void (* authentication_failed)   (GdmGreeterClient  *client);
          void (* selected_user_changed)   (GdmGreeterClient  *client,
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index d689d91..9844af9 100644
+index f484ee6..56a790e 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.c
 +++ b/gui/simple-greeter/gdm-greeter-login-window.c
 @@ -1,7 +1,7 @@
@@ -7795,8 +7364,12 @@ index d689d91..9844af9 100644
  
          in_use = FALSE;
          item = gdm_chooser_widget_get_active_item (GDM_CHOOSER_WIDGET (login_window->priv->user_chooser));
-@@ -419,11 +491,23 @@ set_log_in_button_mode (GdmGreeterLoginWindow *login_window,
+@@ -417,13 +489,27 @@ set_log_in_button_mode (GdmGreeterLoginWindow *login_window,
  
+         login_window->priv->current_button = button;
+ 
++        g_list_foreach (login_window->priv->tasks, (GFunc) hide_task_actions, NULL);
++
          switch (mode) {
          case LOGIN_BUTTON_HIDDEN:
 +                task = gdm_task_list_get_active_task (GDM_TASK_LIST (login_window->priv->conversation_list));
@@ -7821,7 +7394,7 @@ index d689d91..9844af9 100644
                  break;
          case LOGIN_BUTTON_TIMED_LOGIN:
                  login_window->priv->login_button_handler_id = g_signal_connect (button, "clicked", G_CALLBACK (on_login_button_clicked_timed_login), login_window);
-@@ -487,6 +571,24 @@ maybe_show_cancel_button (GdmGreeterLoginWindow *login_window)
+@@ -487,6 +573,24 @@ maybe_show_cancel_button (GdmGreeterLoginWindow *login_window)
  }
  
  static void
@@ -7846,7 +7419,7 @@ index d689d91..9844af9 100644
  switch_mode (GdmGreeterLoginWindow *login_window,
               int                    number)
  {
-@@ -524,6 +626,7 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+@@ -527,6 +631,7 @@ switch_mode (GdmGreeterLoginWindow *login_window,
          }
  
          show_widget (login_window, "auth-input-box", FALSE);
@@ -7854,7 +7427,7 @@ index d689d91..9844af9 100644
          maybe_show_cancel_button (login_window);
  
          /*
-@@ -554,58 +657,71 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+@@ -557,58 +662,72 @@ switch_mode (GdmGreeterLoginWindow *login_window,
          }
  }
  
@@ -7933,6 +7506,7 @@ index d689d91..9844af9 100644
 +
 +        login_window->priv->tasks_to_enable = g_list_remove (login_window->priv->tasks_to_enable, task);
 +
++        hide_task_actions (task);
 +        gdm_conversation_reset (GDM_CONVERSATION (task));
 +        return FALSE;
 +}
@@ -7963,7 +7537,7 @@ index d689d91..9844af9 100644
  }
  
  static gboolean
-@@ -615,6 +731,10 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
+@@ -618,6 +737,10 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
  
          if (!login_window->priv->user_chooser_loaded) {
                  res = FALSE;
@@ -7974,7 +7548,7 @@ index d689d91..9844af9 100644
          } else if (login_window->priv->user_list_disabled) {
                  res = (login_window->priv->timed_login_username == NULL);
          } else {
-@@ -624,11 +744,44 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
+@@ -627,13 +750,44 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
          return res;
  }
  
@@ -8017,10 +7591,12 @@ index d689d91..9844af9 100644
                guint                  dialog_mode)
  {
 -        GtkWidget  *entry;
-         GtkWidget  *label;
- 
+-        GtkWidget  *label;
+-
          g_debug ("GdmGreeterLoginWindow: Resetting dialog to mode %u", dialog_mode);
-@@ -660,11 +813,10 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
+         set_busy (login_window);
+         set_sensitive (login_window, FALSE);
+@@ -663,28 +817,22 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
                  set_message (login_window, "");
          }
  
@@ -8029,14 +7605,14 @@ index d689d91..9844af9 100644
 -        gtk_editable_delete_text (GTK_EDITABLE (entry), 0, -1);
 -
 -        gtk_entry_set_visibility (GTK_ENTRY (entry), TRUE);
+-
+-        label = GTK_WIDGET (gtk_builder_get_object (GDM_GREETER_LOGIN_WINDOW (login_window)->priv->builder, "auth-prompt-label"));
+-        gtk_label_set_text (GTK_LABEL (label), "");
 +        gdm_task_list_foreach_task (GDM_TASK_LIST (login_window->priv->conversation_list),
 +                                    (GdmTaskListForeachFunc)
 +                                    reset_task,
 +                                    login_window);
  
-         label = GTK_WIDGET (gtk_builder_get_object (GDM_GREETER_LOGIN_WINDOW (login_window)->priv->builder, "auth-prompt-label"));
-         gtk_label_set_text (GTK_LABEL (label), "");
-@@ -672,12 +824,9 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
          if (can_jump_to_authenticate (login_window)) {
                  /* If we don't have a user list jump straight to authenticate */
                  g_debug ("GdmGreeterLoginWindow: jumping straight to authenticate");
@@ -8050,7 +7626,12 @@ index d689d91..9844af9 100644
          } else {
                  switch_mode (login_window, dialog_mode);
          }
-@@ -693,88 +842,177 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
+ 
++        gtk_widget_set_sensitive (login_window->priv->conversation_list, TRUE);
+         set_ready (login_window);
+         set_focus (GDM_GREETER_LOGIN_WINDOW (login_window));
+         update_banner_message (login_window);
+@@ -695,90 +843,179 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
  }
  
  static void
@@ -8152,15 +7733,15 @@ index d689d91..9844af9 100644
 +        /* If every conversation has failed, then just start over.
 +         */
 +        task = gdm_task_list_get_active_task (GDM_TASK_LIST (login_window->priv->conversation_list));
- 
--        /* FIXME: shake? */
--        reset_dialog (login_window, MODE_AUTHENTICATION);
++
 +        if (!gdm_task_is_enabled (task)) {
 +                g_debug ("GdmGreeterLoginWindow: No conversations left, starting over");
 +                restart_conversations (login_window);
 +        }
 +        g_object_unref (task);
-+
+ 
+-        /* FIXME: shake? */
+-        reset_dialog (login_window, MODE_AUTHENTICATION);
 +        update_conversation_list_visibility (login_window);
  
          return TRUE;
@@ -8218,6 +7799,7 @@ index d689d91..9844af9 100644
          g_debug ("GdmGreeterLoginWindow: info: %s", text);
  
 -        set_message (GDM_GREETER_LOGIN_WINDOW (login_window), text);
+         maybe_show_cancel_button (login_window);
 +        task = find_task_with_service_name (login_window, service_name);
 +
 +        if (task != NULL) {
@@ -8240,6 +7822,7 @@ index d689d91..9844af9 100644
  
 +        g_return_val_if_fail (GDM_IS_GREETER_LOGIN_WINDOW (login_window), FALSE);
          g_debug ("GdmGreeterLoginWindow: problem: %s", text);
+         maybe_show_cancel_button (login_window);
  
 -        set_message (GDM_GREETER_LOGIN_WINDOW (login_window), text);
 +        task = find_task_with_service_name (login_window, service_name);
@@ -8254,7 +7837,7 @@ index d689d91..9844af9 100644
          gdk_window_beep (gtk_widget_get_window (GTK_WIDGET (login_window)));
  
          return TRUE;
-@@ -799,6 +1037,26 @@ request_timed_login (GdmGreeterLoginWindow *login_window)
+@@ -803,6 +1040,26 @@ request_timed_login (GdmGreeterLoginWindow *login_window)
          login_window->priv->timed_login_already_enabled = TRUE;
  }
  
@@ -8281,7 +7864,7 @@ index d689d91..9844af9 100644
  void
  gdm_greeter_login_window_request_timed_login (GdmGreeterLoginWindow *login_window,
                                                const char            *username,
-@@ -826,11 +1084,21 @@ gdm_greeter_login_window_request_timed_login (GdmGreeterLoginWindow *login_windo
+@@ -830,11 +1087,30 @@ gdm_greeter_login_window_request_timed_login (GdmGreeterLoginWindow *login_windo
  }
  
  static void
@@ -8290,8 +7873,17 @@ index d689d91..9844af9 100644
 +                           GParamSpec            *param_spec,
 +                           char                  *service_name)
 +{
++        if (!login_window->priv->is_interactive) {
++                return;
++        }
++
 +        gdm_greeter_login_window_start_session_when_ready (login_window, service_name);
 +        g_free (service_name);
++
++        if (login_window->priv->start_session_handler_id > 0) {
++                g_signal_handler_disconnect (login_window, login_window->priv->start_session_handler_id);
++                login_window->priv->start_session_handler_id = 0;
++        }
 +}
 +
 +static void
@@ -8305,7 +7897,7 @@ index d689d91..9844af9 100644
          } else {
                  g_debug ("GdmGreeterLoginWindow: not starting session since "
                           "user hasn't had an opportunity to pick language "
-@@ -840,8 +1108,8 @@ gdm_greeter_login_window_start_session_when_ready (GdmGreeterLoginWindow *login_
+@@ -844,8 +1120,8 @@ gdm_greeter_login_window_start_session_when_ready (GdmGreeterLoginWindow *login_
                   */
                  login_window->priv->start_session_handler_id =
                      g_signal_connect (login_window, "notify::is-interactive",
@@ -8316,7 +7908,7 @@ index d689d91..9844af9 100644
  
                  /* FIXME: If the user wasn't asked any questions by pam but
                   * pam still authorized them (passwd -d, or the questions got
-@@ -864,10 +1132,10 @@ gdm_greeter_login_window_start_session_when_ready (GdmGreeterLoginWindow *login_
+@@ -868,10 +1144,10 @@ gdm_greeter_login_window_start_session_when_ready (GdmGreeterLoginWindow *login_
  
  gboolean
  gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
@@ -8329,7 +7921,7 @@ index d689d91..9844af9 100644
  
          g_return_val_if_fail (GDM_IS_GREETER_LOGIN_WINDOW (login_window), FALSE);
  
-@@ -876,16 +1144,15 @@ gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
+@@ -880,16 +1156,15 @@ gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
  
          g_debug ("GdmGreeterLoginWindow: info query: %s", text);
  
@@ -8337,11 +7929,11 @@ index d689d91..9844af9 100644
 -        gtk_editable_delete_text (GTK_EDITABLE (entry), 0, -1);
 -        gtk_entry_set_visibility (GTK_ENTRY (entry), TRUE);
 -        set_log_in_button_mode (login_window, LOGIN_BUTTON_ANSWER_QUERY);
--
--        label = GTK_WIDGET (gtk_builder_get_object (GDM_GREETER_LOGIN_WINDOW (login_window)->priv->builder, "auth-prompt-label"));
--        gtk_label_set_text (GTK_LABEL (label), text);
 +        task = find_task_with_service_name (login_window, service_name);
  
+-        label = GTK_WIDGET (gtk_builder_get_object (GDM_GREETER_LOGIN_WINDOW (login_window)->priv->builder, "auth-prompt-label"));
+-        gtk_label_set_text (GTK_LABEL (label), text);
+-
 -        show_widget (login_window, "auth-input-box", TRUE);
 +        if (task != NULL) {
 +                gdm_conversation_ask_question (GDM_CONVERSATION (task),
@@ -8353,7 +7945,7 @@ index d689d91..9844af9 100644
          set_sensitive (GDM_GREETER_LOGIN_WINDOW (login_window), TRUE);
          set_ready (GDM_GREETER_LOGIN_WINDOW (login_window));
          set_focus (GDM_GREETER_LOGIN_WINDOW (login_window));
-@@ -897,26 +1164,26 @@ gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
+@@ -901,26 +1176,26 @@ gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
  
  gboolean
  gdm_greeter_login_window_secret_info_query (GdmGreeterLoginWindow *login_window,
@@ -8390,7 +7982,7 @@ index d689d91..9844af9 100644
          set_sensitive (GDM_GREETER_LOGIN_WINDOW (login_window), TRUE);
          set_ready (GDM_GREETER_LOGIN_WINDOW (login_window));
          set_focus (GDM_GREETER_LOGIN_WINDOW (login_window));
-@@ -927,13 +1194,16 @@ gdm_greeter_login_window_secret_info_query (GdmGreeterLoginWindow *login_window,
+@@ -931,13 +1206,16 @@ gdm_greeter_login_window_secret_info_query (GdmGreeterLoginWindow *login_window,
  }
  
  void
@@ -8410,7 +8002,7 @@ index d689d91..9844af9 100644
  }
  
  static void
-@@ -1004,6 +1274,49 @@ on_user_chooser_visibility_changed (GdmGreeterLoginWindow *login_window)
+@@ -1008,6 +1286,49 @@ on_user_chooser_visibility_changed (GdmGreeterLoginWindow *login_window)
          update_banner_message (login_window);
  }
  
@@ -8460,7 +8052,7 @@ index d689d91..9844af9 100644
  static void
  on_users_loaded (GdmUserChooserWidget  *user_chooser,
                   GdmGreeterLoginWindow *login_window)
-@@ -1017,37 +1330,153 @@ on_users_loaded (GdmUserChooserWidget  *user_chooser,
+@@ -1021,37 +1342,153 @@ on_users_loaded (GdmUserChooserWidget  *user_chooser,
                  gtk_widget_show (login_window->priv->user_chooser);
          }
  
@@ -8625,7 +8217,7 @@ index d689d91..9844af9 100644
  }
  
  static void
-@@ -1268,11 +1697,74 @@ create_computer_info (GdmGreeterLoginWindow *login_window)
+@@ -1272,12 +1709,75 @@ create_computer_info (GdmGreeterLoginWindow *login_window)
  #define INVISIBLE_CHAR_BULLET        0x2022
  #define INVISIBLE_CHAR_NONE          0
  
@@ -8695,13 +8287,14 @@ index d689d91..9844af9 100644
  static void
  register_custom_types (GdmGreeterLoginWindow *login_window)
  {
--        GType types[] = { GDM_TYPE_USER_CHOOSER_WIDGET };
-+        GType types[] = { GDM_TYPE_USER_CHOOSER_WIDGET,
+         GType types[] = { GDM_TYPE_USER_CHOOSER_WIDGET,
+-                          GDM_TYPE_SESSION_OPTION_WIDGET };
++                          GDM_TYPE_SESSION_OPTION_WIDGET,
 +                          GDM_TYPE_TASK_LIST };
          int i;
  
          for (i = 0; i < G_N_ELEMENTS (types); i++) {
-@@ -1283,7 +1775,6 @@ register_custom_types (GdmGreeterLoginWindow *login_window)
+@@ -1288,7 +1788,6 @@ register_custom_types (GdmGreeterLoginWindow *login_window)
  static void
  load_theme (GdmGreeterLoginWindow *login_window)
  {
@@ -8709,7 +8302,7 @@ index d689d91..9844af9 100644
          GtkWidget *button;
          GtkWidget *box;
          GtkWidget *image;
-@@ -1336,7 +1827,7 @@ load_theme (GdmGreeterLoginWindow *login_window)
+@@ -1341,7 +1840,7 @@ load_theme (GdmGreeterLoginWindow *login_window)
                            login_window);
          g_signal_connect (login_window->priv->user_chooser,
                            "activated",
@@ -8718,7 +8311,7 @@ index d689d91..9844af9 100644
                            login_window);
          g_signal_connect (login_window->priv->user_chooser,
                            "deactivated",
-@@ -1366,30 +1857,30 @@ load_theme (GdmGreeterLoginWindow *login_window)
+@@ -1360,30 +1859,30 @@ load_theme (GdmGreeterLoginWindow *login_window)
                            G_CALLBACK (on_session_activated),
                            login_window);
  
@@ -8762,7 +8355,7 @@ index d689d91..9844af9 100644
  
          gdm_profile_end (NULL);
  }
-@@ -1586,6 +2077,15 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
+@@ -1580,6 +2079,15 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
  
          gtk_container_class_handle_border_width (container_class);
  
@@ -8778,7 +8371,7 @@ index d689d91..9844af9 100644
          signals [BEGIN_AUTO_LOGIN] =
                  g_signal_new ("begin-auto-login",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1602,9 +2102,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
+@@ -1596,9 +2104,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, begin_verification),
                                NULL,
                                NULL,
@@ -8790,7 +8383,7 @@ index d689d91..9844af9 100644
          signals [BEGIN_VERIFICATION_FOR_USER] =
                  g_signal_new ("begin-verification-for-user",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1612,9 +2112,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
+@@ -1606,9 +2114,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, begin_verification_for_user),
                                NULL,
                                NULL,
@@ -8802,7 +8395,7 @@ index d689d91..9844af9 100644
          signals [QUERY_ANSWER] =
                  g_signal_new ("query-answer",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1622,9 +2122,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
+@@ -1616,9 +2124,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, query_answer),
                                NULL,
                                NULL,
@@ -8814,7 +8407,7 @@ index d689d91..9844af9 100644
          signals [USER_SELECTED] =
                  g_signal_new ("user-selected",
                                G_TYPE_FROM_CLASS (object_class),
-@@ -1662,9 +2162,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
+@@ -1656,9 +2164,9 @@ gdm_greeter_login_window_class_init (GdmGreeterLoginWindowClass *klass)
                                G_STRUCT_OFFSET (GdmGreeterLoginWindowClass, start_session),
                                NULL,
                                NULL,
@@ -8826,7 +8419,7 @@ index d689d91..9844af9 100644
  
          g_object_class_install_property (object_class,
                                           PROP_DISPLAY_IS_LOCAL,
-@@ -1717,6 +2217,246 @@ on_gconf_key_changed (GConfClient           *client,
+@@ -1711,6 +2219,246 @@ on_gconf_key_changed (GConfClient           *client,
          }
  }
  
@@ -9158,7 +8751,7 @@ index c8b1167..bcdfbd7 100644
  G_END_DECLS
  
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.ui b/gui/simple-greeter/gdm-greeter-login-window.ui
-index 7ce166b..c09aed7 100644
+index 9c78c11..6cf2327 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.ui
 +++ b/gui/simple-greeter/gdm-greeter-login-window.ui
 @@ -158,69 +158,40 @@
@@ -10456,10 +10049,10 @@ index 0000000..f181140
 +#endif /* __GDM_PLUGIN_MANAGER_H */
 diff --git a/gui/simple-greeter/gdm-task-list.c b/gui/simple-greeter/gdm-task-list.c
 new file mode 100644
-index 0000000..5fdc2b8
+index 0000000..3e49fb7
 --- /dev/null
 +++ b/gui/simple-greeter/gdm-task-list.c
-@@ -0,0 +1,385 @@
+@@ -0,0 +1,390 @@
 +/*
 + * Copyright (C) 2009 Red Hat, Inc.
 + *
@@ -10530,7 +10123,6 @@ index 0000000..5fdc2b8
 +        if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button))) {
 +
 +                GList     *task_node;
-+
 +                /* Sort the list such that the tasks the user clicks last end
 +                 * up first.  This doesn't change the order in which the tasks
 +                 * appear in the UI, but will affect which tasks we implicitly
@@ -10597,7 +10189,6 @@ index 0000000..5fdc2b8
 +
 +                node = node->next;
 +        }
-+
 +}
 +
 +static void
@@ -10680,8 +10271,15 @@ index 0000000..5fdc2b8
 +                           GdmTask     *task)
 +{
 +        GtkWidget *button;
++        GList     *node;
 +
-+        task_list->priv->tasks = g_list_remove (task_list->priv->tasks, task);
++        node = g_list_find (task_list->priv->tasks, task);
++
++        if (node == NULL) {
++                return;
++        }
++
++        task_list->priv->tasks = g_list_delete_link (task_list->priv->tasks, node);
 +
 +        button = g_object_get_data (G_OBJECT (task), "gdm-task-list-button");
 +
@@ -10937,10 +10535,10 @@ index 0000000..cc377bd
 +
 +#endif /* __GDM_TASK_LIST_H */
 diff --git a/gui/simple-greeter/gdm-user-chooser-widget.c b/gui/simple-greeter/gdm-user-chooser-widget.c
-index 9551eca..b27bc95 100644
+index 9b4e5de..246d246 100644
 --- a/gui/simple-greeter/gdm-user-chooser-widget.c
 +++ b/gui/simple-greeter/gdm-user-chooser-widget.c
-@@ -642,9 +642,30 @@ gdm_user_chooser_widget_set_show_user_auto (GdmUserChooserWidget *widget,
+@@ -654,9 +654,30 @@ gdm_user_chooser_widget_set_show_user_auto (GdmUserChooserWidget *widget,
  char *
  gdm_user_chooser_widget_get_chosen_user_name (GdmUserChooserWidget *widget)
  {
@@ -11768,10 +11366,10 @@ index 0000000..5a81499
 +        Makefile.in
 diff --git a/gui/simple-greeter/plugins/password/gdm-password-extension.c b/gui/simple-greeter/plugins/password/gdm-password-extension.c
 new file mode 100644
-index 0000000..255283e
+index 0000000..11a171c
 --- /dev/null
 +++ b/gui/simple-greeter/plugins/password/gdm-password-extension.c
-@@ -0,0 +1,328 @@
+@@ -0,0 +1,337 @@
 +/*
 + * Copyright (C) 2009 Red Hat, Inc.
 + *
@@ -11807,6 +11405,7 @@ index 0000000..255283e
 +        GIcon     *icon;
 +        GtkWidget *page;
 +        GtkActionGroup *actions;
++        GtkAction *login_action;
 +
 +        GtkWidget *message_label;
 +        GtkWidget *prompt_label;
@@ -11852,6 +11451,8 @@ index 0000000..255283e
 +        gtk_widget_show (extension->priv->prompt_entry);
 +        gtk_widget_grab_focus (extension->priv->prompt_entry);
 +        extension->priv->answer_pending = TRUE;
++
++        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
 +}
 +
 +static void
@@ -11866,6 +11467,8 @@ index 0000000..255283e
 +        gtk_widget_show (extension->priv->prompt_entry);
 +        gtk_widget_grab_focus (extension->priv->prompt_entry);
 +        extension->priv->answer_pending = TRUE;
++
++        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
 +}
 +
 +static void
@@ -12023,9 +11626,11 @@ index 0000000..255283e
 +}
 +
 +static void
-+on_activate_log_in (GdmPasswordExtension *extension)
++on_activate_log_in (GdmPasswordExtension *extension,
++                    GtkAction            *action)
 +{
 +        gdm_password_extension_request_answer (GDM_CONVERSATION (extension));
++        gtk_action_set_sensitive (action, FALSE);
 +}
 +
 +static void
@@ -12085,6 +11690,8 @@ index 0000000..255283e
 +        g_object_set (G_OBJECT (action), "icon-name", "go-home", NULL);
 +        gtk_action_group_add_action (extension->priv->actions,
 +                                     action);
++
++        extension->priv->login_action = action;
 +}
 +
 +static void
@@ -12312,205 +11919,10 @@ index 67383d6..524d817 100644
 1.7.4.1
 
 
-From 55d4d9e9c264748b2bc177b3cde925295eb1acd6 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 4 Aug 2010 18:25:50 -0400
-Subject: [PATCH 18/35] squash with password
-
----
- .../plugins/password/gdm-password-extension.c      |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
-
-diff --git a/gui/simple-greeter/plugins/password/gdm-password-extension.c b/gui/simple-greeter/plugins/password/gdm-password-extension.c
-index 255283e..11a171c 100644
---- a/gui/simple-greeter/plugins/password/gdm-password-extension.c
-+++ b/gui/simple-greeter/plugins/password/gdm-password-extension.c
-@@ -33,6 +33,7 @@ struct _GdmPasswordExtensionPrivate
-         GIcon     *icon;
-         GtkWidget *page;
-         GtkActionGroup *actions;
-+        GtkAction *login_action;
- 
-         GtkWidget *message_label;
-         GtkWidget *prompt_label;
-@@ -78,6 +79,8 @@ gdm_password_extension_ask_question (GdmConversation *conversation,
-         gtk_widget_show (extension->priv->prompt_entry);
-         gtk_widget_grab_focus (extension->priv->prompt_entry);
-         extension->priv->answer_pending = TRUE;
-+
-+        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
- }
- 
- static void
-@@ -92,6 +95,8 @@ gdm_password_extension_ask_secret (GdmConversation *conversation,
-         gtk_widget_show (extension->priv->prompt_entry);
-         gtk_widget_grab_focus (extension->priv->prompt_entry);
-         extension->priv->answer_pending = TRUE;
-+
-+        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
- }
- 
- static void
-@@ -249,9 +254,11 @@ gdm_password_extension_finalize (GObject *object)
- }
- 
- static void
--on_activate_log_in (GdmPasswordExtension *extension)
-+on_activate_log_in (GdmPasswordExtension *extension,
-+                    GtkAction            *action)
- {
-         gdm_password_extension_request_answer (GDM_CONVERSATION (extension));
-+        gtk_action_set_sensitive (action, FALSE);
- }
- 
- static void
-@@ -311,6 +318,8 @@ create_actions (GdmPasswordExtension *extension)
-         g_object_set (G_OBJECT (action), "icon-name", "go-home", NULL);
-         gtk_action_group_add_action (extension->priv->actions,
-                                      action);
-+
-+        extension->priv->login_action = action;
- }
- 
- static void
--- 
-1.7.4.1
-
-
-From 0ab0df98418eba43fef7e743aec063bd6a3889d5 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Fri, 6 Aug 2010 11:13:10 -0400
-Subject: [PATCH 19/35] task list fix
-
----
- gui/simple-greeter/gdm-task-list.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-task-list.c b/gui/simple-greeter/gdm-task-list.c
-index 5fdc2b8..3e49fb7 100644
---- a/gui/simple-greeter/gdm-task-list.c
-+++ b/gui/simple-greeter/gdm-task-list.c
-@@ -68,7 +68,6 @@ on_task_toggled (GdmTaskList    *widget,
-         if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button))) {
- 
-                 GList     *task_node;
--
-                 /* Sort the list such that the tasks the user clicks last end
-                  * up first.  This doesn't change the order in which the tasks
-                  * appear in the UI, but will affect which tasks we implicitly
-@@ -135,7 +134,6 @@ activate_first_available_task (GdmTaskList *task_list)
- 
-                 node = node->next;
-         }
--
- }
- 
- static void
-@@ -218,8 +216,15 @@ gdm_task_list_remove_task (GdmTaskList *task_list,
-                            GdmTask     *task)
- {
-         GtkWidget *button;
-+        GList     *node;
-+
-+        node = g_list_find (task_list->priv->tasks, task);
-+
-+        if (node == NULL) {
-+                return;
-+        }
- 
--        task_list->priv->tasks = g_list_remove (task_list->priv->tasks, task);
-+        task_list->priv->tasks = g_list_delete_link (task_list->priv->tasks, node);
- 
-         button = g_object_get_data (G_OBJECT (task), "gdm-task-list-button");
- 
--- 
-1.7.4.1
-
-
-From fdd126c4a8c4ac01248c20f4d7faaf724ce35568 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Tue, 29 Jun 2010 14:13:35 -0400
-Subject: [PATCH 20/35] Show cancel button after first message
-
-Not all PAM modules ask for input at the keyboard. We need
-to show the cancel button after the first message even if
-that message isn't asking for input.
----
- gui/simple-greeter/gdm-greeter-login-window.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index 9844af9..938e523 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.c
-+++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -831,6 +831,7 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
-                 switch_mode (login_window, dialog_mode);
-         }
- 
-+        gtk_widget_set_sensitive (login_window->priv->conversation_list, TRUE);
-         set_sensitive (login_window, TRUE);
-         set_ready (login_window);
-         set_focus (GDM_GREETER_LOGIN_WINDOW (login_window));
-@@ -982,6 +983,7 @@ gdm_greeter_login_window_info (GdmGreeterLoginWindow *login_window,
-         g_return_val_if_fail (GDM_IS_GREETER_LOGIN_WINDOW (login_window), FALSE);
-         g_debug ("GdmGreeterLoginWindow: info: %s", text);
- 
-+        maybe_show_cancel_button (login_window);
-         task = find_task_with_service_name (login_window, service_name);
- 
-         if (task != NULL) {
-@@ -1004,6 +1006,7 @@ gdm_greeter_login_window_problem (GdmGreeterLoginWindow *login_window,
-         g_return_val_if_fail (GDM_IS_GREETER_LOGIN_WINDOW (login_window), FALSE);
-         g_debug ("GdmGreeterLoginWindow: problem: %s", text);
- 
-+        maybe_show_cancel_button (login_window);
-         task = find_task_with_service_name (login_window, service_name);
- 
-         if (task != NULL) {
--- 
-1.7.4.1
-
-
-From c81e4dbc220b1be3c07985a981e4680dd920b6dc Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 28 Oct 2009 11:13:10 -0400
-Subject: [PATCH 21/35] Prevent start session signal handler from getting called multiple times
-
-It was causing a double free.
----
- gui/simple-greeter/gdm-greeter-login-window.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index 938e523..0fb6c64 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.c
-+++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -1091,8 +1091,17 @@ on_ready_to_start_session (GdmGreeterLoginWindow *login_window,
-                            GParamSpec            *param_spec,
-                            char                  *service_name)
- {
-+        if (!login_window->priv->is_interactive) {
-+                return;
-+        }
-+
-         gdm_greeter_login_window_start_session_when_ready (login_window, service_name);
-         g_free (service_name);
-+
-+        if (login_window->priv->start_session_handler_id > 0) {
-+                g_signal_handler_disconnect (login_window, login_window->priv->start_session_handler_id);
-+                login_window->priv->start_session_handler_id = 0;
-+        }
- }
- 
- static void
--- 
-1.7.4.1
-
-
-From 033627174f8e9dcea37018baed41f5418e5fc11f Mon Sep 17 00:00:00 2001
+From 597b1de9f1345ac6e283c2bb0a13f4c248ac3604 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:25:47 -0500
-Subject: [PATCH 22/35] Add fingerprint plugin
+Subject: [PATCH 12/20] Add fingerprint plugin
 
 This commit adds a plugin to initiate a conversation for
 fingerprint scans.
@@ -12543,7 +11955,7 @@ fingerprint scans.
  create mode 100644 gui/simple-greeter/plugins/fingerprint/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index 0370d47..e8f8d52 100644
+index 29e3965..c7bfdb9 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -1440,6 +1440,10 @@ gui/simple-greeter/libgdmsimplegreeter/Makefile
@@ -13277,10 +12689,10 @@ index 524d817..3e0b163 100644
 1.7.4.1
 
 
-From a44cd780db2685ed1ef45f18189d2e696bd264d1 Mon Sep 17 00:00:00 2001
+From fc98f45d8033e0a299254d7da279f7dcd37cc096 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:25:47 -0500
-Subject: [PATCH 23/35] Add smartcard plugin
+Subject: [PATCH 13/20] Add smartcard plugin
 
 This commit adds a plugin to initiate a conversation when
 smartcards are inserted.
@@ -13288,7 +12700,7 @@ smartcards are inserted.
  configure.ac                                       |   11 +
  gui/simple-greeter/plugins/Makefile.am             |    2 +-
  gui/simple-greeter/plugins/smartcard/Makefile.am   |   76 +
- .../plugins/smartcard/gdm-smartcard-extension.c    |  510 +++++++
+ .../plugins/smartcard/gdm-smartcard-extension.c    |  513 +++++++
  .../plugins/smartcard/gdm-smartcard-extension.h    |   56 +
  .../plugins/smartcard/gdm-smartcard-manager.c      | 1521 ++++++++++++++++++++
  .../plugins/smartcard/gdm-smartcard-manager.h      |   86 ++
@@ -13304,7 +12716,7 @@ smartcards are inserted.
  gui/simple-greeter/plugins/smartcard/page.ui       |   57 +
  gui/simple-greeter/plugins/smartcard/plugin.c      |   40 +
  po/POTFILES.in                                     |    3 +
- 19 files changed, 3224 insertions(+), 1 deletions(-)
+ 19 files changed, 3227 insertions(+), 1 deletions(-)
  create mode 100644 gui/simple-greeter/plugins/smartcard/Makefile.am
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
  create mode 100644 gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.h
@@ -13323,13 +12735,13 @@ smartcards are inserted.
  create mode 100644 gui/simple-greeter/plugins/smartcard/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index e8f8d52..15f912c 100644
+index c7bfdb9..6f7000a 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -68,6 +68,7 @@ LIBCANBERRA_GTK_REQUIRED_VERSION=0.4
  FONTCONFIG_REQUIRED_VERSION=2.5.0
  UPOWER_REQUIRED_VERSION=0.9.0
- ACCOUNTS_SERVICE_REQUIRED_VERSION=0.6.3
+ ACCOUNTS_SERVICE_REQUIRED_VERSION=0.6.5
 +NSS_REQUIRED_VERSION=3.11.1
  
  EXTRA_COMPILE_WARNINGS(yes)
@@ -13449,10 +12861,10 @@ index 0000000..e43e424
 +        Makefile.in
 diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
 new file mode 100644
-index 0000000..b925f5e
+index 0000000..b40a21c
 --- /dev/null
 +++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-@@ -0,0 +1,510 @@
+@@ -0,0 +1,513 @@
 +/*
 + * Copyright (C) 2009 Red Hat, Inc.
 + *
@@ -13639,6 +13051,7 @@ index 0000000..b925f5e
 +        gtk_entry_set_visibility (GTK_ENTRY (extension->priv->prompt_entry), TRUE);
 +        gtk_widget_show (extension->priv->prompt_entry);
 +        gtk_action_set_visible (extension->priv->login_action, TRUE);
++        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
 +        gtk_widget_grab_focus (extension->priv->prompt_entry);
 +        extension->priv->answer_pending = TRUE;
 +}
@@ -13655,6 +13068,7 @@ index 0000000..b925f5e
 +        gtk_widget_show (extension->priv->prompt_entry);
 +        gtk_widget_grab_focus (extension->priv->prompt_entry);
 +        gtk_action_set_visible (extension->priv->login_action, TRUE);
++        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
 +        extension->priv->answer_pending = TRUE;
 +}
 +
@@ -13930,6 +13344,7 @@ index 0000000..b925f5e
 +on_activate_log_in (GdmSmartcardExtension *extension)
 +{
 +        gdm_smartcard_extension_request_answer (GDM_CONVERSATION (extension));
++        gtk_action_set_sensitive (extension->priv->login_action, FALSE);
 +}
 +
 +static void
@@ -16793,183 +16208,10 @@ index 3e0b163..69eb449 100644
 1.7.4.1
 
 
-From 2945d55741045b8a52a4656e11d540cef389dd39 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 4 Aug 2010 18:26:01 -0400
-Subject: [PATCH 24/35] squash with smartcard
-
----
- .../plugins/smartcard/gdm-smartcard-extension.c    |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-index b925f5e..b40a21c 100644
---- a/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-+++ b/gui/simple-greeter/plugins/smartcard/gdm-smartcard-extension.c
-@@ -184,6 +184,7 @@ gdm_smartcard_extension_ask_question (GdmConversation *conversation,
-         gtk_entry_set_visibility (GTK_ENTRY (extension->priv->prompt_entry), TRUE);
-         gtk_widget_show (extension->priv->prompt_entry);
-         gtk_action_set_visible (extension->priv->login_action, TRUE);
-+        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
-         gtk_widget_grab_focus (extension->priv->prompt_entry);
-         extension->priv->answer_pending = TRUE;
- }
-@@ -200,6 +201,7 @@ gdm_smartcard_extension_ask_secret (GdmConversation *conversation,
-         gtk_widget_show (extension->priv->prompt_entry);
-         gtk_widget_grab_focus (extension->priv->prompt_entry);
-         gtk_action_set_visible (extension->priv->login_action, TRUE);
-+        gtk_action_set_sensitive (extension->priv->login_action, TRUE);
-         extension->priv->answer_pending = TRUE;
- }
- 
-@@ -475,6 +477,7 @@ static void
- on_activate_log_in (GdmSmartcardExtension *extension)
- {
-         gdm_smartcard_extension_request_answer (GDM_CONVERSATION (extension));
-+        gtk_action_set_sensitive (extension->priv->login_action, FALSE);
- }
- 
- static void
--- 
-1.7.4.1
-
-
-From 06ee4f903ac6500426013665118c1f05c0129752 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Tue, 21 Apr 2009 10:25:18 -0400
-Subject: [PATCH 25/35] When one PAM conversation wins, stop the others
-
-At some point we'll want to have policy here, to allow
-e.g. two factor authentication.
----
- daemon/gdm-session-direct.c |   71 +++++++++++++++++++++++++++++++-----------
- daemon/gdm-simple-slave.c   |    2 +-
- 2 files changed, 53 insertions(+), 20 deletions(-)
-
-diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index 9268bc5..0f0c053 100644
---- a/daemon/gdm-session-direct.c
-+++ b/daemon/gdm-session-direct.c
-@@ -2268,6 +2268,47 @@ gdm_session_direct_open_session (GdmSession *session,
- }
- 
- static void
-+stop_all_other_conversations (GdmSessionDirect        *session,
-+                              GdmSessionConversation  *conversation_to_keep)
-+{
-+        GHashTableIter iter;
-+        gpointer key, value;
-+
-+        if (session->priv->conversations == NULL) {
-+                return;
-+        }
-+
-+        if (conversation_to_keep == NULL) {
-+                g_debug ("GdmSessionDirect: Stopping all conversations");
-+        } else {
-+                g_debug ("GdmSessionDirect: Stopping all conversations "
-+                         "except for %s", conversation_to_keep->service_name);
-+        }
-+
-+        g_hash_table_iter_init (&iter, session->priv->conversations);
-+        while (g_hash_table_iter_next (&iter, &key, &value)) {
-+                GdmSessionConversation *conversation;
-+
-+                conversation = (GdmSessionConversation *) value;
-+
-+                if (conversation == conversation_to_keep) {
-+                        g_hash_table_iter_steal (&iter);
-+                        g_free (key);
-+                } else {
-+                        stop_conversation (conversation);
-+                }
-+        }
-+
-+        g_hash_table_remove_all (session->priv->conversations);
-+
-+        if (conversation_to_keep != NULL) {
-+                g_hash_table_insert (session->priv->conversations,
-+                                     g_strdup (conversation_to_keep->service_name),
-+                                     conversation_to_keep);
-+        }
-+}
-+
-+static void
- gdm_session_direct_start_session (GdmSession *session,
-                                   const char *service_name)
- {
-@@ -2279,6 +2320,16 @@ gdm_session_direct_start_session (GdmSession *session,
-         g_return_if_fail (session != NULL);
-         g_return_if_fail (impl->priv->is_running == FALSE);
- 
-+        conversation = find_conversation_by_name (impl, service_name);
-+
-+        if (conversation == NULL) {
-+                g_warning ("GdmSessionDirect: Tried to start session of "
-+                           "nonexistent conversation %s", service_name);
-+                return;
-+        }
-+
-+        stop_all_other_conversations (impl, conversation);
-+
-         command = get_session_command (impl);
- 
-         if (gdm_session_direct_bypasses_xsession (impl)) {
-@@ -2289,8 +2340,6 @@ gdm_session_direct_start_session (GdmSession *session,
- 
-         g_free (command);
- 
--        conversation = find_conversation_by_name (impl, service_name);
--
-         setup_session_environment (impl);
-         send_environment (impl, conversation);
- 
-@@ -2301,23 +2350,7 @@ gdm_session_direct_start_session (GdmSession *session,
- static void
- stop_all_conversations (GdmSessionDirect *session)
- {
--        GHashTableIter iter;
--        gpointer key, value;
--
--        if (session->priv->conversations == NULL) {
--                return;
--        }
--
--        g_hash_table_iter_init (&iter, session->priv->conversations);
--        while (g_hash_table_iter_next (&iter, &key, &value)) {
--                GdmSessionConversation *conversation;
--
--                conversation = (GdmSessionConversation *) value;
--
--                stop_conversation (conversation);
--        }
--
--        g_hash_table_remove_all (session->priv->conversations);
-+        stop_all_other_conversations (session, NULL);
- }
- 
- static void
-diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 2ecf0a4..ff1f3af 100644
---- a/daemon/gdm-simple-slave.c
-+++ b/daemon/gdm-simple-slave.c
-@@ -669,7 +669,7 @@ on_session_conversation_stopped (GdmSession     *session,
-         gboolean res;
-         g_debug ("GdmSimpleSlave: conversation stopped");
- 
--        if (slave->priv->greeter_server != NULL) {
-+        if (slave->priv->greeter != NULL) {
-                 res = gdm_greeter_server_conversation_stopped (slave->priv->greeter_server,
-                                                                service_name);
-                 if (! res) {
--- 
-1.7.4.1
-
-
-From c4a15afc00e9fadeaa7116e378b5078e4eb2df65 Mon Sep 17 00:00:00 2001
+From d1fa8b901bb9de3ddc2ec2f62ee28b4710cd481f Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 24 Jul 2009 14:41:48 -0400
-Subject: [PATCH 26/35] KILL stuck processes if they don't die on TERM
+Subject: [PATCH 14/20] KILL stuck processes if they don't die on TERM
 
 Some PAM modules are really slow to shut down.
 We need to handle them being slow to shut down better,
@@ -17090,70 +16332,17 @@ index be85f30..8b93663 100644
 1.7.4.1
 
 
-From 0d18f88d5f890131e43dbdc2bc94824845730b1c Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Tue, 13 Jul 2010 22:36:19 -0400
-Subject: [PATCH 27/35] add better debug spew (needs squash)
-
----
- daemon/gdm-session-direct.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/daemon/gdm-session-direct.c b/daemon/gdm-session-direct.c
-index 0f0c053..23812d2 100644
---- a/daemon/gdm-session-direct.c
-+++ b/daemon/gdm-session-direct.c
-@@ -208,7 +208,7 @@ find_conversation_by_name (GdmSessionDirect *session,
-         conversation = g_hash_table_lookup (session->priv->conversations, service_name);
- 
-         if (conversation == NULL) {
--                g_warning ("Tried to look up non-existant conversation");
-+                g_warning ("Tried to look up non-existent conversation %s", service_name);
-         }
- 
-         return conversation;
-@@ -1715,7 +1715,7 @@ static void
- free_conversation (GdmSessionConversation *conversation)
- {
-         if (conversation->job != NULL) {
--                g_warning ("Freeing conversation with active job");
-+                g_warning ("Freeing conversation '%s' with active job", conversation->service_name);
-         }
- 
-         g_free (conversation->service_name);
-@@ -1888,7 +1888,7 @@ gdm_session_direct_start_conversation (GdmSession *session,
- 
-         g_return_if_fail (session != NULL);
- 
--        g_debug ("GdmSessionDirect: starting conversation");
-+        g_debug ("GdmSessionDirect: starting conversation %s", service_name);
- 
-         conversation = start_conversation (impl, service_name);
- 
-@@ -1905,7 +1905,7 @@ gdm_session_direct_stop_conversation (GdmSession *session,
- 
-         g_return_if_fail (session != NULL);
- 
--        g_debug ("GdmSessionDirect: stopping conversation");
-+        g_debug ("GdmSessionDirect: stopping conversation %s", service_name);
- 
-         conversation = find_conversation_by_name (impl, service_name);
- 
--- 
-1.7.4.1
-
-
-From 1ae0444575f02f25e7a7670e93b4c4e814b08f81 Mon Sep 17 00:00:00 2001
+From 459d9900e4bd957587a5073a49ef0d7a2f16de7b Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 13 Jul 2010 22:37:35 -0400
-Subject: [PATCH 28/35] switch to proper mode when going to timed login
+Subject: [PATCH 15/20] switch to proper mode when going to timed login
 
 ---
  gui/simple-greeter/gdm-greeter-login-window.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index 0fb6c64..adcd71f 100644
+index 56a790e..9b07ffe 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.c
 +++ b/gui/simple-greeter/gdm-greeter-login-window.c
 @@ -1389,7 +1389,7 @@ begin_auto_login (GdmGreeterLoginWindow *login_window)
@@ -17169,10 +16358,10 @@ index 0fb6c64..adcd71f 100644
 1.7.4.1
 
 
-From cd0872a8a3868ee0908d475f96a5e3f2977dbe9c Mon Sep 17 00:00:00 2001
+From 4faa577d1fed1217b6a5364aca2c0eace30269ec Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 3 Aug 2010 15:21:26 -0400
-Subject: [PATCH 29/35] Drop "Cancelling" message for plugin initiated cancels
+Subject: [PATCH 16/20] Drop "Cancelling" message for plugin initiated cancels
 
 The plugin may be cancelling the mesage for a number of
 reasons.  We could potentially let it specify the message,
@@ -17182,10 +16371,10 @@ but for now just drop the message.
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index adcd71f..cd1941e 100644
+index 9b07ffe..907f34b 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.c
 +++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -2252,7 +2252,7 @@ static void
+@@ -2242,7 +2242,7 @@ static void
  on_conversation_cancel (GdmGreeterLoginWindow *login_window,
                          GdmConversation       *conversation)
  {
@@ -17198,46 +16387,10 @@ index adcd71f..cd1941e 100644
 1.7.4.1
 
 
-From 4b98bddab0ecd8230cc2f44a5e0657b7f29a5d09 Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Wed, 4 Aug 2010 18:11:27 -0400
-Subject: [PATCH 30/35] drop code for label that doesn't exist anymore
-
----
- gui/simple-greeter/gdm-greeter-login-window.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index cd1941e..f3f89b2 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.c
-+++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -782,8 +782,6 @@ static void
- reset_dialog (GdmGreeterLoginWindow *login_window,
-               guint                  dialog_mode)
- {
--        GtkWidget  *label;
--
-         g_debug ("GdmGreeterLoginWindow: Resetting dialog to mode %u", dialog_mode);
-         set_busy (login_window);
-         set_sensitive (login_window, FALSE);
-@@ -818,9 +816,6 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
-                                     reset_task,
-                                     login_window);
- 
--        label = GTK_WIDGET (gtk_builder_get_object (GDM_GREETER_LOGIN_WINDOW (login_window)->priv->builder, "auth-prompt-label"));
--        gtk_label_set_text (GTK_LABEL (label), "");
--
-         if (can_jump_to_authenticate (login_window)) {
-                 /* If we don't have a user list jump straight to authenticate */
-                 g_debug ("GdmGreeterLoginWindow: jumping straight to authenticate");
--- 
-1.7.4.1
-
-
-From 3bb184a64b0549f9bebb8c948a6087948ddfc299 Mon Sep 17 00:00:00 2001
+From be4e406903412ba1b3122754079389c467244792 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Aug 2010 18:03:52 -0400
-Subject: [PATCH 31/35] Add delay when showing messages (needs split)
+Subject: [PATCH 17/20] Add delay when showing messages (needs split)
 
 Previously, there were times when the user would be unable
 to read messages, because they would blink by so fast.
@@ -17255,7 +16408,7 @@ screen for a sufficient amount of time.
  6 files changed, 187 insertions(+), 10 deletions(-)
 
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index f3f89b2..e43449e 100644
+index 907f34b..d4e177d 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.c
 +++ b/gui/simple-greeter/gdm-greeter-login-window.c
 @@ -140,6 +140,9 @@ struct GdmGreeterLoginWindowPrivate
@@ -17285,7 +16438,7 @@ index f3f89b2..e43449e 100644
          return FALSE;
  }
  
-@@ -888,16 +894,12 @@ gdm_greeter_login_window_ready (GdmGreeterLoginWindow *login_window,
+@@ -893,16 +899,12 @@ gdm_greeter_login_window_ready (GdmGreeterLoginWindow *login_window,
          return TRUE;
  }
  
@@ -17305,7 +16458,7 @@ index f3f89b2..e43449e 100644
          /* If the password conversation failed, then start over
           *
           * FIXME: we need to get this policy out of the source code
-@@ -905,13 +907,15 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
+@@ -910,13 +912,15 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
          if (strcmp (service_name, "gdm-password") == 0) {
                  g_debug ("GdmGreeterLoginWindow: main conversation failed, starting over");
                  restart_conversations (login_window);
@@ -17322,7 +16475,7 @@ index f3f89b2..e43449e 100644
                  g_object_unref (task);
          }
  
-@@ -926,6 +930,34 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
+@@ -931,6 +935,34 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
          g_object_unref (task);
  
          update_conversation_list_visibility (login_window);
@@ -17357,7 +16510,7 @@ index f3f89b2..e43449e 100644
  
          return TRUE;
  }
-@@ -937,6 +969,7 @@ restart_task_conversation (GdmTaskList           *task_list,
+@@ -942,6 +974,7 @@ restart_task_conversation (GdmTaskList           *task_list,
  {
          char *service_name;
  
@@ -17365,7 +16518,7 @@ index f3f89b2..e43449e 100644
          service_name = gdm_conversation_get_service_name (GDM_CONVERSATION (task));
          if (service_name != NULL) {
                  char *name;
-@@ -965,6 +998,9 @@ gdm_greeter_login_window_reset (GdmGreeterLoginWindow *login_window)
+@@ -970,6 +1003,9 @@ gdm_greeter_login_window_reset (GdmGreeterLoginWindow *login_window)
                                      restart_task_conversation,
                                      login_window);
  
@@ -17375,7 +16528,7 @@ index f3f89b2..e43449e 100644
          return TRUE;
  }
  
-@@ -982,6 +1018,7 @@ gdm_greeter_login_window_info (GdmGreeterLoginWindow *login_window,
+@@ -987,6 +1023,7 @@ gdm_greeter_login_window_info (GdmGreeterLoginWindow *login_window,
          task = find_task_with_service_name (login_window, service_name);
  
          if (task != NULL) {
@@ -17383,7 +16536,7 @@ index f3f89b2..e43449e 100644
                  gdm_conversation_set_message (GDM_CONVERSATION (task),
                                                text);
                  show_task_actions (task);
-@@ -1005,6 +1042,7 @@ gdm_greeter_login_window_problem (GdmGreeterLoginWindow *login_window,
+@@ -1010,6 +1047,7 @@ gdm_greeter_login_window_problem (GdmGreeterLoginWindow *login_window,
          task = find_task_with_service_name (login_window, service_name);
  
          if (task != NULL) {
@@ -17391,7 +16544,7 @@ index f3f89b2..e43449e 100644
                  gdm_conversation_set_message (GDM_CONVERSATION (task),
                                                text);
                  show_task_actions (task);
-@@ -1100,12 +1138,40 @@ on_ready_to_start_session (GdmGreeterLoginWindow *login_window,
+@@ -1105,12 +1143,40 @@ on_ready_to_start_session (GdmGreeterLoginWindow *login_window,
  }
  
  static void
@@ -17434,7 +16587,7 @@ index f3f89b2..e43449e 100644
          } else {
                  g_debug ("GdmGreeterLoginWindow: not starting session since "
                           "user hasn't had an opportunity to pick language "
-@@ -2279,6 +2345,35 @@ on_conversation_chose_user (GdmGreeterLoginWindow *login_window,
+@@ -2274,6 +2340,35 @@ on_conversation_chose_user (GdmGreeterLoginWindow *login_window,
          return TRUE;
  }
  
@@ -17470,7 +16623,7 @@ index f3f89b2..e43449e 100644
  void
  gdm_greeter_login_window_remove_extension (GdmGreeterLoginWindow *login_window,
   GdmGreeterExtension *extension)
-@@ -2441,6 +2536,10 @@ gdm_greeter_login_window_add_extension (GdmGreeterLoginWindow *login_window,
+@@ -2436,6 +2531,10 @@ gdm_greeter_login_window_add_extension (GdmGreeterLoginWindow *login_window,
                                    "user-chosen",
                                    G_CALLBACK (on_conversation_chose_user),
                                    login_window);
@@ -17699,10 +16852,10 @@ index b40a21c..5e234b9 100644
 1.7.4.1
 
 
-From b1e2ebebf84d8b69b1010361ba3b00b6225969db Mon Sep 17 00:00:00 2001
+From 4304e1570f8757c8e981cc9ff6e08f2c3406dc31 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Aug 2010 19:27:14 -0400
-Subject: [PATCH 32/35] Drop cancelling message
+Subject: [PATCH 18/20] Drop cancelling message
 
 We cancel very quickly in most cases now, so the message isn't useful
 ---
@@ -17710,10 +16863,10 @@ We cancel very quickly in most cases now, so the message isn't useful
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index e43449e..cb03d06 100644
+index d4e177d..ca03073 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.c
 +++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -855,7 +855,7 @@ static void
+@@ -860,7 +860,7 @@ static void
  do_cancel (GdmGreeterLoginWindow *login_window)
  {
          /* need to wait for response from backend */
@@ -17726,13 +16879,13 @@ index e43449e..cb03d06 100644
 1.7.4.1
 
 
-From 912075a067a8428ea7d68d34d488717d12a51cc7 Mon Sep 17 00:00:00 2001
+From 4c168d850673fad082f9d3de201e450ca12450cf Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Aug 2010 11:14:23 -0400
-Subject: [PATCH 33/35] manage tasks outside of task list
+Subject: [PATCH 19/20] manage tasks outside of task list
 
 The task list isn't very good for tracking tasks as
-they come and go, since it replies on the groaty details
+they come and go, since it relies on the groaty details
 of toggle buttons and widget activation and such.
 
 We now use it soley for display purposes when necessary
@@ -17746,7 +16899,7 @@ when we don't need to.
  1 files changed, 206 insertions(+), 190 deletions(-)
 
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index cb03d06..627a6f9 100644
+index ca03073..93ae192 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.c
 +++ b/gui/simple-greeter/gdm-greeter-login-window.c
 @@ -100,6 +100,7 @@ enum {
@@ -17830,7 +16983,7 @@ index cb03d06..627a6f9 100644
  
          in_use = FALSE;
          item = gdm_chooser_widget_get_active_item (GDM_CHOOSER_WIDGET (login_window->priv->user_chooser));
-@@ -497,20 +497,16 @@ set_log_in_button_mode (GdmGreeterLoginWindow *login_window,
+@@ -499,20 +499,16 @@ set_log_in_button_mode (GdmGreeterLoginWindow *login_window,
  
          switch (mode) {
          case LOGIN_BUTTON_HIDDEN:
@@ -17856,7 +17009,7 @@ index cb03d06..627a6f9 100644
                  }
  
                  gtk_widget_hide (button);
-@@ -557,6 +553,7 @@ maybe_show_cancel_button (GdmGreeterLoginWindow *login_window)
+@@ -559,6 +555,7 @@ maybe_show_cancel_button (GdmGreeterLoginWindow *login_window)
                  show = TRUE;
                  break;
          case MODE_AUTHENTICATION:
@@ -17864,7 +17017,7 @@ index cb03d06..627a6f9 100644
                  if (login_window->priv->num_queries > 1) {
                          /* if we are inside a pam conversation past
                             the first step */
-@@ -581,7 +578,7 @@ update_conversation_list_visibility (GdmGreeterLoginWindow *login_window)
+@@ -583,7 +580,7 @@ update_conversation_list_visibility (GdmGreeterLoginWindow *login_window)
  {
          int number_of_tasks;
  
@@ -17873,15 +17026,15 @@ index cb03d06..627a6f9 100644
                  gtk_widget_hide (login_window->priv->conversation_list);
                  return;
          }
-@@ -624,6 +621,7 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+@@ -628,6 +625,7 @@ switch_mode (GdmGreeterLoginWindow *login_window,
                  gtk_widget_show (login_window->priv->session_option_widget);
                  break;
          case MODE_AUTHENTICATION:
 +        case MODE_MULTIPLE_AUTHENTICATION:
                  set_log_in_button_mode (login_window, LOGIN_BUTTON_ANSWER_QUERY);
+                 set_sensitive (login_window, FALSE);
                  gtk_widget_show (login_window->priv->session_option_widget);
-                 break;
-@@ -663,39 +661,36 @@ switch_mode (GdmGreeterLoginWindow *login_window,
+@@ -668,39 +666,36 @@ switch_mode (GdmGreeterLoginWindow *login_window,
          }
  }
  
@@ -17941,10 +17094,10 @@ index cb03d06..627a6f9 100644
              GdmGreeterLoginWindow *login_window)
  {
          char *name;
-@@ -706,28 +701,31 @@ reset_task (GdmTaskList           *task_list,
- 
+@@ -712,28 +707,31 @@ reset_task (GdmTaskList           *task_list,
          login_window->priv->tasks_to_enable = g_list_remove (login_window->priv->tasks_to_enable, task);
  
+         hide_task_actions (task);
 +        gdm_task_list_remove_task (GDM_TASK_LIST (login_window->priv->conversation_list), task);
          gdm_conversation_reset (GDM_CONVERSATION (task));
          return FALSE;
@@ -17986,7 +17139,7 @@ index cb03d06..627a6f9 100644
  }
  
  static gboolean
-@@ -741,6 +739,8 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
+@@ -747,6 +745,8 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
                  res = FALSE;
          } else if (login_window->priv->dialog_mode == MODE_AUTHENTICATION) {
                  res = FALSE;
@@ -17995,7 +17148,7 @@ index cb03d06..627a6f9 100644
          } else if (login_window->priv->user_list_disabled) {
                  res = (login_window->priv->timed_login_username == NULL);
          } else {
-@@ -750,39 +750,81 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
+@@ -756,39 +756,81 @@ can_jump_to_authenticate (GdmGreeterLoginWindow *login_window)
          return res;
  }
  
@@ -18098,7 +17251,7 @@ index cb03d06..627a6f9 100644
  
  static void
  reset_dialog (GdmGreeterLoginWindow *login_window,
-@@ -817,18 +859,16 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
+@@ -823,18 +865,16 @@ reset_dialog (GdmGreeterLoginWindow *login_window,
                  set_message (login_window, "");
          }
  
@@ -18120,7 +17273,7 @@ index cb03d06..627a6f9 100644
                  switch_mode (login_window, dialog_mode);
          }
  
-@@ -873,9 +913,9 @@ gdm_greeter_login_window_ready (GdmGreeterLoginWindow *login_window,
+@@ -878,9 +918,9 @@ gdm_greeter_login_window_ready (GdmGreeterLoginWindow *login_window,
                  if (gdm_chooser_widget_is_loaded (GDM_CHOOSER_WIDGET (login_window->priv->user_chooser))) {
                          gdm_conversation_set_ready (GDM_CONVERSATION (task));
                  } else {
@@ -18132,7 +17285,7 @@ index cb03d06..627a6f9 100644
          }
  
          set_sensitive (GDM_GREETER_LOGIN_WINDOW (login_window), TRUE);
-@@ -888,7 +928,7 @@ gdm_greeter_login_window_ready (GdmGreeterLoginWindow *login_window,
+@@ -893,7 +933,7 @@ gdm_greeter_login_window_ready (GdmGreeterLoginWindow *login_window,
                  g_debug ("Starting PAM conversation since user list disabled or no local users");
                  g_signal_emit (G_OBJECT (login_window), signals[USER_SELECTED],
                                 0, GDM_USER_CHOOSER_USER_OTHER);
@@ -18141,7 +17294,7 @@ index cb03d06..627a6f9 100644
          }
  
          return TRUE;
-@@ -910,24 +950,37 @@ handle_stopped_conversation (GdmGreeterLoginWindow *login_window,
+@@ -915,24 +955,37 @@ handle_stopped_conversation (GdmGreeterLoginWindow *login_window,
                  return;
          }
  
@@ -18182,7 +17335,7 @@ index cb03d06..627a6f9 100644
  
          update_conversation_list_visibility (login_window);
  }
-@@ -943,8 +996,8 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
+@@ -948,8 +1001,8 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
  
          g_debug ("GdmGreeterLoginWindow: conversation '%s' has stopped", service_name);
  
@@ -18193,7 +17346,7 @@ index cb03d06..627a6f9 100644
  
                  messages_pending = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (task), "message-pending"));
          } else {
-@@ -963,8 +1016,7 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
+@@ -968,8 +1021,7 @@ gdm_greeter_login_window_conversation_stopped (GdmGreeterLoginWindow *login_wind
  }
  
  static gboolean
@@ -18203,7 +17356,7 @@ index cb03d06..627a6f9 100644
                             GdmGreeterLoginWindow *login_window)
  {
          char *service_name;
-@@ -993,10 +1045,7 @@ gdm_greeter_login_window_reset (GdmGreeterLoginWindow *login_window)
+@@ -998,10 +1050,7 @@ gdm_greeter_login_window_reset (GdmGreeterLoginWindow *login_window)
          g_return_val_if_fail (GDM_IS_GREETER_LOGIN_WINDOW (login_window), FALSE);
          reset_dialog (GDM_GREETER_LOGIN_WINDOW (login_window), MODE_SELECTION);
  
@@ -18215,7 +17368,7 @@ index cb03d06..627a6f9 100644
  
          g_free (login_window->priv->service_name_of_session_ready_to_start);
          login_window->priv->service_name_of_session_ready_to_start = NULL;
-@@ -1022,7 +1071,6 @@ gdm_greeter_login_window_info (GdmGreeterLoginWindow *login_window,
+@@ -1027,7 +1076,6 @@ gdm_greeter_login_window_info (GdmGreeterLoginWindow *login_window,
                  gdm_conversation_set_message (GDM_CONVERSATION (task),
                                                text);
                  show_task_actions (task);
@@ -18223,7 +17376,7 @@ index cb03d06..627a6f9 100644
          }
  
          return TRUE;
-@@ -1046,7 +1094,6 @@ gdm_greeter_login_window_problem (GdmGreeterLoginWindow *login_window,
+@@ -1051,7 +1099,6 @@ gdm_greeter_login_window_problem (GdmGreeterLoginWindow *login_window,
                  gdm_conversation_set_message (GDM_CONVERSATION (task),
                                                text);
                  show_task_actions (task);
@@ -18231,7 +17384,7 @@ index cb03d06..627a6f9 100644
          }
  
          gdk_window_beep (gtk_widget_get_window (GTK_WIDGET (login_window)));
-@@ -1085,9 +1132,19 @@ gdm_greeter_login_window_service_unavailable (GdmGreeterLoginWindow *login_windo
+@@ -1090,9 +1137,19 @@ gdm_greeter_login_window_service_unavailable (GdmGreeterLoginWindow *login_windo
          task = find_task_with_service_name (login_window, service_name);
  
          if (task != NULL) {
@@ -18254,7 +17407,7 @@ index cb03d06..627a6f9 100644
          }
  
          return TRUE;
-@@ -1222,7 +1279,6 @@ gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
+@@ -1227,7 +1284,6 @@ gdm_greeter_login_window_info_query (GdmGreeterLoginWindow *login_window,
          if (task != NULL) {
                  gdm_conversation_ask_question (GDM_CONVERSATION (task),
                                                 text);
@@ -18262,7 +17415,7 @@ index cb03d06..627a6f9 100644
          }
  
          set_log_in_button_mode (login_window, LOGIN_BUTTON_ANSWER_QUERY);
-@@ -1253,7 +1309,6 @@ gdm_greeter_login_window_secret_info_query (GdmGreeterLoginWindow *login_window,
+@@ -1258,7 +1314,6 @@ gdm_greeter_login_window_secret_info_query (GdmGreeterLoginWindow *login_window,
          if (task != NULL) {
                  gdm_conversation_ask_secret (GDM_CONVERSATION (task),
                                               text);
@@ -18270,7 +17423,7 @@ index cb03d06..627a6f9 100644
          }
  
          set_log_in_button_mode (login_window, LOGIN_BUTTON_ANSWER_QUERY);
-@@ -1348,8 +1403,7 @@ on_user_chooser_visibility_changed (GdmGreeterLoginWindow *login_window)
+@@ -1353,8 +1408,7 @@ on_user_chooser_visibility_changed (GdmGreeterLoginWindow *login_window)
  }
  
  static gboolean
@@ -18280,7 +17433,7 @@ index cb03d06..627a6f9 100644
                                             GdmGreeterLoginWindow *login_window)
  {
          char *user_name;
-@@ -1367,6 +1421,9 @@ begin_task_verification_for_selected_user (GdmTaskList           *task_list,
+@@ -1372,6 +1426,9 @@ begin_task_verification_for_selected_user (GdmTaskList           *task_list,
                  g_free (service_name);
          }
  
@@ -18290,7 +17443,7 @@ index cb03d06..627a6f9 100644
          g_free (user_name);
          return FALSE;
  }
-@@ -1414,7 +1471,7 @@ on_users_loaded (GdmUserChooserWidget  *user_chooser,
+@@ -1419,7 +1476,7 @@ on_users_loaded (GdmUserChooserWidget  *user_chooser,
                  g_debug ("GdmGreeterLoginWindow: jumping straight to authenticate");
                  g_signal_emit (G_OBJECT (login_window), signals[USER_SELECTED],
                                 0, GDM_USER_CHOOSER_USER_OTHER);
@@ -18299,7 +17452,7 @@ index cb03d06..627a6f9 100644
          }
  }
  
-@@ -1422,19 +1479,23 @@ static void
+@@ -1427,19 +1484,23 @@ static void
  choose_user (GdmGreeterLoginWindow *login_window,
               const char            *user_name)
  {
@@ -18328,7 +17481,7 @@ index cb03d06..627a6f9 100644
          update_conversation_list_visibility (login_window);
  }
  
-@@ -1450,35 +1511,34 @@ begin_auto_login (GdmGreeterLoginWindow *login_window)
+@@ -1455,35 +1516,34 @@ begin_auto_login (GdmGreeterLoginWindow *login_window)
          /* just wait for the user to select language and stuff */
          set_message (login_window, _("Select language and click Log In"));
  
@@ -18375,7 +17528,7 @@ index cb03d06..627a6f9 100644
  }
  
  static void
-@@ -1501,11 +1561,10 @@ begin_single_service_verification (GdmGreeterLoginWindow *login_window,
+@@ -1506,11 +1566,10 @@ begin_single_service_verification (GdmGreeterLoginWindow *login_window,
           */
          g_signal_emit (login_window, signals[BEGIN_VERIFICATION], 0, service_name);
  
@@ -18390,7 +17543,7 @@ index cb03d06..627a6f9 100644
  
          show_widget (login_window, "conversation-list", FALSE);
  }
-@@ -1536,7 +1595,7 @@ on_user_chooser_activated (GdmUserChooserWidget  *user_chooser,
+@@ -1541,7 +1600,7 @@ on_user_chooser_activated (GdmUserChooserWidget  *user_chooser,
                  g_debug ("GdmGreeterLoginWindow: Starting all auth conversations");
                  g_free (item_id);
  
@@ -18399,7 +17552,7 @@ index cb03d06..627a6f9 100644
          } else if (strcmp (item_id, GDM_USER_CHOOSER_USER_GUEST) == 0) {
                  /* FIXME: handle guest account stuff */
                  g_free (item_id);
-@@ -1774,63 +1833,28 @@ static void
+@@ -1779,63 +1838,28 @@ static void
  on_task_activated (GdmGreeterLoginWindow *login_window,
                     GdmTask               *task)
  {
@@ -18472,7 +17625,7 @@ index cb03d06..627a6f9 100644
  }
  
  static void
-@@ -1953,6 +1977,7 @@ load_theme (GdmGreeterLoginWindow *login_window)
+@@ -1948,6 +1972,7 @@ load_theme (GdmGreeterLoginWindow *login_window)
          box = GTK_WIDGET (gtk_builder_get_object (login_window->priv->builder, "computer-info-event-box"));
          g_signal_connect (box, "button-press-event", G_CALLBACK (on_computer_info_label_button_press), login_window);
  
@@ -18480,7 +17633,7 @@ index cb03d06..627a6f9 100644
          switch_mode (login_window, MODE_SELECTION);
  
          gdm_profile_end (NULL);
-@@ -2332,15 +2357,12 @@ on_conversation_chose_user (GdmGreeterLoginWindow *login_window,
+@@ -2327,15 +2352,12 @@ on_conversation_chose_user (GdmGreeterLoginWindow *login_window,
  
          /* If we're already authenticating then we can't pick a user
           */
@@ -18499,7 +17652,7 @@ index cb03d06..627a6f9 100644
  
          return TRUE;
  }
-@@ -2364,11 +2386,7 @@ on_conversation_message_set (GdmGreeterLoginWindow *login_window,
+@@ -2359,11 +2381,7 @@ on_conversation_message_set (GdmGreeterLoginWindow *login_window,
          }
  
          if (login_window->priv->service_name_of_session_ready_to_start != NULL ) {
@@ -18512,7 +17665,7 @@ index cb03d06..627a6f9 100644
                          gdm_greeter_login_window_start_session (login_window);
                  }
          }
-@@ -2544,9 +2562,7 @@ gdm_greeter_login_window_add_extension (GdmGreeterLoginWindow *login_window,
+@@ -2539,9 +2557,7 @@ gdm_greeter_login_window_add_extension (GdmGreeterLoginWindow *login_window,
          g_debug ("GdmGreeterLoginWindow: new extension '%s - %s' added",
                  name, description);
  
@@ -18527,45 +17680,10 @@ index cb03d06..627a6f9 100644
 1.7.4.1
 
 
-From 28b25a66c5205b1e9112b41a24d5ce9aa42c1dcc Mon Sep 17 00:00:00 2001
-From: Ray Strode <rstrode@redhat.com>
-Date: Mon, 9 Aug 2010 18:09:19 -0400
-Subject: [PATCH 34/35] hide task actions more aggressively
-
-This fixes "dual login buttons" after the user hits cancel.
----
- gui/simple-greeter/gdm-greeter-login-window.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/gui/simple-greeter/gdm-greeter-login-window.c b/gui/simple-greeter/gdm-greeter-login-window.c
-index 627a6f9..8772fdd 100644
---- a/gui/simple-greeter/gdm-greeter-login-window.c
-+++ b/gui/simple-greeter/gdm-greeter-login-window.c
-@@ -495,6 +495,8 @@ set_log_in_button_mode (GdmGreeterLoginWindow *login_window,
- 
-         login_window->priv->current_button = button;
- 
-+        g_list_foreach (login_window->priv->tasks, (GFunc) hide_task_actions, NULL);
-+
-         switch (mode) {
-         case LOGIN_BUTTON_HIDDEN:
-                 if (login_window->priv->active_task != NULL) {
-@@ -702,6 +704,7 @@ reset_task (GdmTask               *task,
-         login_window->priv->tasks_to_enable = g_list_remove (login_window->priv->tasks_to_enable, task);
- 
-         gdm_task_list_remove_task (GDM_TASK_LIST (login_window->priv->conversation_list), task);
-+        hide_task_actions (task);
-         gdm_conversation_reset (GDM_CONVERSATION (task));
-         return FALSE;
- }
--- 
-1.7.4.1
-
-
-From 9715dcc8f5a4aa1f552a43fd0b49166339ec56a1 Mon Sep 17 00:00:00 2001
+From df1bfdc66920037a1bad8a006cf635cd3a666579 Mon Sep 17 00:00:00 2001
 From: Gal Hammer <ghammer@redhat.com>
 Date: Thu, 21 Oct 2010 10:14:32 -0400
-Subject: [PATCH 35/35] smartcard: don't show extension if disabled in authconfig
+Subject: [PATCH 20/20] smartcard: don't show extension if disabled in authconfig
 
 It was erroneously always returning TRUE instead of the the
 value determined from reading authconfig's configuration.
