@@ -79,6 +79,7 @@ BuildRequires: libxklavier-devel >= 4.0
 BuildRequires: upower-devel >= 0.9.7
 BuildRequires: libXdmcp-devel
 BuildRequires: dbus-glib-devel
+BuildRequires: GConf2-devel
 BuildRequires: pkgconfig(accountsservice) >= 0.6.3
 
 Provides: service(graphical-login) = %{name}
