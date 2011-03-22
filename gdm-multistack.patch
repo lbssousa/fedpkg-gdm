@@ -1,4 +1,4 @@
-From 20991d66702c7337d23313f3429468c4a2f6be49 Mon Sep 17 00:00:00 2001
+From e08d0004d437c92da33013ee9646d07f24d22876 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Thu, 22 Jul 2010 13:38:09 -0400
 Subject: [PATCH 01/20] Revert "Don't wait a mandatory 2 seconds when resetting greeter"
@@ -12,7 +12,7 @@ long enough.  A better fix would belong in the greeter.
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 3e0ed5c..fbec0a9 100644
+index f43ed64..05326dc 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -285,7 +285,7 @@ queue_greeter_reset (GdmSimpleSlave *slave)
@@ -28,7 +28,7 @@ index 3e0ed5c..fbec0a9 100644
 1.7.4.1
 
 
-From 9c4009493d4c55c56a573519d87d237033dd4db8 Mon Sep 17 00:00:00 2001
+From 15d20a69c728b87017b28c2c6518d4ffda210128 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 20 Feb 2009 14:05:20 -0500
 Subject: [PATCH 02/20] Add new api to ask when chooser widget is done loading items
@@ -84,7 +84,7 @@ index 11a6456..3f6fea3 100644
 1.7.4.1
 
 
-From 88f4bdeab75647ca666757e70bef30eae2f2ad57 Mon Sep 17 00:00:00 2001
+From 950454a880c9084a50e8901801b60db99a3ee15e Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 11:00:08 -0500
 Subject: [PATCH 03/20] Introduce new Conversation object
@@ -1103,7 +1103,7 @@ index a1e885d..202da36 100644
                                                    const char *service_name);
  void     gdm_session_setup_for_user              (GdmSession *session,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index fbec0a9..eb24e74 100644
+index 05326dc..5afb557 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -243,7 +243,6 @@ reset_session (GdmSimpleSlave *slave)
@@ -1154,7 +1154,7 @@ index 8bed085..9bfda86 100644
 1.7.4.1
 
 
-From 9fc55e09cfaf43d073865a8766ceae5c2cef4e60 Mon Sep 17 00:00:00 2001
+From 136cceb2c899e5a59a892f82674b92e0b6927295 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Feb 2009 10:55:03 -0500
 Subject: [PATCH 04/20] Rename session worker to the service it's managing
@@ -1343,7 +1343,7 @@ index d24f025..4833f23 100644
 1.7.4.1
 
 
-From e225e66238a518f8d0f784e46003de8681cd8a29 Mon Sep 17 00:00:00 2001
+From 8170e2dd9b62d3bad618f39e6bf9a6ac0361f72b Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 13:01:48 -0500
 Subject: [PATCH 05/20] Make greeter/autologin session explicitly request PAM conversation
@@ -1514,7 +1514,7 @@ index 7872201..d4fc9dd 100644
                                                                const char       *text);
  void                gdm_greeter_server_default_language_name_changed (GdmGreeterServer *greeter_server,
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index eb24e74..907d54e 100644
+index 5afb557..155680c 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -616,6 +616,7 @@ on_session_secret_info_query (GdmSession     *session,
@@ -1595,7 +1595,7 @@ index eb24e74..907d54e 100644
  on_greeter_begin_verification (GdmGreeterServer *greeter_server,
                                 GdmSimpleSlave   *slave)
  {
-@@ -1156,6 +1187,10 @@ start_greeter (GdmSimpleSlave *slave)
+@@ -1159,6 +1190,10 @@ start_greeter (GdmSimpleSlave *slave)
  
          slave->priv->greeter_server = gdm_greeter_server_new (display_id);
          g_signal_connect (slave->priv->greeter_server,
@@ -1704,7 +1704,7 @@ index 7be5acd..ed20884 100644
 1.7.4.1
 
 
-From 04d5f558753e4a6685ce31f3b89402484f707086 Mon Sep 17 00:00:00 2001
+From be38e34cfeca87d500705bfd033f820766264966 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 16 Jan 2009 15:18:31 -0500
 Subject: [PATCH 06/20] Store multiple conversations in the session
@@ -4685,10 +4685,10 @@ index d559c71..50f1140 100644
  
          return DBUS_HANDLER_RESULT_HANDLED;
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index 299c8be..b11b46e 100644
+index 15ec0e9..19474d8 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
-@@ -2591,6 +2591,28 @@ worker_dbus_filter_function (DBusConnection *connection,
+@@ -2593,6 +2593,28 @@ worker_dbus_filter_function (DBusConnection *connection,
          return DBUS_HANDLER_RESULT_HANDLED;
  }
  
@@ -4717,7 +4717,7 @@ index 299c8be..b11b46e 100644
  static GObject *
  gdm_session_worker_constructor (GType                  type,
                                  guint                  n_construct_properties,
-@@ -2617,6 +2639,11 @@ gdm_session_worker_constructor (GType                  type,
+@@ -2619,6 +2641,11 @@ gdm_session_worker_constructor (GType                  type,
                  exit (1);
          }
  
@@ -5401,7 +5401,7 @@ index 202da36..9e72f89 100644
  void     gdm_session_select_session              (GdmSession *session,
                                                    const char *session_name);
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index 907d54e..e881e59 100644
+index 155680c..4895bfe 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -75,6 +75,8 @@ struct GdmSimpleSlavePrivate
@@ -6369,7 +6369,7 @@ index ed20884..16f8db5 100644
 1.7.4.1
 
 
-From e26a7dfc7623ab0f03b55e066a9e4747c1314740 Mon Sep 17 00:00:00 2001
+From c0cf2003b56dd9593e889a6c20f64d89c031aff1 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Nov 2009 13:35:26 -0500
 Subject: [PATCH 07/20] Don't delay login for passwd -d users
@@ -6398,7 +6398,7 @@ index abd6707..f484ee6 100644
 1.7.4.1
 
 
-From c6f6fb248f0eea2f56f38c345f17a187a90903b6 Mon Sep 17 00:00:00 2001
+From cd734d4517dc9f4e9f190de9e6aee2eaa947f715 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:32:00 -0400
 Subject: [PATCH 08/20] Emit "service-unavailable" from session when pam service refuses to work
@@ -6528,7 +6528,7 @@ index 50f1140..f76fa6f 100644
                                 "    </method>\n"
                                 "    <method name=\"SetupFailed\">\n"
 diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
-index b11b46e..f0056ac 100644
+index 19474d8..0e18382 100644
 --- a/daemon/gdm-session-worker.c
 +++ b/daemon/gdm-session-worker.c
 @@ -1994,9 +1994,16 @@ do_setup (GdmSessionWorker *worker)
@@ -6637,7 +6637,7 @@ index 9e72f89..ab16031 100644
 1.7.4.1
 
 
-From 0c11fbaa2f638db02df3c9a2289451fbb479e415 Mon Sep 17 00:00:00 2001
+From 25977dd389a8f75b76d910ae5947988aae00b2b0 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:38:52 -0400
 Subject: [PATCH 09/20] Bubble service-unavailable up to greeter
@@ -6690,7 +6690,7 @@ index 9015c26..52ce9fc 100644
  gboolean            gdm_greeter_server_ready                 (GdmGreeterServer *greeter_server,
                                                                const char       *service_name);
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index e881e59..abf2842 100644
+index 4895bfe..b6646aa 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
 @@ -264,22 +264,6 @@ greeter_reset_timeout (GdmSimpleSlave *slave)
@@ -6771,7 +6771,7 @@ index e881e59..abf2842 100644
 1.7.4.1
 
 
-From d819fa6c1f0b2d19169fa685247b9ea9368dadf4 Mon Sep 17 00:00:00 2001
+From 5d43c9355b72bf0134063d058c595560d443a5df Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 28 Oct 2009 21:46:39 -0400
 Subject: [PATCH 10/20] Catch service-unavailable from server in client and propagate it
@@ -6850,7 +6850,7 @@ index 868b496..63bd4b5 100644
 1.7.4.1
 
 
-From aa349c3a6b953548f15472f3c3f73dd9548c5d0e Mon Sep 17 00:00:00 2001
+From c1964d63c574a8296062dc94213cd52cf0a233bf Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 30 Jan 2009 23:57:31 -0500
 Subject: [PATCH 11/20] Add a plugin based extension system to greeter
@@ -6925,7 +6925,7 @@ index d5455e1..d8a9e72 100644
  VOID:DOUBLE
 +BOOLEAN:STRING
 diff --git a/configure.ac b/configure.ac
-index 2e7e440..29e3965 100644
+index 1755235..5258390 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -18,6 +18,22 @@ AC_PROG_CXX
@@ -8751,7 +8751,7 @@ index c8b1167..bcdfbd7 100644
  G_END_DECLS
  
 diff --git a/gui/simple-greeter/gdm-greeter-login-window.ui b/gui/simple-greeter/gdm-greeter-login-window.ui
-index 9c78c11..6cf2327 100644
+index 4f6bed4..64ba0b7 100644
 --- a/gui/simple-greeter/gdm-greeter-login-window.ui
 +++ b/gui/simple-greeter/gdm-greeter-login-window.ui
 @@ -158,69 +158,40 @@
@@ -10535,7 +10535,7 @@ index 0000000..cc377bd
 +
 +#endif /* __GDM_TASK_LIST_H */
 diff --git a/gui/simple-greeter/gdm-user-chooser-widget.c b/gui/simple-greeter/gdm-user-chooser-widget.c
-index 9b4e5de..246d246 100644
+index 84c9586..ba75d72 100644
 --- a/gui/simple-greeter/gdm-user-chooser-widget.c
 +++ b/gui/simple-greeter/gdm-user-chooser-widget.c
 @@ -654,9 +654,30 @@ gdm_user_chooser_widget_set_show_user_auto (GdmUserChooserWidget *widget,
@@ -11904,10 +11904,10 @@ index 0000000..9b87c67
 +        return GDM_GREETER_EXTENSION (extension);
 +}
 diff --git a/po/POTFILES.in b/po/POTFILES.in
-index 67383d6..524d817 100644
+index d2f59a7..d4d5a51 100644
 --- a/po/POTFILES.in
 +++ b/po/POTFILES.in
-@@ -80,6 +80,7 @@ gui/simple-greeter/gdm-simple-greeter.schemas.in
+@@ -81,6 +81,7 @@ gui/simple-greeter/gdm-simple-greeter.schemas.in
  gui/simple-greeter/gdm-timer.c
  gui/simple-greeter/gdm-user-chooser-widget.c
  gui/simple-greeter/greeter-main.c
@@ -11919,7 +11919,7 @@ index 67383d6..524d817 100644
 1.7.4.1
 
 
-From 597b1de9f1345ac6e283c2bb0a13f4c248ac3604 Mon Sep 17 00:00:00 2001
+From 3019c4b8631c2823119b737736d81688f1e793b3 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:25:47 -0500
 Subject: [PATCH 12/20] Add fingerprint plugin
@@ -11955,7 +11955,7 @@ fingerprint scans.
  create mode 100644 gui/simple-greeter/plugins/fingerprint/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index 29e3965..c7bfdb9 100644
+index 5258390..7e825cb 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -1440,6 +1440,10 @@ gui/simple-greeter/libgdmsimplegreeter/Makefile
@@ -12674,10 +12674,10 @@ index 0000000..5ea9925
 +        return GDM_GREETER_EXTENSION (extension);
 +}
 diff --git a/po/POTFILES.in b/po/POTFILES.in
-index 524d817..3e0b163 100644
+index d4d5a51..77fe17d 100644
 --- a/po/POTFILES.in
 +++ b/po/POTFILES.in
-@@ -81,6 +81,7 @@ gui/simple-greeter/gdm-timer.c
+@@ -82,6 +82,7 @@ gui/simple-greeter/gdm-timer.c
  gui/simple-greeter/gdm-user-chooser-widget.c
  gui/simple-greeter/greeter-main.c
  gui/simple-greeter/plugins/password/gdm-password-extension.c
@@ -12689,7 +12689,7 @@ index 524d817..3e0b163 100644
 1.7.4.1
 
 
-From fc98f45d8033e0a299254d7da279f7dcd37cc096 Mon Sep 17 00:00:00 2001
+From 286a7a3e5391bc860fb0f562f74c86169bbc6899 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Feb 2009 16:25:47 -0500
 Subject: [PATCH 13/20] Add smartcard plugin
@@ -12735,7 +12735,7 @@ smartcards are inserted.
  create mode 100644 gui/simple-greeter/plugins/smartcard/plugin.c
 
 diff --git a/configure.ac b/configure.ac
-index c7bfdb9..6f7000a 100644
+index 7e825cb..b8b6ecf 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -68,6 +68,7 @@ LIBCANBERRA_GTK_REQUIRED_VERSION=0.4
@@ -12756,7 +12756,7 @@ index c7bfdb9..6f7000a 100644
 +AC_SUBST(NSS_CFLAGS)
 +AC_SUBST(NSS_LIBS)
 +
- PKG_CHECK_MODULES(XLIB, x11 xau, ,
+ PKG_CHECK_MODULES(XLIB, x11 xau xrandr, ,
    [AC_PATH_XTRA
      if test "x$no_x" = xyes; then
 @@ -1444,6 +1451,10 @@ gui/simple-greeter/plugins/fingerprint/Makefile
@@ -16191,10 +16191,10 @@ index 0000000..fffbd50
 +        return GDM_GREETER_EXTENSION (extension);
 +}
 diff --git a/po/POTFILES.in b/po/POTFILES.in
-index 3e0b163..69eb449 100644
+index 77fe17d..11f8725 100644
 --- a/po/POTFILES.in
 +++ b/po/POTFILES.in
-@@ -82,6 +82,9 @@ gui/simple-greeter/gdm-user-chooser-widget.c
+@@ -83,6 +83,9 @@ gui/simple-greeter/gdm-user-chooser-widget.c
  gui/simple-greeter/greeter-main.c
  gui/simple-greeter/plugins/password/gdm-password-extension.c
  gui/simple-greeter/plugins/fingerprint/gdm-fingerprint-extension.c
@@ -16208,7 +16208,7 @@ index 3e0b163..69eb449 100644
 1.7.4.1
 
 
-From d1fa8b901bb9de3ddc2ec2f62ee28b4710cd481f Mon Sep 17 00:00:00 2001
+From 5944a6d2870817e66253349b63f4808fefa0a99a Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 24 Jul 2009 14:41:48 -0400
 Subject: [PATCH 14/20] KILL stuck processes if they don't die on TERM
@@ -16332,7 +16332,7 @@ index be85f30..8b93663 100644
 1.7.4.1
 
 
-From 459d9900e4bd957587a5073a49ef0d7a2f16de7b Mon Sep 17 00:00:00 2001
+From f745d04390e1bcc0de885efe99f5d436b3c7f54b Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 13 Jul 2010 22:37:35 -0400
 Subject: [PATCH 15/20] switch to proper mode when going to timed login
@@ -16358,7 +16358,7 @@ index 56a790e..9b07ffe 100644
 1.7.4.1
 
 
-From 4faa577d1fed1217b6a5364aca2c0eace30269ec Mon Sep 17 00:00:00 2001
+From 989a304e776877a51aba2e8236f667529214dbb6 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Tue, 3 Aug 2010 15:21:26 -0400
 Subject: [PATCH 16/20] Drop "Cancelling" message for plugin initiated cancels
@@ -16387,7 +16387,7 @@ index 9b07ffe..907f34b 100644
 1.7.4.1
 
 
-From be4e406903412ba1b3122754079389c467244792 Mon Sep 17 00:00:00 2001
+From 59a49f2d5840d2797856e5135735a813c6b08d48 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Aug 2010 18:03:52 -0400
 Subject: [PATCH 17/20] Add delay when showing messages (needs split)
@@ -16852,7 +16852,7 @@ index b40a21c..5e234b9 100644
 1.7.4.1
 
 
-From 4304e1570f8757c8e981cc9ff6e08f2c3406dc31 Mon Sep 17 00:00:00 2001
+From 7c18fc7396b247538008e79ff4c0a0962ceaa4a2 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Wed, 4 Aug 2010 19:27:14 -0400
 Subject: [PATCH 18/20] Drop cancelling message
@@ -16879,7 +16879,7 @@ index d4e177d..ca03073 100644
 1.7.4.1
 
 
-From 4c168d850673fad082f9d3de201e450ca12450cf Mon Sep 17 00:00:00 2001
+From 7b800188fb140b52dbee9136cee9428ee97158b7 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 6 Aug 2010 11:14:23 -0400
 Subject: [PATCH 19/20] manage tasks outside of task list
@@ -17680,7 +17680,7 @@ index ca03073..93ae192 100644
 1.7.4.1
 
 
-From df1bfdc66920037a1bad8a006cf635cd3a666579 Mon Sep 17 00:00:00 2001
+From e787f3bd631cdfb8aa090716992432c3bbf46d73 Mon Sep 17 00:00:00 2001
 From: Gal Hammer <ghammer@redhat.com>
 Date: Thu, 21 Oct 2010 10:14:32 -0400
 Subject: [PATCH 20/20] smartcard: don't show extension if disabled in authconfig

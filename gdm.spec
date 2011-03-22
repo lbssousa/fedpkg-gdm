@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 2.91.93
-Release: 2%{?dist}
+Version: 2.91.94
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -87,7 +87,6 @@ Provides: service(graphical-login) = %{name}
 Requires: audit-libs >= %{libauditver}
 
 Patch2: plymouth.patch
-Patch3: fix-autologin.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -118,7 +117,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch3 -p1 -b .fix-autologin
 %patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
@@ -294,10 +292,8 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %dir %{_sysconfdir}/gdm/PreSession
 %dir %{_sysconfdir}/gdm/PostSession
 %dir %{_sysconfdir}/gdm/PostLogin
+%{_datadir}/gnome-session/sessions/gdm.session
 %{_datadir}/pixmaps/*.png
-%dir %{_datadir}/pixmaps/faces
-%{_datadir}/pixmaps/faces/*.png
-%{_datadir}/pixmaps/faces/*.jpg
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_libexecdir}/gdm-factory-slave
 %{_libexecdir}/gdm-host-chooser
@@ -358,6 +354,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Tue Mar 22 2011 Ray Strode <rstrode@redhat.com> 2.91.94-1
+- Update to 2.91.94
+
 * Wed Mar 09 2011 Ray Strode <rstrode@redhat.com> 2.91.93-2
 - Fix autologin crash
 
