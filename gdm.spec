@@ -85,6 +85,7 @@ BuildRequires: pkgconfig(accountsservice) >= 0.6.3
 # these are all just for rebuilding dconf-override-db
 BuildRequires: dbus-x11
 BuildRequires: gnome-power-manager
+BuildRequires: gsettings-desktop-schemas
 
 Provides: service(graphical-login) = %{name}
 
