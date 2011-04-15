@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.0.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -86,11 +86,15 @@ Provides: service(graphical-login) = %{name}
 
 Requires: audit-libs >= %{libauditver}
 
+# For the Fedora logo in the greeter, not sure
+# how well this will work with generic logos, though
+Requires: system-icon-theme
+
 Patch2: plymouth.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
-Patch99: gdm-2.23.1-fedora-logo.patch
+Patch99: gdm-3.0.0-fedora-logo.patch
 
 %package plugin-smartcard
 Summary:   GDM smartcard plugin
@@ -354,6 +358,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Fri Apr 15 2011 Matthias Clasen <mclasen@redhat.com> - 3.0.0-2
+- Put the Fedora logo back in the greeter
+
 * Mon Apr  4 2011 Matthias Clasen <mclasen@redhat.com> - 3.0.0-1
 - Update to 3.0.0
 
