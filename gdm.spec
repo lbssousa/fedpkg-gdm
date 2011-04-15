@@ -86,6 +86,7 @@ BuildRequires: pkgconfig(accountsservice) >= 0.6.3
 BuildRequires: dbus-x11
 BuildRequires: gnome-power-manager
 BuildRequires: gsettings-desktop-schemas
+BuildRequires: gnome-settings-daemon
 
 Provides: service(graphical-login) = %{name}
 
