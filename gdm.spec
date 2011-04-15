@@ -126,6 +126,9 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 
 autoreconf -i -f
 
+# force regeneration
+rm data/dconf-override-db
+
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
@@ -149,18 +152,6 @@ cp -f %{SOURCE9} gui/simple-greeter/plugins/fingerprint/icons/48x48/gdm-fingerpr
 sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0 /g' -e 's/    if test "$export_dynamic" = yes && test -n "$export_dynamic_flag_spec"; then/      func_append compile_command " -Wl,-O1,--as-needed"\n      func_append finalize_command " -Wl,-O1,--as-needed"\n\0/' libtool
 
 make %{?_smp_mflags}
-
-# strip unneeded translations from .mo files
-# ideally intltool (ha!) would do that for us
-# http://bugzilla.gnome.org/show_bug.cgi?id=474987
-cd po
-grep -v ".*[.]desktop[.]in.*\|.*[.]server[.]in[.]in$" POTFILES.in > POTFILES.keep
-mv POTFILES.keep POTFILES.in
-intltool-update --pot
-for p in *.po; do
-  msgmerge $p %{name}.pot > $p.out
-  msgfmt -o `basename $p .po`.gmo $p.out
-done
 
 
 %install
