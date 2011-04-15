@@ -81,6 +81,7 @@ BuildRequires: libXdmcp-devel
 BuildRequires: dbus-glib-devel
 BuildRequires: GConf2-devel
 BuildRequires: pkgconfig(accountsservice) >= 0.6.3
+BuildRequires: dbus-devel
 
 Provides: service(graphical-login) = %{name}
 
