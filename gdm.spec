@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.0.0
-Release: 2%{?dist}
+Version: 3.0.4
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -98,6 +98,7 @@ Requires: audit-libs >= %{libauditver}
 Requires: system-icon-theme
 
 Patch2: plymouth.patch
+Patch3: fix-dconf-db-thing.patch
 
 Patch96: gdm-multistack.patch
 # Fedora-specific
@@ -128,6 +129,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
+%patch3 -p1 -b .fix-dconf-db-thing
 %patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
@@ -337,6 +339,8 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 %attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
+%{_localstatedir}/lib/gdm/.local/share/applications/mime-dummy-handler.desktop
+%{_localstatedir}/lib/gdm/.local/share/applications/mimeapps.list
 %{_sysconfdir}/dconf/profile/gdm
 %{_sysconfdir}/dconf/db/gdm
 
@@ -356,6 +360,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
 
 %changelog
+* Mon Jun 06 2011 Ray Strode <rstrode@redhat.com> 3.0.4-1
+- Update to latest version
+  Resolves CVE-2011-1709
+
 * Fri Apr 15 2011 Matthias Clasen <mclasen@redhat.com> - 3.0.0-2
 - Put the Fedora logo back in the greeter
 
