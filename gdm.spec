@@ -97,9 +97,10 @@ Requires: audit-libs >= %{libauditver}
 # how well this will work with generic logos, though
 Requires: system-icon-theme
 
-Patch2: plymouth.patch
+Patch0: fix-build.patch
 
 # Fedora-specific
+Patch98: plymouth.patch
 Patch99: gdm-3.0.0-fedora-logo.patch
 
 %package plugin-smartcard
@@ -126,7 +127,8 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 
 %prep
 %setup -q
-%patch2 -p1 -b .plymouth
+%patch0 -p1 -b .fix-build
+%patch98 -p1 -b .plymouth
 %patch99 -p1 -b .fedora-logo
 
 autoreconf -i -f
