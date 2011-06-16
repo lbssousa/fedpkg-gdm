@@ -14,14 +14,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.0.4
+Version: 3.1.2
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/2.91/gdm-%{version}.tar.bz2
+Source: http://download.gnome.org/sources/gdm/2.91/gdm-%{version}.tar.xz
 Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source3: gdm-password.pam
@@ -98,9 +98,7 @@ Requires: audit-libs >= %{libauditver}
 Requires: system-icon-theme
 
 Patch2: plymouth.patch
-Patch3: fix-dconf-db-thing.patch
 
-Patch96: gdm-multistack.patch
 # Fedora-specific
 Patch99: gdm-3.0.0-fedora-logo.patch
 
@@ -129,8 +127,6 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch2 -p1 -b .plymouth
-%patch3 -p1 -b .fix-dconf-db-thing
-%patch96 -p1 -b .multistack
 %patch99 -p1 -b .fedora-logo
 
 autoreconf -i -f
@@ -141,15 +137,16 @@ rm data/dconf-override-db
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
-cp -f %{SOURCE3} gui/simple-greeter/plugins/password/gdm-password.pam
-cp -f %{SOURCE4} gui/simple-greeter/plugins/smartcard/gdm-smartcard.pam
-cp -f %{SOURCE5} gui/simple-greeter/plugins/fingerprint/gdm-fingerprint.pam
-cp -f %{SOURCE6} gui/simple-greeter/plugins/smartcard/icons/16x16/gdm-smartcard.png
-cp -f %{SOURCE7} gui/simple-greeter/plugins/smartcard/icons/48x48/gdm-smartcard.png
-cp -f %{SOURCE8} gui/simple-greeter/plugins/fingerprint/icons/16x16/gdm-fingerprint.png
-cp -f %{SOURCE9} gui/simple-greeter/plugins/fingerprint/icons/48x48/gdm-fingerprint.png
+cp -f %{SOURCE3} gui/simple-greeter/extensions/password/gdm-password.pam
+cp -f %{SOURCE4} gui/simple-greeter/extensions/smartcard/gdm-smartcard.pam
+cp -f %{SOURCE5} gui/simple-greeter/extensions/fingerprint/gdm-fingerprint.pam
+cp -f %{SOURCE6} gui/simple-greeter/extensions/smartcard/icons/16x16/gdm-smartcard.png
+cp -f %{SOURCE7} gui/simple-greeter/extensions/smartcard/icons/48x48/gdm-smartcard.png
+cp -f %{SOURCE8} gui/simple-greeter/extensions/fingerprint/icons/16x16/gdm-fingerprint.png
+cp -f %{SOURCE9} gui/simple-greeter/extensions/fingerprint/icons/48x48/gdm-fingerprint.png
 
 %configure --with-pam-prefix=%{_sysconfdir} \
+           --enable-split-authentication \
            --enable-profiling      \
            --enable-console-helper \
            --disable-scrollkeeper  \
@@ -198,7 +195,7 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
-rm -f $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter/gdm-greeter-extension.h
+rm -f $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter/gdm-login-extension.h
 rm -f $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
 
 %find_lang gdm --with-gnome
@@ -299,6 +296,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_datadir}/gnome-session/sessions/gdm.session
 %{_datadir}/pixmaps/*.png
 %{_datadir}/icons/hicolor/*/apps/*.png
+%{_datadir}/glib-2.0/schemas/org.gnome.display-manager.extensions.fingerprint.gschema.xml
+%{_datadir}/glib-2.0/schemas/org.gnome.display-manager.extensions.smartcard.gschema.xml
+%{_datadir}/gdm/simple-greeter/extensions/unified/page.ui
 %{_libexecdir}/gdm-factory-slave
 %{_libexecdir}/gdm-host-chooser
 %{_libexecdir}/gdm-product-slave
@@ -319,8 +319,8 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/libgdm*.so*
 %dir %{_libdir}/gdm
 %dir %{_libdir}/gdm/simple-greeter
-%dir %{_libdir}/gdm/simple-greeter/plugins
-%{_libdir}/gdm/simple-greeter/plugins/password.so
+%dir %{_libdir}/gdm/simple-greeter/extensions
+%{_libdir}/gdm/simple-greeter/extensions/libpassword.so
 %dir %{_datadir}/gdm/simple-greeter
 %dir %{_datadir}/gdm/simple-greeter/extensions
 %dir %{_datadir}/gdm/simple-greeter/extensions/password
@@ -349,7 +349,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %config %{_sysconfdir}/pam.d/gdm-smartcard
 %dir %{_datadir}/gdm/simple-greeter/extensions/smartcard
 %{_datadir}/gdm/simple-greeter/extensions/smartcard/page.ui
-%{_libdir}/gdm/simple-greeter/plugins/smartcard.so
+%{_libdir}/gdm/simple-greeter/extensions/libsmartcard.so
 %{_libexecdir}/gdm-smartcard-worker
 
 %files plugin-fingerprint
@@ -357,9 +357,12 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %config %{_sysconfdir}/pam.d/gdm-fingerprint
 %dir %{_datadir}/gdm/simple-greeter/extensions/fingerprint
 %{_datadir}/gdm/simple-greeter/extensions/fingerprint/page.ui
-%{_libdir}/gdm/simple-greeter/plugins/fingerprint.so
+%{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
 
 %changelog
+* Mon Jun 13 2011 Ray Strode <rstrode@redhat.com> 3.1.2-1
+- Update for release
+
 * Mon Jun 06 2011 Ray Strode <rstrode@redhat.com> 3.0.4-1
 - Update to latest version
   Resolves CVE-2011-1709
