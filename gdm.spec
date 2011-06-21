@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.1.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -269,11 +269,11 @@ fi
 /sbin/ldconfig
 if [ $1 -eq 0 ]; then
   touch --no-create %{_datadir}/icons/hicolor >&/dev/null || :
-  gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
+  gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 fi
 
 %posttrans
-gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
+gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 
 %files -f gdm.lang
 %defattr(-, root, root)
@@ -362,6 +362,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/ull || :
 %{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
 
 %changelog
+* Tue Jun 21 2011 Michael Schwendt <mschwendt@fedoraproject.org> - 3.1.2-2
+- Fix /dev/ull typo in scriptlets (#693046).
+
 * Mon Jun 13 2011 Ray Strode <rstrode@redhat.com> 3.1.2-1
 - Update for release
 
