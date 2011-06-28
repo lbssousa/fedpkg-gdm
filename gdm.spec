@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.1.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -98,6 +98,7 @@ Requires: audit-libs >= %{libauditver}
 Requires: system-icon-theme
 
 Patch0: fix-build.patch
+Patch1: disable-fatal-criticals.patch
 
 # Fedora-specific
 Patch98: plymouth.patch
@@ -128,6 +129,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %prep
 %setup -q
 %patch0 -p1 -b .fix-build
+%patch1 -p1 -b .disable-fatal-criticals
 %patch98 -p1 -b .plymouth
 %patch99 -p1 -b .fedora-logo
 
@@ -362,6 +364,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
 
 %changelog
+* Tue Jun 28 2011 Ray Strode <rstrode@redhat.com> 3.1.2-3
+- Disable fatal critcals
+  Resolves: #717324
+
 * Tue Jun 21 2011 Michael Schwendt <mschwendt@fedoraproject.org> - 3.1.2-2
 - Fix /dev/ull typo in scriptlets (#693046).
 
