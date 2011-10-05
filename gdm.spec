@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.2.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -99,6 +99,9 @@ Requires: system-icon-theme
 
 Patch0: fix-build.patch
 Patch1: disable-fatal-criticals.patch
+# Upstream 64e6b10f98fe7226a2f41807268dae3afa80236d : check for
+# gnome-shell before using it to do login (RH #743596)
+Patch2: gdm-3.2.0-shell_check.patch
 
 # Fedora-specific
 Patch98: plymouth.patch
@@ -130,6 +133,7 @@ The GDM fingerprint plugin provides functionality necessary to use a fingerprint
 %setup -q
 %patch0 -p1 -b .fix-build
 %patch1 -p1 -b .disable-fatal-criticals
+%patch2 -p1 -b .shell-check
 %patch98 -p1 -b .plymouth
 %patch99 -p1 -b .fedora-logo
 
@@ -364,6 +368,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
 
 %changelog
+* Wed Oct  5 2011 Adam Williamson <awilliam@redhat.com> - 1:3.2.0-2
+- shell_check.patch (upstream): re-add check for gnome-shell presence
+  before using it to handle login (RH #743596)
+
 * Wed Sep 28 2011 Ray <rstrode@redhat.com> - 1:3.2.0-1
 - Update to 3.2.0
 
