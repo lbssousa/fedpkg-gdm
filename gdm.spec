@@ -32,6 +32,7 @@ Source7: gdm-smartcard-48.png
 Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
+Source11: gdm-welcome-pam
 
 Requires(pre): /usr/sbin/useradd
 
@@ -65,6 +66,7 @@ BuildRequires: gettext
 BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: audit-libs-devel >= %{libauditver}
+BuildRequires: gobject-introspection-devel
 BuildRequires: autoconf automake libtool
 BuildRequires: intltool
 %ifnarch s390 s390x ppc64
@@ -145,6 +147,7 @@ autoreconf -i -f
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
+cp -f %{SOURCE11} data/gdm-welcome
 cp -f %{SOURCE3} gui/simple-greeter/extensions/password/gdm-password.pam
 cp -f %{SOURCE4} gui/simple-greeter/extensions/smartcard/gdm-smartcard.pam
 cp -f %{SOURCE5} gui/simple-greeter/extensions/fingerprint/gdm-fingerprint.pam
@@ -281,9 +284,14 @@ if [ $1 -eq 0 ]; then
   gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 fi
 
+if [ $1 -eq 0 ] ; then
+    /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &> /dev/null || :
+fi
+
 %posttrans
 %{_libexecdir}/gdm-update-dconf-db gdm %{_datadir}/gdm/upstream-settings 00-upstream-settings
 gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
+/usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &> /dev/null || :
 
 %files -f gdm.lang
 %defattr(-, root, root)
@@ -297,6 +305,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %config %{_sysconfdir}/pam.d/gdm
 %config %{_sysconfdir}/pam.d/gdm-autologin
 %config %{_sysconfdir}/pam.d/gdm-password
+%config %{_sysconfdir}/pam.d/gdm-welcome
 # not config files
 %{_sysconfdir}/gdm/Xsession
 %{_datadir}/gdm/gdm.schemas
@@ -305,7 +314,8 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_sysconfdir}/gdm/PreSession
 %dir %{_sysconfdir}/gdm/PostSession
 %dir %{_sysconfdir}/gdm/PostLogin
-%{_datadir}/gnome-session/sessions/gdm.session
+%{_datadir}/gnome-session/sessions/gdm-shell.session
+%{_datadir}/gnome-session/sessions/gdm-fallback.session
 %{_datadir}/pixmaps/*.png
 %{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.xml
@@ -324,12 +334,15 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_sbindir}/gdm-binary
 %{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
+%{_datadir}/gdm/greeter/applications/*
 %{_datadir}/gdm/*.ui
 %{_datadir}/gdm/locale.alias
+%{_datadir}/gnome-session/sessions/*
 %{_sysconfdir}/gconf/schemas/*.schemas
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
 %{_libdir}/libgdm*.so*
+%{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 %dir %{_libdir}/gdm
 %dir %{_libdir}/gdm/simple-greeter
 %dir %{_libdir}/gdm/simple-greeter/extensions
@@ -338,15 +351,13 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm/simple-greeter/extensions
 %dir %{_datadir}/gdm/simple-greeter/extensions/password
 %{_datadir}/gdm/simple-greeter/extensions/password/page.ui
-%dir %{_datadir}/gdm
-%dir %{_datadir}/gdm/autostart
-%dir %{_datadir}/gdm/autostart/LoginWindow
-%{_datadir}/gdm/autostart/LoginWindow/*
+%dir %{_datadir}/gdm/greeter
+%dir %{_datadir}/gdm/greeter/applications
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/spool/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
-%attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
+%attr(1640, gdm, gdm) %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
 %attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1755, gdm, gdm) %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
