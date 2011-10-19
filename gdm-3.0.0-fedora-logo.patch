@@ -9,14 +9,3 @@
        <locale name="C">
          <short>Icon name to use for greeter logo</short>
          <long>Set to the themed icon name to use for the greeter logo.</long>
-diff -up gdm-3.0.0/data/make-dconf-override-db.sh.fedora-icon-theme gdm-3.0.0/data/make-dconf-override-db.sh
---- gdm-3.0.0/data/make-dconf-override-db.sh.fedora-icon-theme	2011-04-15 08:30:54.750455961 -0400
-+++ gdm-3.0.0/data/make-dconf-override-db.sh	2011-04-15 08:26:11.525996754 -0400
-@@ -13,6 +13,7 @@ gsettings set org.gnome.desktop.a11y.key
- gsettings set org.gnome.desktop.background show-desktop-icons false
- gsettings set org.gnome.desktop.default-applications.terminal exec '"/bin/true"'
- gsettings set org.gnome.desktop.interface toolkit-accessibility true
-+gsettings set org.gnome.desktop.interface icon-theme '"Fedora"'
- 
- gsettings set org.gnome.desktop.lockdown disable-application-handlers true
- gsettings set org.gnome.desktop.lockdown disable-command-line true
