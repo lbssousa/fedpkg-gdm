@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.2.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -398,6 +398,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gir-1.0/GdmGreeter-1.0.gir
 
 %changelog
+* Wed Oct 26 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:3.2.1-2
+- Rebuilt for glibc bug#747377
+
 * Tue Oct 18 2011 Ray Strode <rstrode@redhat.com> 3.2.1-1
 - Update to 3.2.1
 - Move plugins into main package
