@@ -15,7 +15,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.2.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -100,8 +100,6 @@ Requires: audit-libs >= %{libauditver}
 Requires: system-icon-theme
 
 # Swallow up old fingerprint/smartcard plugins
-Requires:  fprintd-pam
-
 Obsoletes: gdm-plugin-smartcard < 1:3.2.1
 Provides: gdm-plugin-smartcard = %{epoch}:%{version}-%{release}
 
@@ -398,6 +396,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gir-1.0/GdmGreeter-1.0.gir
 
 %changelog
+* Thu Nov 03 2011 Ray Strode <rstrode@redhat.com> 3.2.1-3
+- Drop fprintd-pam dependency and make Harald's laptop
+  more lean and streamlined.
+
 * Wed Oct 26 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:3.2.1-2
 - Rebuilt for glibc bug#747377
 
