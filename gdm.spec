@@ -392,7 +392,13 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 
 %changelog
 * Wed Nov 09 2011 Adam Williamson <awilliam@redhat.com> 1:3.2.1.1-8
-- sync with recent changes on f16 branch
+- sync with recent changes on f16 branch:
+	+ update to 3.2.1.1
+	+ properly set up PAM files
+	+ auth fixes
+	+ put fallback plugin development files in -devel
+	+ require metacity to fix #746693
+	+ fix logo in fallback mode - just set it to a Fedora file
 
 * Thu Nov 03 2011 Ray Strode <rstrode@redhat.com> 3.2.1-3
 - Drop fprintd-pam dependency and make Harald's laptop
