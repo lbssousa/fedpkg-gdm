@@ -14,8 +14,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.2.1
-Release: 3%{?dist}
+Version: 3.2.1.1
+Release: 8%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -24,6 +24,7 @@ URL: http://download.gnome.org/sources/gdm
 Source: http://download.gnome.org/sources/gdm/3.2/gdm-%{version}.tar.xz
 Source1: gdm-pam
 Source2: gdm-autologin-pam
+Source11: gdm-welcome-pam
 Source3: gdm-password.pam
 Source4: gdm-smartcard.pam
 Source5: gdm-fingerprint.pam
@@ -32,7 +33,6 @@ Source7: gdm-smartcard-48.png
 Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
-Source11: gdm-welcome-pam
 
 Requires(pre): /usr/sbin/useradd
 
@@ -53,6 +53,9 @@ Requires: gnome-keyring-pam
 Requires: pulseaudio-gdm-hooks
 # We need 1.0.4-5 since it lets us use "localhost" in auth cookies
 Requires: libXau >= 1.0.4-4
+# RH #746693: gdm's fallback session specifies metacity as the WM
+# and refuses to run if metacity is not present
+Requires: metacity
 BuildRequires: pkgconfig(libcanberra-gtk)
 BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
@@ -85,11 +88,7 @@ BuildRequires: GConf2-devel
 BuildRequires: pkgconfig(accountsservice) >= 0.6.3
 
 # these are all just for rewriting gdm.d/00-upstream-settings
-Requires(posttrans): dbus-x11
 Requires(posttrans): dconf
-Requires(posttrans): gnome-power-manager
-Requires(posttrans): gsettings-desktop-schemas
-Requires(posttrans): gnome-settings-daemon
 
 Provides: service(graphical-login) = %{name}
 
@@ -105,6 +104,9 @@ Provides: gdm-plugin-smartcard = %{epoch}:%{version}-%{release}
 
 Obsoletes: gdm-plugin-fingerprint < 1:3.2.1
 Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
+
+# already upstream
+Patch0: auth-fixes.patch
 
 # Fedora-specific
 Patch98: plymouth.patch
@@ -137,6 +139,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch0 -p1 -b .auth-fixes
 %patch98 -p1 -b .plymouth
 %patch99 -p1 -b .fedora-logo
 
@@ -145,10 +148,10 @@ autoreconf -i -f
 %build
 cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
-cp -f %{SOURCE11} data/gdm-welcome
 cp -f %{SOURCE3} gui/simple-greeter/extensions/password/gdm-password.pam
-cp -f %{SOURCE4} gui/simple-greeter/extensions/smartcard/gdm-smartcard.pam
-cp -f %{SOURCE5} gui/simple-greeter/extensions/fingerprint/gdm-fingerprint.pam
+cp -f %{SOURCE4} data/gdm-smartcard.pam
+cp -f %{SOURCE5} data/gdm-fingerprint.pam
+cp -f %{SOURCE11} data/gdm-welcome
 cp -f %{SOURCE6} gui/simple-greeter/extensions/smartcard/icons/16x16/gdm-smartcard.png
 cp -f %{SOURCE7} gui/simple-greeter/extensions/smartcard/icons/48x48/gdm-smartcard.png
 cp -f %{SOURCE8} gui/simple-greeter/extensions/fingerprint/icons/16x16/gdm-fingerprint.png
@@ -206,9 +209,6 @@ rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
-
-rm -f $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter/gdm-login-extension.h
-rm -f $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
 
 %find_lang gdm --with-gnome
 
@@ -287,13 +287,13 @@ if [ $1 -eq 0 ] ; then
 fi
 
 %posttrans
-%{_libexecdir}/gdm-update-dconf-db gdm %{_datadir}/gdm/upstream-settings 00-upstream-settings
+dconf update
 gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &> /dev/null || :
 
 %files -f gdm.lang
-%defattr(-, root, root)
 %doc AUTHORS COPYING NEWS README TODO
+
 %dir %{_sysconfdir}/gdm
 %config(noreplace) %{_sysconfdir}/gdm/custom.conf
 %config %{_sysconfdir}/gdm/Init/*
@@ -327,7 +327,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libexecdir}/gdm-simple-greeter
 %{_libexecdir}/gdm-simple-slave
 %{_libexecdir}/gdm-xdmcp-chooser-slave
-%{_libexecdir}/gdm-update-dconf-db
 %{_sbindir}/gdm
 %{_sbindir}/gdm-binary
 %{_bindir}/gdmflexiserver
@@ -349,6 +348,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm/simple-greeter/extensions
 %dir %{_datadir}/gdm/simple-greeter/extensions/password
 %{_datadir}/gdm/simple-greeter/extensions/password/page.ui
+%dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/greeter
 %dir %{_datadir}/gdm/greeter/applications
 %dir %{_localstatedir}/log/gdm
@@ -366,7 +366,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_sysconfdir}/dconf/db/gdm.d/00-upstream-settings
 %{_sysconfdir}/dconf/db/gdm.d/locks/00-upstream-settings-locks
 %{_sysconfdir}/dconf/profile/gdm
-%{_datadir}/gdm/upstream-settings
 %{_datadir}/icons/hicolor/*/*/*.png
 %config %{_sysconfdir}/pam.d/gdm-smartcard
 %dir %{_datadir}/gdm/simple-greeter/extensions/smartcard
@@ -385,17 +384,16 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_includedir}/gdm/greeter/gdm-greeter-sessions.h
 %{_datadir}/gir-1.0/GdmGreeter-1.0.gir
 %{_libdir}/pkgconfig/gdmgreeter.pc
+%{_includedir}/gdm/simple-greeter/gdm-login-extension.h
+%{_libdir}/pkgconfig/gdmsimplegreeter.pc
 
 %files libs
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
-%files devel
-%{_includedir}/gdm/greeter/gdm-greeter-client.h
-%{_includedir}/gdm/greeter/gdm-greeter-sessions.h
-%{_libdir}/pkgconfig/gdmgreeter.pc
-%{_datadir}/gir-1.0/GdmGreeter-1.0.gir
-
 %changelog
+* Wed Nov 09 2011 Adam Williamson <awilliam@redhat.com> 1:3.2.1.1-8
+- sync with recent changes on f16 branch
+
 * Thu Nov 03 2011 Ray Strode <rstrode@redhat.com> 3.2.1-3
 - Drop fprintd-pam dependency and make Harald's laptop
   more lean and streamlined.
