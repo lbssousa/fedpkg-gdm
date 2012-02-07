@@ -136,7 +136,7 @@ index 7af20ed..aaaa8f2 100644
 1.7.9
 
 
-From 1872e3e00cc0fc820a04207ca1227f04e03b77cc Mon Sep 17 00:00:00 2001
+From 03d92cf39f74b265cc9936bdeabfcf071b102767 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 27 Nov 2009 18:52:54 -0500
 Subject: [PATCH 2/2] Enable smooth transition between plymouth and X
@@ -150,7 +150,7 @@ turns on the smooth transition between plymouth and X.
  3 files changed, 146 insertions(+), 1 deletions(-)
 
 diff --git a/daemon/gdm-server.c b/daemon/gdm-server.c
-index 54bf8b3..8cb10c2 100644
+index 54bf8b3..365590f 100644
 --- a/daemon/gdm-server.c
 +++ b/daemon/gdm-server.c
 @@ -32,6 +32,7 @@
@@ -225,7 +225,7 @@ index 54bf8b3..8cb10c2 100644
 +        char *vt;
 +
 +        g_free (server->priv->command);
-+        server->priv->command = g_strdup (X_SERVER " -nr -verbose");
++        server->priv->command = g_strdup (X_SERVER " -background none -logverbose 7");
 +        vt = get_active_vt_as_string ();
 +        res = gdm_server_spawn (server, vt);
 +        g_free (vt);

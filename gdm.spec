@@ -85,6 +85,8 @@ BuildRequires: libXdmcp-devel
 BuildRequires: dbus-glib-devel
 BuildRequires: GConf2-devel
 BuildRequires: pkgconfig(accountsservice) >= 0.6.3
+BuildRequires: pkgconfig(libsystemd-login)
+BuildRequires: pkgconfig(libsystemd-daemon)
 
 # these are all just for rewriting gdm.d/00-upstream-settings
 Requires(posttrans): dconf
