@@ -8,14 +8,13 @@
 %define desktop_file_utils_version 0.2.90
 %define gail_version 1.2.0
 %define nss_version 3.11.1
-%define consolekit_version 0.3.0-9
 %define fontconfig_version 2.6.0
 %define _default_patch_fuzz 999
 
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.2.1.1
-Release: 10%{?dist}
+Release: 11%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -42,7 +41,7 @@ Requires: system-logos
 Requires: xorg-x11-server-utils
 Requires: setxkbmap
 Requires: xorg-x11-xinit
-Requires: ConsoleKit >= %{consolekit_version}
+Requires: systemd >= 39
 Requires: accountsservice
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
@@ -104,6 +103,9 @@ Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
 # already upstream
 Patch0: auth-fixes.patch
 
+# Multi-seat stuff
+Patch50: multi-seat.patch
+
 # Fedora-specific
 Patch98: plymouth.patch
 Patch99: gdm-3.0.0-fedora-logo.patch
@@ -136,6 +138,7 @@ Development files and headers for writing GDM greeters.
 %prep
 %setup -q
 %patch0 -p1 -b .auth-fixes
+%patch50 -p1 -b .multi-seat
 %patch98 -p1 -b .plymouth
 %patch99 -p1 -b .fedora-logo
 
@@ -387,6 +390,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Tue Feb  7 2012 Lennart Poettering <lpoetter@redhat.com> - 1:3.2.1.1-11
+- Add multi-seat patch from gdm git master
+
 * Thu Jan 26 2012 Ray Strode <rstrode@redhat.com> 3.2.1.1-10
 - Drop system-icon-theme requirement since we don't depend
   on it anymore
@@ -860,7 +866,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 - Rework "force X on vt1" code to work after the user logs out
 
 * Wed Oct 15 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-9
-- Save some space 
+- Save some space
 
 * Fri Oct  3 2008 Matthias Clasen  <mclasen@redhat.com> - 1:2.24.0-8
 - Don't show a non-functional help menuitem
@@ -1186,7 +1192,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 
 * Fri Nov 30 2007 Matthias Clasen <mclasen@redhat.com> - 1:2.21.2-0.2007.11.20.4
 - Use the new "substack" support in pam to make keyring unlocking work
- 
+
 * Tue Nov 20 2007 Ray Strode <rstrode@redhat.com> - 1:2.21.2-0.2007.11.20.3
 - use metacity for now
 
@@ -1244,7 +1250,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 
 * Mon Oct  1 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-10
 - apply upstream patch from Brady Anderson <brady.anderson@gmail.com>
-  to fix writing out .dmrc file when setting default language 
+  to fix writing out .dmrc file when setting default language
   (upstream bug 453916)
 
 * Fri Sep 28 2007 Ray Strode <rstrode@redhat.com> - 1:2.20.0-9
@@ -1324,7 +1330,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 - Require gnome-keyring-pam
 
 * Mon Aug  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-5
-- change previous patch to drop even more code 
+- change previous patch to drop even more code
 
 * Mon Aug  6 2007 Ray Strode <rstrode@redhat.com> - 1:2.19.5-4
 - turn off dwellmouselistener if devices don't send core events.
@@ -1506,7 +1512,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
   in gdmsetup
 
 * Tue Sep 19 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-8.fc6
-- Add as_IN, si_LK to language list (bug 203917) 
+- Add as_IN, si_LK to language list (bug 203917)
 
 * Mon Sep 18 2006 Ray Strode <rstrode@redhat.com> - 1:2.16.0-7.fc6
 - fix a problem recently introduced in the smart card forking
@@ -1676,7 +1682,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 
 * Tue Feb 28 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.9-1
 - Update to 2.13.0.9
-- Use new %%post section, written by 
+- Use new %%post section, written by
   Michal Jaegermann <michal@harddata.com> (bug 183082)
 
 * Sat Feb 25 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.8-6
@@ -1732,7 +1738,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 - add new theme by Diana Fong, Máirín Duffy, and me
 
 * Mon Jan 16 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-4
-- improve migration snippet (bug 177443). 
+- improve migration snippet (bug 177443).
 
 * Fri Jan 13 2006 Ray Strode <rstrode@redhat.com> - 1:2.13.0.4-3
 - migrate X server configuration for pre-modular X configurations.
@@ -1818,7 +1824,7 @@ p
 * Mon May 23 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-16
 - Make sure username/password incorrect message gets displayed
   (bug 158127).
-- reread system locale before starting gdm in early login mode 
+- reread system locale before starting gdm in early login mode
   (bug 158376).
 
 * Thu May 19 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-15
@@ -1842,7 +1848,7 @@ p
 - silence %%postun
 
 * Tue Apr 26 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.8-9
-- Change default standard greeter theme to clearlooks and 
+- Change default standard greeter theme to clearlooks and
   default graphical greeter theme to Bluecurve specifically.
 
 - Change default path values (bug 154280)
@@ -1898,7 +1904,7 @@ p
   user's home directory (fixes bug 149899)
 
 * Thu Feb 10 2005 Ray Strode <rstrode@redhat.com> 1:2.6.0.7-2
-- Turn off "switchdesk" mode by default which accidentally got 
+- Turn off "switchdesk" mode by default which accidentally got
   turned on by default in 2.6.0.5-4
 
 * Wed Feb  2 2005 Matthias Clasen <mclasen@redhat.com> 1:2.6.0.7-1
@@ -1911,28 +1917,28 @@ p
 * Thu Dec 9 2004 Dan Walsh <dwalsh@redhat.com> 1:2.6.0.5-10
 - Remove pam_selinux from gdmsetup pam file
 
-* Wed Dec  1 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-9 
-- Look up and use username instead of assuming that user entered 
+* Wed Dec  1 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-9
+- Look up and use username instead of assuming that user entered
   login is cannonical.  Patch from
   Mike Patnode <mike.patnode@centrify.com> (fixes bug 141380).
 
-* Thu Nov 11 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-8 
+* Thu Nov 11 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-8
 - Sort session list so that default session comes out on top
   (fixes bug 107324)
 
-* Wed Nov 10 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-7 
+* Wed Nov 10 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-7
 - Make desktop file symlink instead of absolute (bug 104390)
 - Add flexiserver back to menus
 
-* Wed Oct 20 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-6 
+* Wed Oct 20 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-6
 - Clean up xses if the session was successfullly completed.
   (fixes bug #136382)
 
-* Tue Oct 19 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-5 
+* Tue Oct 19 2004  Ray Strode  <rstrode@redhat.com> 1:2.6.0.5-5
 - Prefer nb_NO over no_NO for Norwegian (fixes bug #136033)
 
 * Thu Oct  7 2004 Alexander Larsson <alexl@redhat.com> - 1:2.6.0.5-4
-- Change default greeter theme to "Default", require 
+- Change default greeter theme to "Default", require
   redhat-artwork with Default symlink.
 
 * Wed Sep 29 2004 Ray Strode <rstrode@redhat.com> 1:2.6.0.5-3
@@ -2171,14 +2177,14 @@ p
 * Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
 - put /usr/X11R6/bin in path for now fixes #72781
 - use proper i18n algorithm for word wrap, #71937
-- remove greek text from language picker due to lack 
+- remove greek text from language picker due to lack
   of greek font
 - reorder PAM config file #72657
 
 * Wed Aug 28 2002 Havoc Pennington <hp@redhat.com>
 - improve gdmsetup icon
 - remove GNOME session, we will instead put it in gnome-session
-- apply patch from george to make gdmphotosetup file selector 
+- apply patch from george to make gdmphotosetup file selector
   work
 
 * Mon Aug 26 2002 Elliot Lee <sopwith@redhat.com> 2.4.0.7-6
@@ -2198,7 +2204,7 @@ p
 - rename Gnome session to GNOME, this was just bugging me
 
 * Thu Aug  8 2002 Havoc Pennington <hp@redhat.com>
-- 2.4.0.7 with bugfixes George kindly did for me, 
+- 2.4.0.7 with bugfixes George kindly did for me,
   including mnemonics for the graphical greeter
 - use Wonderland gtk theme for the nongraphical greeter
 - remove patches that are now upstream
@@ -2213,7 +2219,7 @@ p
 
 * Tue Jun 25 2002 Owen Taylor <otaylor@redhat.com>
 - Require redhat-artwork, make the default greeter theme Wonderland
-- Look for all configuration in .gnome2 not .gnome. This avoids problems 
+- Look for all configuration in .gnome2 not .gnome. This avoids problems
   with changes in the set of session/lang.
 - Remove English from locale.alias, make most locales UTF-8
 - Call find_lang with the right name
@@ -2295,7 +2301,7 @@ p
 
 * Thu Jul 19 2001 Havoc Pennington <hp@redhat.com>
 - depend on usermode, xinitrc
- 
+
 * Thu Jul 19 2001 Havoc Pennington <hp@redhat.com>
 - build requires pam-devel, should fix #49448
 
@@ -2315,7 +2321,7 @@ p
 - upgrade to 2.2.3.1, pray this fixes more than it breaks
 
 * Thu Jul 05 2001 Havoc Pennington <hp@redhat.com>
-- add "rpm" user to those not to show in greeter 
+- add "rpm" user to those not to show in greeter
 
 * Tue Jul 03 2001 Havoc Pennington <hp@redhat.com>
 - Upgrade to 2.2.3
@@ -2325,7 +2331,7 @@ p
 - Prereq for scrollkeeper-update
 
 * Thu May 30 2001 Havoc Pennington <hp@redhat.com>
-- New CVS snap with the "no weird sessions" options; 
+- New CVS snap with the "no weird sessions" options;
   more default settings changes
 
 * Wed May 30 2001 Havoc Pennington <hp@redhat.com>
@@ -2334,8 +2340,8 @@ p
 * Wed May 30 2001 Havoc Pennington <hp@redhat.com>
 - After, oh, 2 years or so, finally upgrade version and set
   release to 1. Remove all hacks and patches, pretty much;
-  this will break a few things, will be putting them back 
-  via GNOME CVS. All changes should go in 'gdm2' module in 
+  this will break a few things, will be putting them back
+  via GNOME CVS. All changes should go in 'gdm2' module in
   CVS for now.
 
   This RPM enables all kinds of features that I'm going to turn
@@ -2371,7 +2377,7 @@ p
 
 * Sun Aug 13 2000 Owen Taylor <otaylor@redhat.com>
 - Return to toplevel main loop and start Xdcmp if enabled
-  (Bug #16106) 
+  (Bug #16106)
 
 * Fri Aug 11 2000 Jonathan Blandford <jrb@redhat.com>
 - Up Epoch and release
@@ -2417,7 +2423,7 @@ p
 * Fri Feb 04 2000 Havoc Pennington <hp@redhat.com>
 - Modify Default.session and Failsafe.session not to add -login option to bash
 - exec the session scripts with the user's shell with a hyphen prepended
-- doesn't seem to actually work yet with tcsh, but it doesn't seem to 
+- doesn't seem to actually work yet with tcsh, but it doesn't seem to
   break anything. needs a look to see why it doesn't work
 
 * Fri Feb 04 2000 Havoc Pennington <hp@redhat.com>
@@ -2429,12 +2435,12 @@ p
 - remove docs/gdm-manual.txt which doesn't seem to exist from %doc
 
 * Fri Feb 04 2000 Havoc Pennington <hp@redhat.com>
-- Enhance 8877 fix by not deleting the "Please login" 
+- Enhance 8877 fix by not deleting the "Please login"
   message
 
 * Fri Feb 04 2000 Havoc Pennington <hp@redhat.com>
-- Try to fix bug 8877 by clearing the message below 
-  the entry box when the prompt changes. may turn 
+- Try to fix bug 8877 by clearing the message below
+  the entry box when the prompt changes. may turn
   out to be a bad idea.
 
 * Mon Jan 17 2000 Elliot Lee <sopwith@redhat.com>
@@ -2474,10 +2480,10 @@ p
 * Mon Apr 19 1999 Michael Fulbright <drmike@redhat.com>
 - fix to handling ancient gdm config files with non-standard language specs
 - dont close display connection for xdmcp connections, else we die if remote
-  end dies. 
+  end dies.
 
 * Fri Apr 16 1999 Michael Fulbright <drmike@redhat.com>
-- fix language handling to set GDM_LANG variable so gnome-session 
+- fix language handling to set GDM_LANG variable so gnome-session
   can pick it up
 
 * Wed Apr 14 1999 Michael Fulbright <drmike@redhat.com>
