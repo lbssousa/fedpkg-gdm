@@ -1,4 +1,4 @@
-From b865a1ec2965d26dea2db9de085d4d09c3830434 Mon Sep 17 00:00:00 2001
+From e6ed6f48c35a6c736a5cde2dcfb6c10941e07809 Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 27 Nov 2009 18:27:53 -0500
 Subject: [PATCH 1/2] Save root window to pixmap at _XROOTPMAP_ID
@@ -12,14 +12,13 @@ will give us a nice fade transition when g-s-d starts
  3 files changed, 81 insertions(+), 0 deletions(-)
 
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index b9165fd..c091bdd 100644
+index 9d1347a..fc8649c 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
-@@ -1212,6 +1212,14 @@ setup_server (GdmSimpleSlave *slave)
-
+@@ -1215,6 +1215,14 @@ setup_server (GdmSimpleSlave *slave)
+ 
          /* Set the initial keyboard layout to something reasonable */
          gdm_slave_set_initial_keyboard_layout (GDM_SLAVE (slave));
-+
 +        /* The root window has a background that may be useful
 +         * to cross fade or transition from when setting the
 +         * login screen background.  We read it here, and stuff
@@ -27,11 +26,12 @@ index b9165fd..c091bdd 100644
 +         * so gnome-settings-daemon can get at it.
 +         */
 +        gdm_slave_save_root_windows (GDM_SLAVE (slave));
++
  }
  
  static void
 diff --git a/daemon/gdm-slave.c b/daemon/gdm-slave.c
-index 787ef89..09df6de 100644
+index 371b9bd..694dcde 100644
 --- a/daemon/gdm-slave.c
 +++ b/daemon/gdm-slave.c
 @@ -43,6 +43,7 @@
@@ -42,8 +42,8 @@ index 787ef89..09df6de 100644
  #include <X11/cursorfont.h> /* for watch cursor */
  #include <X11/extensions/Xrandr.h>
  #include <X11/Xatom.h>
-@@ -483,6 +484,77 @@ gdm_slave_set_initial_cursor_position (GdmSlave *slave)
-         }
+@@ -364,6 +365,77 @@ gdm_slave_run_script (GdmSlave   *slave,
+         return ret;
  }
  
 +static void
@@ -118,7 +118,7 @@ index 787ef89..09df6de 100644
 +}
 +
  void
- gdm_slave_set_busy_cursor (GdmSlave *slave)
+ gdm_slave_set_initial_keyboard_layout (GdmSlave *slave)
  {
 diff --git a/daemon/gdm-slave.h b/daemon/gdm-slave.h
 index 7af20ed..aaaa8f2 100644
@@ -133,10 +133,10 @@ index 7af20ed..aaaa8f2 100644
                                                        const char *dir,
                                                        const char *username);
 -- 
-1.7.6.2
+1.7.9
 
 
-From 70dae28439a2ce54441fa24b7dca4a2933f9a348 Mon Sep 17 00:00:00 2001
+From 1872e3e00cc0fc820a04207ca1227f04e03b77cc Mon Sep 17 00:00:00 2001
 From: Ray Strode <rstrode@redhat.com>
 Date: Fri, 27 Nov 2009 18:52:54 -0500
 Subject: [PATCH 2/2] Enable smooth transition between plymouth and X
@@ -144,160 +144,32 @@ Subject: [PATCH 2/2] Enable smooth transition between plymouth and X
 This commit checks if plymouth is running, and if so,
 turns on the smooth transition between plymouth and X.
 ---
- configure.ac                |   17 +++++++
- daemon/Makefile.am          |    1 +
- daemon/gdm-display.c        |   30 +++++++++++-
- daemon/gdm-server.c         |   56 +++++++++++++++++++++++
- daemon/gdm-server.h         |    1 +
- daemon/gdm-simple-slave.c   |  102 ++++++++++++++++++++++++++++++++++++++++++-
- daemon/gdm-simple-slave.h   |    3 +-
- daemon/gdm-slave.c          |   23 ++++++++++
- daemon/gdm-static-display.c |   17 +++++++
- daemon/simple-slave-main.c  |    4 +-
- data/Makefile.am            |    8 +++
- 11 files changed, 255 insertions(+), 7 deletions(-)
+ daemon/gdm-server.c       |   55 +++++++++++++++++++++++++++
+ daemon/gdm-server.h       |    1 +
+ daemon/gdm-simple-slave.c |   91 ++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 146 insertions(+), 1 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 10f6d60..bae6186 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1311,6 +1311,23 @@ GDM_SIMPLE_GREETER_EXTENSIONS_DATA_DIR=${datadir}/gdm/simple-greeter/extensions
- AC_SUBST(GDM_SIMPLE_GREETER_EXTENSIONS_DATA_DIR)
-
- dnl ---------------------------------------------------------------------------
-+dnl - Directory to spool events from other processes
-+dnl ---------------------------------------------------------------------------
-+
-+AC_ARG_WITH(spool-dir,
-+            AS_HELP_STRING([--with-spool-dir=<dir>],
-+                           [spool directory]))
-+
-+if ! test -z "$with_spool_dir"; then
-+   GDM_SPOOL_DIR=$with_spool_dir
-+else
-+   GDM_SPOOL_DIR=${localstatedir}/spool/gdm
-+fi
-+
-+AC_SUBST(GDM_SPOOL_DIR)
-+
-+
-+dnl ---------------------------------------------------------------------------
- dnl - Finish
- dnl ---------------------------------------------------------------------------
-
-diff --git a/daemon/Makefile.am b/daemon/Makefile.am
-index 65e82b8..9ec0f4a 100644
---- a/daemon/Makefile.am
-+++ b/daemon/Makefile.am
-@@ -15,6 +15,7 @@ AM_CPPFLAGS = \
-	-DLOGDIR=\"$(logdir)\"				\
-	-DSBINDIR=\"$(sbindir)\"			\
-	-DGNOMELOCALEDIR=\""$(datadir)/locale"\"	\
-+	-DGDM_SPOOL_DIR=\"$(GDM_SPOOL_DIR)\"  \
-	-DGDM_XAUTH_DIR=\"$(GDM_XAUTH_DIR)\"		\
-	-DGDM_SCREENSHOT_DIR=\"$(GDM_SCREENSHOT_DIR)\"		\
-	-DGDM_CACHE_DIR=\""$(localstatedir)/cache/gdm"\"	\
-diff --git a/daemon/gdm-display.c b/daemon/gdm-display.c
-index 6ee675a..83ae445 100644
---- a/daemon/gdm-display.c
-+++ b/daemon/gdm-display.c
-@@ -65,7 +65,9 @@ struct GdmDisplayPrivate
-         gsize                 x11_cookie_size;
-         GdmDisplayAccessFile *access_file;
-
--        gboolean              is_local;
-+        guint                 is_local : 1;
-+        guint                 force_active_vt : 1;
-+
-         guint                 finish_idle_id;
-
-         GdmSlaveProxy        *slave_proxy;
-@@ -84,6 +86,7 @@ enum {
-         PROP_X11_COOKIE,
-         PROP_X11_AUTHORITY_FILE,
-         PROP_IS_LOCAL,
-+        PROP_FORCE_ACTIVE_VT,
-         PROP_SLAVE_COMMAND,
- };
-
-@@ -574,9 +577,10 @@ gdm_display_real_prepare (GdmDisplay *display)
-         gdm_slave_proxy_set_log_path (display->priv->slave_proxy, log_path);
-         g_free (log_path);
-
--        command = g_strdup_printf ("%s --display-id %s",
-+        command = g_strdup_printf ("%s --display-id %s %s",
-                                    display->priv->slave_command,
--                                   display->priv->id);
-+                                   display->priv->id,
-+                                   display->priv->force_active_vt? "--force-active-vt" : "");
-         gdm_slave_proxy_set_command (display->priv->slave_proxy, command);
-         g_free (command);
-
-@@ -824,6 +828,13 @@ _gdm_display_set_is_local (GdmDisplay     *display,
- }
-
- static void
-+_gdm_display_set_force_active_vt (GdmDisplay     *display,
-+                                  gboolean        force_active_vt)
-+{
-+        display->priv->force_active_vt = force_active_vt;
-+}
-+
-+static void
- _gdm_display_set_slave_command (GdmDisplay     *display,
-                                 const char     *command)
- {
-@@ -866,6 +877,9 @@ gdm_display_set_property (GObject        *object,
-         case PROP_IS_LOCAL:
-                 _gdm_display_set_is_local (self, g_value_get_boolean (value));
-                 break;
-+        case PROP_FORCE_ACTIVE_VT:
-+                _gdm_display_set_force_active_vt (self, g_value_get_boolean (value));
-+                break;
-         case PROP_SLAVE_COMMAND:
-                 _gdm_display_set_slave_command (self, g_value_get_string (value));
-                 break;
-@@ -914,6 +928,9 @@ gdm_display_get_property (GObject        *object,
-         case PROP_IS_LOCAL:
-                 g_value_set_boolean (value, self->priv->is_local);
-                 break;
-+        case PROP_FORCE_ACTIVE_VT:
-+                g_value_set_boolean (value, self->priv->force_active_vt);
-+                break;
-         case PROP_SLAVE_COMMAND:
-                 g_value_set_string (value, self->priv->slave_command);
-                 break;
-@@ -1084,6 +1101,13 @@ gdm_display_class_init (GdmDisplayClass *klass)
-                                                                NULL,
-                                                                TRUE,
-                                                                G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-+        g_object_class_install_property (object_class,
-+                                         PROP_FORCE_ACTIVE_VT,
-+                                         g_param_spec_boolean ("force-active-vt",
-+                                                               NULL,
-+                                                               NULL,
-+                                                               FALSE,
-+                                                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-         g_object_class_install_property (object_class,
-                                          PROP_SLAVE_COMMAND,
 diff --git a/daemon/gdm-server.c b/daemon/gdm-server.c
-index 62ffca1..8d270bb 100644
+index 54bf8b3..8cb10c2 100644
 --- a/daemon/gdm-server.c
 +++ b/daemon/gdm-server.c
-@@ -32,8 +32,11 @@
+@@ -32,6 +32,7 @@
  #include <pwd.h>
  #include <grp.h>
  #include <signal.h>
 +#include <sys/ioctl.h>
  #include <sys/resource.h>
  
-+#include <linux/vt.h>
-+
  #ifdef HAVE_SYS_PRCTL_H
- #include <sys/prctl.h>
+@@ -41,6 +42,7 @@
+ #ifdef WITH_SYSTEMD
+ #include <systemd/sd-daemon.h>
  #endif
-@@ -673,6 +676,44 @@ gdm_server_spawn (GdmServer  *server,
++#include <linux/vt.h>
+ 
+ #include <glib.h>
+ #include <glib/gi18n.h>
+@@ -732,6 +734,44 @@ gdm_server_spawn (GdmServer  *server,
          return ret;
  }
  
@@ -342,7 +214,7 @@ index 62ffca1..8d270bb 100644
  /**
   * gdm_server_start:
   * @disp: Pointer to a GdmDisplay structure
-@@ -691,6 +732,21 @@ gdm_server_start (GdmServer *server)
+@@ -750,6 +790,21 @@ gdm_server_start (GdmServer *server)
          return res;
  }
  
@@ -353,7 +225,7 @@ index 62ffca1..8d270bb 100644
 +        char *vt;
 +
 +        g_free (server->priv->command);
-+        server->priv->command = g_strdup (X_SERVER " -background none -verbose");
++        server->priv->command = g_strdup (X_SERVER " -nr -verbose");
 +        vt = get_active_vt_as_string ();
 +        res = gdm_server_spawn (server, vt);
 +        g_free (vt);
@@ -365,11 +237,11 @@ index 62ffca1..8d270bb 100644
  server_died (GdmServer *server)
  {
 diff --git a/daemon/gdm-server.h b/daemon/gdm-server.h
-index 535a69a..bd6c60a 100644
+index b53d68e..4939382 100644
 --- a/daemon/gdm-server.h
 +++ b/daemon/gdm-server.h
-@@ -56,6 +56,7 @@ GType               gdm_server_get_type  (void);
- GdmServer *         gdm_server_new       (const char *display_id,
+@@ -57,6 +57,7 @@ GdmServer *         gdm_server_new       (const char *display_id,
+                                           const char *seat_id,
                                            const char *auth_file);
  gboolean            gdm_server_start     (GdmServer   *server);
 +gboolean            gdm_server_start_on_active_vt (GdmServer   *server);
@@ -377,26 +249,18 @@ index 535a69a..bd6c60a 100644
  char *              gdm_server_get_display_device (GdmServer *server);
  
 diff --git a/daemon/gdm-simple-slave.c b/daemon/gdm-simple-slave.c
-index c091bdd..f8dd56f 100644
+index fc8649c..dd19ced 100644
 --- a/daemon/gdm-simple-slave.c
 +++ b/daemon/gdm-simple-slave.c
-@@ -90,6 +90,7 @@ struct GdmSimpleSlavePrivate
- 
-         guint              start_session_when_ready : 1;
-         guint              waiting_to_start_session : 1;
-+        guint              plymouth_is_running : 1;
+@@ -93,6 +93,7 @@ struct GdmSimpleSlavePrivate
  #ifdef  HAVE_LOGINDEVPERM
          gboolean           use_logindevperm;
  #endif
-@@ -97,6 +98,7 @@ struct GdmSimpleSlavePrivate
++        guint              plymouth_is_running : 1;
+ };
  
  enum {
-         PROP_0,
-+        FORCE_ACTIVE_VT
- };
-
- static void     gdm_simple_slave_class_init     (GdmSimpleSlaveClass *klass);
-@@ -1201,6 +1203,72 @@ on_start_session_later (GdmGreeterServer *session,
+@@ -1204,6 +1205,72 @@ on_start_session_later (GdmGreeterServer *session,
          slave->priv->start_session_when_ready = FALSE;
  }
  
@@ -469,11 +333,10 @@ index c091bdd..f8dd56f 100644
  static void
  setup_server (GdmSimpleSlave *slave)
  {
-@@ -1220,6 +1288,11 @@ setup_server (GdmSimpleSlave *slave)
-          * so gnome-settings-daemon can get at it.
+@@ -1223,6 +1290,10 @@ setup_server (GdmSimpleSlave *slave)
           */
          gdm_slave_save_root_windows (GDM_SLAVE (slave));
-+
+ 
 +        /* Plymouth is waiting for the go-ahead to exit */
 +        if (slave->priv->plymouth_is_running) {
 +                plymouth_quit_with_transition (slave);
@@ -481,7 +344,7 @@ index c091bdd..f8dd56f 100644
  }
  
  static void
-@@ -1423,6 +1496,10 @@ on_server_exited (GdmServer      *server,
+@@ -1426,6 +1497,10 @@ on_server_exited (GdmServer      *server,
          g_debug ("GdmSimpleSlave: server exited with code %d\n", exit_code);
  
          gdm_slave_stopped (GDM_SLAVE (slave));
@@ -492,7 +355,7 @@ index c091bdd..f8dd56f 100644
  }
  
  static void
-@@ -1435,6 +1512,10 @@ on_server_died (GdmServer      *server,
+@@ -1438,6 +1513,10 @@ on_server_died (GdmServer      *server,
                   g_strsignal (signal_number));
  
          gdm_slave_stopped (GDM_SLAVE (slave));
@@ -503,21 +366,7 @@ index c091bdd..f8dd56f 100644
  }
  
  static gboolean
-@@ -1443,11 +1524,13 @@ gdm_simple_slave_run (GdmSimpleSlave *slave)
-         char    *display_name;
-         char    *auth_file;
-         gboolean display_is_local;
-+        gboolean force_active_vt;
-
-         g_object_get (slave,
-                       "display-is-local", &display_is_local,
-                       "display-name", &display_name,
-                       "display-x11-authority-file", &auth_file,
-+                      "force-active-vt", &force_active_vt,
-                       NULL);
-
-         /* if this is local display start a server if one doesn't
-@@ -1479,7 +1562,17 @@ gdm_simple_slave_run (GdmSimpleSlave *slave)
+@@ -1484,7 +1563,14 @@ gdm_simple_slave_run (GdmSimpleSlave *slave)
                                    G_CALLBACK (on_server_ready),
                                    slave);
  
@@ -528,15 +377,12 @@ index c091bdd..f8dd56f 100644
 +                        plymouth_prepare_for_transition (slave);
 +                        res = gdm_server_start_on_active_vt (slave->priv->server);
 +                } else {
-+                        if (force_active_vt)
-+                                res = gdm_server_start_on_active_vt (slave->priv->server);
-+                        else
-+                                res = gdm_server_start (slave->priv->server);
++                        res = gdm_server_start (slave->priv->server);
 +                }
                  if (! res) {
                          g_warning (_("Could not start the X "
                                       "server (your graphical environment) "
-@@ -1489,6 +1582,9 @@ gdm_simple_slave_run (GdmSimpleSlave *slave)
+@@ -1494,6 +1580,9 @@ gdm_simple_slave_run (GdmSimpleSlave *slave)
                                       "In the meantime this display will be "
                                       "disabled.  Please restart GDM when "
                                       "the problem is corrected."));
@@ -546,196 +392,6 @@ index c091bdd..f8dd56f 100644
                          exit (1);
                  }
  
-@@ -1645,12 +1741,14 @@ gdm_simple_slave_finalize (GObject *object)
- }
- 
- GdmSlave *
--gdm_simple_slave_new (const char *id)
-+gdm_simple_slave_new (const char *id,
-+                      gboolean    force_active_vt)
- {
-         GObject *object;
- 
-         object = g_object_new (GDM_TYPE_SIMPLE_SLAVE,
-                                "display-id", id,
-+                               "force-active-vt", force_active_vt,
-                                NULL);
- 
-         return GDM_SLAVE (object);
-diff --git a/daemon/gdm-simple-slave.h b/daemon/gdm-simple-slave.h
-index 1f1aa1d..e9aa624 100644
---- a/daemon/gdm-simple-slave.h
-+++ b/daemon/gdm-simple-slave.h
-@@ -48,7 +48,8 @@ typedef struct
- } GdmSimpleSlaveClass;
- 
- GType               gdm_simple_slave_get_type   (void);
--GdmSlave *          gdm_simple_slave_new        (const char       *id);
-+GdmSlave *          gdm_simple_slave_new        (const char       *id,
-+                                                 gboolean          force_active_vt);
- 
- G_END_DECLS
- 
-diff --git a/daemon/gdm-slave.c b/daemon/gdm-slave.c
-index 09df6de..ce467b2 100644
---- a/daemon/gdm-slave.c
-+++ b/daemon/gdm-slave.c
-@@ -92,6 +92,7 @@ struct GdmSlavePrivate
-         char            *display_hostname;
-         gboolean         display_is_local;
-         gboolean         display_is_parented;
-+        gboolean         force_active_vt;
-         char            *display_seat_id;
-         char            *display_x11_authority_file;
-         char            *parent_display_name;
-@@ -111,6 +112,7 @@ enum {
-         PROP_DISPLAY_NUMBER,
-         PROP_DISPLAY_HOSTNAME,
-         PROP_DISPLAY_IS_LOCAL,
-+        PROP_FORCE_ACTIVE_VT,
-         PROP_DISPLAY_SEAT_ID,
-         PROP_DISPLAY_X11_AUTHORITY_FILE
- };
-@@ -1651,6 +1653,13 @@ _gdm_slave_set_display_is_local (GdmSlave   *slave,
- }
- 
- static void
-+_gdm_slave_set_force_active_vt (GdmSlave   *slave,
-+                                gboolean    force_active_vt)
-+{
-+        slave->priv->force_active_vt = force_active_vt;
-+}
-+
-+static void
- gdm_slave_set_property (GObject      *object,
-                         guint         prop_id,
-                         const GValue *value,
-@@ -1682,6 +1691,9 @@ gdm_slave_set_property (GObject      *object,
-         case PROP_DISPLAY_IS_LOCAL:
-                 _gdm_slave_set_display_is_local (self, g_value_get_boolean (value));
-                 break;
-+        case PROP_FORCE_ACTIVE_VT:
-+                _gdm_slave_set_force_active_vt (self, g_value_get_boolean (value));
-+                break;
-         default:
-                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-                 break;
-@@ -1720,6 +1732,9 @@ gdm_slave_get_property (GObject    *object,
-         case PROP_DISPLAY_IS_LOCAL:
-                 g_value_set_boolean (value, self->priv->display_is_local);
-                 break;
-+        case PROP_FORCE_ACTIVE_VT:
-+                g_value_set_boolean (value, self->priv->force_active_vt);
-+                break;
-         default:
-                 G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-                 break;
-@@ -1845,6 +1860,14 @@ gdm_slave_class_init (GdmSlaveClass *klass)
-                                                                TRUE,
-                                                                G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
- 
-+        g_object_class_install_property (object_class,
-+                                         PROP_FORCE_ACTIVE_VT,
-+                                         g_param_spec_boolean ("force-active-vt",
-+                                                               "Force Active VT",
-+                                                               "Force display to active VT",
-+                                                               TRUE,
-+                                                               G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-+
-         signals [STOPPED] =
-                 g_signal_new ("stopped",
-                               G_TYPE_FROM_CLASS (object_class),
-diff --git a/daemon/gdm-static-display.c b/daemon/gdm-static-display.c
-index 16953f9..397f07e 100644
---- a/daemon/gdm-static-display.c
-+++ b/daemon/gdm-static-display.c
-@@ -81,10 +81,27 @@ gdm_static_display_remove_user_authorization (GdmDisplay *display,
- }
- 
- static gboolean
-+triggered_to_force_display_on_active_vt (void)
-+{
-+        gboolean should_force_display_on_active_vt;
-+
-+        should_force_display_on_active_vt = g_file_test (GDM_SPOOL_DIR "/force-display-on-active-vt",
-+                                                         G_FILE_TEST_EXISTS);
-+        g_unlink (GDM_SPOOL_DIR "/force-display-on-active-vt");
-+
-+        return should_force_display_on_active_vt;
-+}
-+
-+static gboolean
- gdm_static_display_manage (GdmDisplay *display)
- {
-         g_return_val_if_fail (GDM_IS_DISPLAY (display), FALSE);
- 
-+        if (triggered_to_force_display_on_active_vt ()) {
-+                g_object_set (display, "force-active-vt", TRUE, NULL);
-+        } else {
-+                g_object_set (display, "force-active-vt", FALSE, NULL);
-+        }
-         GDM_DISPLAY_CLASS (gdm_static_display_parent_class)->manage (display);
- 
-         return TRUE;
-diff --git a/daemon/simple-slave-main.c b/daemon/simple-slave-main.c
-index 057492b..afa60a4 100644
---- a/daemon/simple-slave-main.c
-+++ b/daemon/simple-slave-main.c
-@@ -177,9 +177,11 @@ main (int    argc,
-         DBusGConnection  *connection;
-         GdmSlave         *slave;
-         static char      *display_id = NULL;
-+        static gboolean   force_active_vt = FALSE;
-         GdmSignalHandler *signal_handler;
-         static GOptionEntry entries []   = {
-                 { "display-id", 0, 0, G_OPTION_ARG_STRING, &display_id, N_("Display ID"), N_("ID") },
-+                { "force-active-vt", 0, 0, G_OPTION_ARG_NONE, &force_active_vt, N_("Force X to start on active vt"), NULL },
-                 { NULL }
-         };
- 
-@@ -246,7 +248,7 @@ main (int    argc,
-         gdm_signal_handler_add (signal_handler, SIGUSR1, signal_cb, NULL);
-         gdm_signal_handler_add (signal_handler, SIGUSR2, signal_cb, NULL);
- 
--        slave = gdm_simple_slave_new (display_id);
-+        slave = gdm_simple_slave_new (display_id, force_active_vt);
-         if (slave == NULL) {
-                 goto out;
-         }
-diff --git a/data/Makefile.am b/data/Makefile.am
-index 3175436..5c11b03 100644
---- a/data/Makefile.am
-+++ b/data/Makefile.am
-@@ -12,6 +12,7 @@ predir = $(gdmconfdir)/PreSession
- postlogindir = $(gdmconfdir)/PostLogin
- workingdir = $(GDM_WORKING_DIR)
- xauthdir = $(GDM_XAUTH_DIR)
-+spooldir = $(GDM_SPOOL_DIR)
- screenshotdir = $(GDM_SCREENSHOT_DIR)
- cachedir = $(localstatedir)/cache/gdm
- 
-@@ -159,6 +160,7 @@ uninstall-hook:
-	$(DESTDIR)$(workingdir)/.config/dconf \
- 	$(DESTDIR)$(screenshotdir) \
--	$(DESTDIR)$(xauthdir)
-+	$(DESTDIR)$(xauthdir) \
-+	$(DESTDIR)$(spooldir)
- 
-	-rmdir \
-	$(DESTDIR)$(sysconfdir)/dconf/db/gdm.d/locks \
-@@ -303,6 +305,12 @@ install-data-hook: gdm.conf-custom Xsession Init PostSession PreSession gconf.pa
- 		chown root:gdm $(DESTDIR)$(cachedir) || : ; \
- 	fi
- 
-+	if test '!' -d $(DESTDIR)$(spooldir); then \
-+		$(mkinstalldirs) $(DESTDIR)$(spooldir); \
-+		chmod 775 $(DESTDIR)$(spooldir); \
-+		chown root:gdm $(DESTDIR)$(spooldir) || : ; \
-+	fi
-+
- 	$(INSTALL_DATA) $(srcdir)/gconf.path $(DESTDIR)$(workingdir)/.gconf.path
- 	gconftool-2 --direct --config-source=xml:merged:$(DESTDIR)$(workingdir)/.gconf.mandatory --recursive-unset /
- 	gconftool-2 --direct --config-source=xml:merged:$(DESTDIR)$(workingdir)/.gconf.mandatory --load $(srcdir)/session-setup.entries
---
-1.7.6.2
+-- 
+1.7.9
 
