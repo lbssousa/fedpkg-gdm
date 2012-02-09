@@ -2370,3 +2370,36 @@ index f7fac33..59bccd1 100644
 -- 
 1.7.9
 
+From 4c80969a0f8667d9a17ae44281cacb939e9f1a21 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Thu, 9 Feb 2012 13:27:11 -0500
+Subject: [PATCH] slave: fix crasher in systemd integration
+
+sd_seat_get_sessions returns NULL instead of a one
+element array in the case there are no sessions
+associated with a seat.
+
+This commit guards against that problem.
+---
+ daemon/gdm-slave.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/daemon/gdm-slave.c b/daemon/gdm-slave.c
+index 371b9bd..d864a3d 100644
+--- a/daemon/gdm-slave.c
++++ b/daemon/gdm-slave.c
+@@ -1336,6 +1336,11 @@ gdm_slave_get_primary_session_id_for_user_from_systemd (GdmSlave   *slave,
+                 return NULL;
+         }
+ 
++        if (sessions == NULL) {
++                g_debug ("GdmSlave: seat has no active sessions");
++                return NULL;
++        }
++
+         for (i = 0; sessions[i] != NULL; i++) {
+ 
+                 if (primary_ssid == NULL) {
+-- 
+1.7.9
+
