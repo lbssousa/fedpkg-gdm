@@ -392,6 +392,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Mon Feb 13 2012 Ray Strode <rstrode@redhat.com> 3.2.1.1-12
+- Restore ConsoleKit registration if ConsoleKit is installed
+
 * Tue Feb  7 2012 Lennart Poettering <lpoetter@redhat.com> - 1:3.2.1.1-11
 - Add multi-seat patch from gdm git master
 
