@@ -378,6 +378,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 * Tue Mar 20 2012 Ray Strode <rstrode@redhat.com> 3.3.92.1-1
 - Update to 3.3.92.1
 
+* Wed Feb 15 2012 Ray Strode <rstrode@redhat.com> 3.2.1.1-14
+- More consolekit registration fixes
+
 * Mon Feb 13 2012 Ray Strode <rstrode@redhat.com> 3.2.1.1-12
 - Restore ConsoleKit registration if ConsoleKit is installed
 
