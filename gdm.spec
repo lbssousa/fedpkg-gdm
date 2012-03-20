@@ -13,8 +13,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.2.1.1
-Release: 13%{?dist}
+Version: 3.3.92.1
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -75,7 +75,6 @@ BuildRequires: intltool
 BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
-BuildRequires: ConsoleKit
 BuildRequires: libselinux-devel
 BuildRequires: check-devel
 BuildRequires: iso-codes-devel
@@ -102,15 +101,8 @@ Provides: gdm-plugin-smartcard = %{epoch}:%{version}-%{release}
 Obsoletes: gdm-plugin-fingerprint < 1:3.2.1
 Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
 
-# already upstream
-Patch0: auth-fixes.patch
-
-# Multi-seat stuff
-Patch50: multi-seat.patch
-
 # Fedora-specific
 Patch98: plymouth.patch
-Patch99: gdm-3.0.0-fedora-logo.patch
 
 %package libs
 Summary: Client-side library to talk to gdm
@@ -139,10 +131,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
-%patch0 -p1 -b .auth-fixes
-%patch50 -p1 -b .multi-seat
 %patch98 -p1 -b .plymouth
-%patch99 -p1 -b .fedora-logo
 
 autoreconf -i -f
 
@@ -214,7 +203,6 @@ find $RPM_BUILD_ROOT -name '*.la' -delete
 %find_lang gdm --with-gnome
 
 %pre
-%gconf_schema_prepare gdm-simple-greeter
 /usr/sbin/useradd -M -u 42 -d /var/lib/gdm -s /sbin/nologin -r gdm > /dev/null 2>&1
 /usr/sbin/usermod -d /var/lib/gdm -s /sbin/nologin gdm >/dev/null 2>&1
 # ignore errors, as we can't disambiguate between gdm already existed
@@ -223,7 +211,6 @@ exit 0
 
 %post
 /sbin/ldconfig
-%gconf_schema_upgrade gdm-simple-greeter
 touch --no-create /usr/share/icons/hicolor >&/dev/null || :
 
 # if the user already has a config file, then migrate it to the new
@@ -336,7 +323,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gdm/*.ui
 %{_datadir}/gdm/locale.alias
 %{_datadir}/gnome-session/sessions/*
-%{_sysconfdir}/gconf/schemas/*.schemas
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
 %{_libdir}/libgdm*.so*
@@ -355,9 +341,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_localstatedir}/log/gdm
 %dir %{_localstatedir}/spool/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
-%attr(1750, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.mandatory
-%attr(1640, gdm, gdm) %{_localstatedir}/lib/gdm/.gconf.mandatory/*.xml
-%attr(1640, gdm, gdm) %dir %{_localstatedir}/lib/gdm/.gconf.path
 %attr(1755, gdm, gdm) %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
 %attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
@@ -392,6 +375,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Tue Mar 20 2012 Ray Strode <rstrode@redhat.com> 3.3.92.1-1
+- Update to 3.3.92.1
+
 * Mon Feb 13 2012 Ray Strode <rstrode@redhat.com> 3.2.1.1-12
 - Restore ConsoleKit registration if ConsoleKit is installed
 
