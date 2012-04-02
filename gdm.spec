@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.4.0.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -375,6 +375,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Mon Apr 02 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-2
+- Move pam_gnome_keyring after XDG_RUNTIME_DIR is setup
+  Resolves: #809152
+
 * Tue Mar 27 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-1
 - Update to 3.4.0.1
 - fixes autologin
