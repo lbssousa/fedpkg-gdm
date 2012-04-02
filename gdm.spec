@@ -21,7 +21,6 @@ Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
 Source: http://download.gnome.org/sources/gdm/3.2/gdm-%{version}.tar.xz
-Source1: gdm-pam
 Source2: gdm-autologin-pam
 Source11: gdm-welcome-pam
 Source3: gdm-password.pam
@@ -136,7 +135,6 @@ Development files and headers for writing GDM greeters.
 autoreconf -i -f
 
 %build
-cp -f %{SOURCE1} data/gdm
 cp -f %{SOURCE2} data/gdm-autologin
 cp -f %{SOURCE3} gui/simple-greeter/extensions/password/gdm-password.pam
 cp -f %{SOURCE4} data/gdm-smartcard.pam
@@ -288,7 +286,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %config %{_sysconfdir}/gdm/PostLogin/*
 %config %{_sysconfdir}/gdm/PreSession/*
 %config %{_sysconfdir}/gdm/PostSession/*
-%config %{_sysconfdir}/pam.d/gdm
 %config %{_sysconfdir}/pam.d/gdm-autologin
 %config %{_sysconfdir}/pam.d/gdm-password
 %config %{_sysconfdir}/pam.d/gdm-welcome
