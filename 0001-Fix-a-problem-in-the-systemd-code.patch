@@ -1,0 +1,29 @@
+From 97f0b7a36e4a99a1ddf88c69aab38e816e13c70c Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Thu, 5 Apr 2012 22:54:48 -0400
+Subject: [PATCH] Fix a problem in the systemd code
+
+Make session unlock work with logind.
+This was not working due to a typo in the bus name of logind.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=673620
+---
+ daemon/gdm-slave.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/daemon/gdm-slave.c b/daemon/gdm-slave.c
+index 6e1b45c..06abc91 100644
+--- a/daemon/gdm-slave.c
++++ b/daemon/gdm-slave.c
+@@ -1658,7 +1658,7 @@ session_unlock_for_systemd (GdmSlave   *slave,
+ 
+         dbus_error_init (&error);
+ 
+-        message = dbus_message_new_method_call ("org.freedesktop.login",
++        message = dbus_message_new_method_call ("org.freedesktop.login1",
+                                                 "/org/freedesktop/login1",
+                                                 "org.freedesktop.login1.Manager",
+                                                 "UnlockSession");
+-- 
+1.7.9.3
+

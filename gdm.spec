@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.4.0.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -32,6 +32,8 @@ Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
 
+# https://bugzilla.gnome.org/show_bug.cgi?id=673620 
+Patch1: 0001-Fix-a-problem-in-the-systemd-code.patch
 Requires(pre): /usr/sbin/useradd
 
 Requires: pam >= 0:%{pam_version}
@@ -130,6 +132,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch1 -p1 -b .systemd
 %patch98 -p1 -b .plymouth
 
 autoreconf -i -f
@@ -372,6 +375,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Thu Apr  5 2012 Matthias Clasen <mclasen@redhat.com> 3.4.0.1-3
+- Make session unlocking after user switching work
+
 * Mon Apr 02 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-2
 - Move pam_gnome_keyring after XDG_RUNTIME_DIR is setup
   Resolves: #809152
