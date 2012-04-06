@@ -170,6 +170,8 @@ mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/gdm/PostSession
 
 make install DESTDIR=$RPM_BUILD_ROOT
 
+rm -f $RPM_BUILD_ROOT%{_sysconfdir}/pam.d/gdm
+
 # add logo to shell greeter
 cp $RPM_SOURCE_DIR/org.gnome.login-screen.gschema.override $RPM_BUILD_ROOT%{_datadir}/glib-2.0/schemas
 
