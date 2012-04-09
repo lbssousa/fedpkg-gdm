@@ -35,3 +35,37 @@ index 01df365..d0ca4e6 100644
          }
 --
 1.7.9.3
+From 4df3dea6b59445be769ae16fef6d206695190b7a Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 9 Apr 2012 15:40:48 -0400
+Subject: [PATCH] welcome: more seat_id fixes
+
+Two commits ago I tried to only strip the consolekit prefix
+off the seat id, if there was a consolekit prefix.  In the
+process I ended up not initializing the seat_id variable
+at all in the non-consolekit case.
+
+This commit fixes that.
+---
+ daemon/gdm-welcome-session.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/daemon/gdm-welcome-session.c b/daemon/gdm-welcome-session.c
+index d0ca4e6..778d5dc 100644
+--- a/daemon/gdm-welcome-session.c
++++ b/daemon/gdm-welcome-session.c
+@@ -308,8 +308,9 @@ build_welcome_environment (GdmWelcomeSession *welcome_session,
+         if (start_session && welcome_session->priv->x11_display_seat_id != NULL) {
+                 char *seat_id;
+ 
+-                if (g_str_has_prefix (welcome_session->priv->x11_display_seat_id, "/org/freedesktop/ConsoleKit/")) {
+-                        seat_id = welcome_session->priv->x11_display_seat_id + strlen ("/org/freedesktop/ConsoleKit/");
++                seat_id = welcome_session->priv->x11_display_seat_id;
++                if (g_str_has_prefix (seat_id, "/org/freedesktop/ConsoleKit/")) {
++                        seat_id += strlen ("/org/freedesktop/ConsoleKit/");
+                 }
+ 
+                 g_hash_table_insert (hash, g_strdup ("GDM_SEAT_ID"), g_strdup (seat_id));
+-- 
+1.7.9.3
+

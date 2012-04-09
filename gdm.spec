@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.4.0.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -381,6 +381,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Mon Apr 09 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-5
+- One more try at fixing crash
+  Resolves: #810451
+
 * Mon Apr 09 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-4
 - Fix crash
   Resolves: #810451
