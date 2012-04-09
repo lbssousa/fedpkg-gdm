@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.4.0.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -32,7 +32,9 @@ Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
 
-# https://bugzilla.gnome.org/show_bug.cgi?id=673620 
+# already upstream
+Patch0: fix-crash.patch
+# https://bugzilla.gnome.org/show_bug.cgi?id=673620
 Patch1: 0001-Fix-a-problem-in-the-systemd-code.patch
 Requires(pre): /usr/sbin/useradd
 
@@ -132,7 +134,9 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch0 -p1 -b .fix-crash
 %patch1 -p1 -b .systemd
+
 %patch98 -p1 -b .plymouth
 
 autoreconf -i -f
@@ -377,6 +381,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Mon Apr 09 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-4
+- Fix crash
+  Resolves: #810451
+
 * Thu Apr  5 2012 Matthias Clasen <mclasen@redhat.com> 3.4.0.1-3
 - Make session unlocking after user switching work
 

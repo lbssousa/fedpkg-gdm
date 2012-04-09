@@ -1,0 +1,37 @@
+From 59f883f28a4b176cb821e4ee2aaec4f024e22213 Mon Sep 17 00:00:00 2001
+From: Ray Strode <rstrode@redhat.com>
+Date: Mon, 9 Apr 2012 14:01:22 -0400
+Subject: [PATCH] Only strip CK goo from seat prefix, if there's CK goo in
+ seat prefix
+
+Now that we can use logind for seat management, there' may not be
+/org/freedesktop/ConsoleKit in the seat identifier.
+
+This commit makes sure the GDM_SEAT_ID environment variable doesn't
+show gunk in the case the system is configured to use logind.
+
+Related downstream report:
+
+http://bugzilla.redhat.com/810451
+---
+ daemon/gdm-welcome-session.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/daemon/gdm-welcome-session.c b/daemon/gdm-welcome-session.c
+index 01df365..d0ca4e6 100644
+--- a/daemon/gdm-welcome-session.c
++++ b/daemon/gdm-welcome-session.c
+@@ -308,8 +308,9 @@ build_welcome_environment (GdmWelcomeSession *welcome_session,
+         if (start_session && welcome_session->priv->x11_display_seat_id != NULL) {
+                 char *seat_id;
+
+-                seat_id = welcome_session->priv->x11_display_seat_id +
+-                        strlen ("/org/freedesktop/ConsoleKit/");
++                if (g_str_has_prefix (welcome_session->priv->x11_display_seat_id, "/org/freedesktop/ConsoleKit/")) {
++                        seat_id = welcome_session->priv->x11_display_seat_id + strlen ("/org/freedesktop/ConsoleKit/");
++                }
+
+                 g_hash_table_insert (hash, g_strdup ("GDM_SEAT_ID"), g_strdup (seat_id));
+         }
+--
+1.7.9.3
