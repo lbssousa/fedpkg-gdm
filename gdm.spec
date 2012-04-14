@@ -13,8 +13,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.4.0.1
-Release: 5%{?dist}
+Version: 3.4.1
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -32,10 +32,6 @@ Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
 
-# already upstream
-Patch0: fix-crash.patch
-# https://bugzilla.gnome.org/show_bug.cgi?id=673620
-Patch1: 0001-Fix-a-problem-in-the-systemd-code.patch
 Requires(pre): /usr/sbin/useradd
 
 Requires: pam >= 0:%{pam_version}
@@ -134,8 +130,6 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
-%patch0 -p1 -b .fix-crash
-%patch1 -p1 -b .systemd
 
 %patch98 -p1 -b .plymouth
 
@@ -381,6 +375,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Sat Apr 14 2012 Matthias Clasen <mclasen@redhat.com> - 3.4.1-1
+- Update to 3.4.1
+
 * Mon Apr 09 2012 Ray Strode <rstrode@redhat.com> 3.4.0.1-5
 - One more try at fixing crash
   Resolves: #810451
