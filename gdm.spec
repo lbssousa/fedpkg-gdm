@@ -20,7 +20,7 @@ License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/3.2/gdm-%{version}.tar.xz
+Source: http://download.gnome.org/sources/gdm/3.4/gdm-%{version}.tar.xz
 Source2: gdm-autologin-pam
 Source11: gdm-welcome-pam
 Source3: gdm-password.pam
