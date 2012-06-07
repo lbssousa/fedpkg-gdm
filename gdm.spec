@@ -13,7 +13,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.4.1
+Version: 3.5.2
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
@@ -100,9 +100,6 @@ Provides: gdm-plugin-smartcard = %{epoch}:%{version}-%{release}
 Obsoletes: gdm-plugin-fingerprint < 1:3.2.1
 Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
 
-# Fedora-specific
-Patch98: plymouth.patch
-
 %package libs
 Summary: Client-side library to talk to gdm
 Group: Development/Libraries
@@ -130,8 +127,6 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
-
-%patch98 -p1 -b .plymouth
 
 autoreconf -i -f
 
@@ -375,6 +370,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Thu Jun 07 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.2-1
+- Update to 3.5.2
+
 * Sat Apr 14 2012 Matthias Clasen <mclasen@redhat.com> - 3.4.1-1
 - Update to 3.4.1
 
