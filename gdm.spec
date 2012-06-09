@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -31,6 +31,9 @@ Source7: gdm-smartcard-48.png
 Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
+
+# upstream fix
+Patch0: 0001-Really-remove-the-gdm-mode-commandline-option.patch
 
 Requires(pre): /usr/sbin/useradd
 
@@ -127,6 +130,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch0 -p1
 
 autoreconf -i -f
 
@@ -370,6 +374,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Sat Jun  9 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.5.2-2
+- Fix gnome-shell detection
+
 * Thu Jun 07 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.2-1
 - Update to 3.5.2
 
