@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -181,9 +181,6 @@ rm -rf $RPM_BUILD_ROOT/%{_prefix}/doc
 # create log dir
 mkdir -p $RPM_BUILD_ROOT/var/log/gdm
 
-# and a spool dir
-mkdir -p $RPM_BUILD_ROOT/var/spool/gdm
-
 # remove the gdm Xsession as we're using the xdm one
 rm -f $RPM_BUILD_ROOT%{_sysconfdir}/gdm/Xsession
 (cd $RPM_BUILD_ROOT%{_sysconfdir}/gdm; ln -sf ../X11/xinit/Xsession .)
@@ -338,7 +335,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm/greeter
 %dir %{_datadir}/gdm/greeter/applications
 %dir %{_localstatedir}/log/gdm
-%dir %{_localstatedir}/spool/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1755, gdm, gdm) %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
@@ -374,6 +370,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Wed Jun 13 2012 Ray Strode <rstrode@redhat.com> 3.5.2-3
+- Drop unused spool dir
+  Related: #819254
+
 * Sat Jun  9 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.5.2-2
 - Fix gnome-shell detection
 
