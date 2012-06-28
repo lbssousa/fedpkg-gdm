@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -88,6 +88,7 @@ BuildRequires: GConf2-devel
 BuildRequires: pkgconfig(accountsservice) >= 0.6.3
 BuildRequires: pkgconfig(libsystemd-login)
 BuildRequires: pkgconfig(libsystemd-daemon)
+BuildRequires: pkgconfig(ply-boot-client)
 
 # these are all just for rewriting gdm.d/00-upstream-settings
 Requires(posttrans): dconf
@@ -149,8 +150,7 @@ cp -f %{SOURCE9} gui/simple-greeter/extensions/fingerprint/icons/48x48/gdm-finge
            --enable-split-authentication \
            --enable-profiling      \
            --enable-console-helper \
-           --disable-scrollkeeper  \
-           --with-console-kit      \
+           --with-plymouth \
            --with-selinux
 
 # drop unneeded direct library deps with --as-needed
@@ -370,6 +370,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 
 %changelog
+* Thu Jun 28 2012 Ray Strode <rstrode@redhat.com> 3.5.2-4
+- Build with plymouth support (woops).
+
 * Wed Jun 13 2012 Ray Strode <rstrode@redhat.com> 3.5.2-3
 - Drop unused spool dir
   Related: #819254
