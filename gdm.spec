@@ -299,9 +299,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.xml
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.override
 %{_datadir}/gdm/simple-greeter/extensions/unified/page.ui
-%{_libexecdir}/gdm-factory-slave
 %{_libexecdir}/gdm-host-chooser
-%{_libexecdir}/gdm-product-slave
 %{_libexecdir}/gdm-session-worker
 %{_libexecdir}/gdm-simple-chooser
 %{_libexecdir}/gdm-simple-greeter
@@ -318,7 +316,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
 %{_libdir}/libgdm*.so*
-%{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
 %dir %{_libdir}/gdm
 %dir %{_libdir}/gdm/simple-greeter
 %dir %{_libdir}/gdm/simple-greeter/extensions
