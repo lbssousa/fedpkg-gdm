@@ -351,16 +351,15 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 
 %files devel
 %dir %{_includedir}/gdm
-%dir %{_includedir}/gdm/greeter
-%{_includedir}/gdm/greeter/gdm-greeter-client.h
-%{_includedir}/gdm/greeter/gdm-greeter-sessions.h
-%{_datadir}/gir-1.0/GdmGreeter-1.0.gir
-%{_libdir}/pkgconfig/gdmgreeter.pc
+%dir %{_includedir}/gdm
+%{_includedir}/gdm/*.h
+%{_datadir}/gir-1.0/Gdm-1.0.gir
+%{_libdir}/pkgconfig/gdm.pc
 %{_includedir}/gdm/simple-greeter/gdm-login-extension.h
 %{_libdir}/pkgconfig/gdmsimplegreeter.pc
 
 %files libs
-%{_libdir}/girepository-1.0/GdmGreeter-1.0.typelib
+%{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
 * Tue Jul 17 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.4-1
