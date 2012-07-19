@@ -23,9 +23,6 @@ URL: http://download.gnome.org/sources/gdm
 Source: http://download.gnome.org/sources/gdm/3.4/gdm-%{version}.tar.xz
 Source1: org.gnome.login-screen.gschema.override
 
-# upstream fix
-Patch0: dconf-profile.patch
-
 Requires(pre): /usr/sbin/useradd
 
 Requires: pam >= 0:%{pam_version}
@@ -122,7 +119,6 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
-%patch0 -p1
 
 autoreconf -i -f
 
