@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -40,7 +40,7 @@ Requires: system-logos
 Requires: xorg-x11-server-utils
 Requires: setxkbmap
 Requires: xorg-x11-xinit
-Requires: systemd >= 39
+Requires: systemd >= 186
 Requires: accountsservice
 Requires: gnome-settings-daemon >= 2.21.92
 Requires: iso-codes
@@ -362,6 +362,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Thu Jul 19 2012 Kalev Lember <kalevlember@gmail.com> - 1:3.5.4-2
+- Require systemd >= 186 for libsystemd-login
+
 * Tue Jul 17 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.4-1
 - Update to 3.5.4
 
