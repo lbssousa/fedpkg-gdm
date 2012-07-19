@@ -13,24 +13,15 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.5.4
-Release: 3%{?dist}
+Version: 3.5.4.1
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
 Source: http://download.gnome.org/sources/gdm/3.4/gdm-%{version}.tar.xz
-Source2: gdm-autologin-pam
-Source11: gdm-welcome-pam
-Source3: gdm-password.pam
-Source4: gdm-smartcard.pam
-Source5: gdm-fingerprint.pam
-Source6: gdm-smartcard-16.png
-Source7: gdm-smartcard-48.png
-Source8: gdm-fingerprint-16.png
-Source9: gdm-fingerprint-48.png
-Source10: org.gnome.login-screen.gschema.override
+Source1: org.gnome.login-screen.gschema.override
 
 # upstream fix
 Patch0: dconf-profile.patch
@@ -136,15 +127,6 @@ Development files and headers for writing GDM greeters.
 autoreconf -i -f
 
 %build
-cp -f %{SOURCE2} data/gdm-autologin
-cp -f %{SOURCE3} gui/simple-greeter/extensions/password/gdm-password.pam
-cp -f %{SOURCE4} data/gdm-smartcard.pam
-cp -f %{SOURCE5} data/gdm-fingerprint.pam
-cp -f %{SOURCE11} data/gdm-welcome
-cp -f %{SOURCE6} gui/simple-greeter/extensions/smartcard/icons/16x16/gdm-smartcard.png
-cp -f %{SOURCE7} gui/simple-greeter/extensions/smartcard/icons/48x48/gdm-smartcard.png
-cp -f %{SOURCE8} gui/simple-greeter/extensions/fingerprint/icons/16x16/gdm-fingerprint.png
-cp -f %{SOURCE9} gui/simple-greeter/extensions/fingerprint/icons/48x48/gdm-fingerprint.png
 
 %configure --with-pam-prefix=%{_sysconfdir} \
            --enable-split-authentication \
@@ -366,6 +348,12 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Thu Jul 19 2012 Ray Strode <rstrode@redhat.com> 3.5.4.1-1
+- Update to 3.5.4.1
+- Fixes autologin
+- Fixes logind integration
+- Fixes dconf incompatibility
+
 * Thu Jul 19 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.5.4-3
 - Fix dconf profile syntax
 
