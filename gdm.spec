@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -31,6 +31,9 @@ Source7: gdm-smartcard-48.png
 Source8: gdm-fingerprint-16.png
 Source9: gdm-fingerprint-48.png
 Source10: org.gnome.login-screen.gschema.override
+
+# upstream fix
+Patch0: dconf-profile.patch
 
 Requires(pre): /usr/sbin/useradd
 
@@ -128,6 +131,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch0 -p1
 
 autoreconf -i -f
 
@@ -362,6 +366,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Thu Jul 19 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.5.4-3
+- Fix dconf profile syntax
+
 * Thu Jul 19 2012 Kalev Lember <kalevlember@gmail.com> - 1:3.5.4-2
 - Require systemd >= 186 for libsystemd-login
 

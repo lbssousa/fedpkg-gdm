@@ -1,0 +1,8 @@
+diff -up gdm-3.5.4/data/dconf-profile.profile gdm-3.5.4/data/dconf-profile
+--- gdm-3.5.4/data/dconf-profile.profile	2012-07-19 08:28:36.267982484 -0400
++++ gdm-3.5.4/data/dconf-profile	2012-07-19 08:28:46.276983140 -0400
+@@ -1,2 +1,2 @@
+-user
+-gdm
++user-db:user
++system-db:gdm
