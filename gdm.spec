@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.4.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -344,6 +344,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Fri Jul 27 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:3.5.4.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
 * Thu Jul 19 2012 Ray Strode <rstrode@redhat.com> 3.5.4.2-1
 - Update to 3.5.4.2
 - Fixes non-autologin
