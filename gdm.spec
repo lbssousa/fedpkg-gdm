@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.5.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -77,6 +77,11 @@ BuildRequires: pkgconfig(accountsservice) >= 0.6.3
 BuildRequires: pkgconfig(libsystemd-login)
 BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(ply-boot-client)
+BuildRequires: systemd
+
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
 
 # these are all just for rewriting gdm.d/00-upstream-settings
 Requires(posttrans): dconf
@@ -235,8 +240,11 @@ if [ $1 -ge 2 -a -f $custom ] && grep -q /etc/X11/gdm $custom ; then
    sed -i -e 's@/etc/X11/gdm@/etc/gdm@g' $custom
 fi
 
+%systemd_post gdm.service
+
 %preun
 %gconf_schema_remove gdm-simple-greeter
+%systemd_preun gdm.service
 
 %postun
 /sbin/ldconfig
@@ -248,6 +256,7 @@ fi
 if [ $1 -eq 0 ] ; then
     /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &> /dev/null || :
 fi
+%systemd_postun
 
 %posttrans
 dconf update
@@ -330,7 +339,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gdm/simple-greeter/extensions/fingerprint/page.ui
 %{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
 %{_sysconfdir}/pam.d/gdm-launch-environment
-/usr/lib/systemd/system/gdm.service
+%{_unitdir}/gdm.service
 
 %files devel
 %dir %{_includedir}/gdm
@@ -345,6 +354,12 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Tue Aug  7 2012 Lennart Poettering <lpoetter@redhat.com> - 1:3.5.5-2
+- https://fedoraproject.org/wiki/Features/DisplayManagerRework
+- https://bugzilla.redhat.com/show_bug.cgi?id=846135
+- Ship and use gdm.service
+- Force gdm onto VT1
+
 * Tue Aug 07 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.5-1
 - Update to 3.5.5
 
