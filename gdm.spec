@@ -329,6 +329,8 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm/simple-greeter/extensions/fingerprint
 %{_datadir}/gdm/simple-greeter/extensions/fingerprint/page.ui
 %{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
+%{_sysconfdir}/pam.d/gdm-launch-environment
+/usr/lib/systemd/system/gdm.service
 
 %files devel
 %dir %{_includedir}/gdm
