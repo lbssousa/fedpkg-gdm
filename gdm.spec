@@ -13,8 +13,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.5.5
-Release: 2%{?dist}
+Version: 3.5.90
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -354,6 +354,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Tue Aug 21 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.90-1
+- Update to 3.5.90
+
 * Tue Aug  7 2012 Lennart Poettering <lpoetter@redhat.com> - 1:3.5.5-2
 - https://fedoraproject.org/wiki/Features/DisplayManagerRework
 - https://bugzilla.redhat.com/show_bug.cgi?id=846135
