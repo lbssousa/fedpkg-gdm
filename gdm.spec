@@ -297,7 +297,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libexecdir}/gdm-xdmcp-chooser-slave
 %{_sbindir}/gdm
 %{_sbindir}/gdm-binary
-%{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
 %{_datadir}/gdm/greeter/applications/*
 %{_datadir}/gdm/*.ui
