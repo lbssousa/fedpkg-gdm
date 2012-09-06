@@ -126,6 +126,7 @@ Development files and headers for writing GDM greeters.
 %setup -q
 
 autoreconf -i -f
+intltoolize -f
 
 %build
 
