@@ -97,6 +97,8 @@ Provides: gdm-plugin-smartcard = %{epoch}:%{version}-%{release}
 Obsoletes: gdm-plugin-fingerprint < 1:3.2.1
 Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
 
+Patch0: fix-auto-login.patch
+
 %package libs
 Summary: Client-side library to talk to gdm
 Group: Development/Libraries
@@ -124,6 +126,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch0 -p1 -b .fix-autologin
 
 autoreconf -i -f
 intltoolize -f
@@ -354,6 +357,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Fri Sep 07 2012 Ray Strode <rstrode@redhat.com> 1:3.5.91-1
+- Fix autologin
+
 * Thu Sep 06 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.91-1
 - Update to 3.5.91
 
