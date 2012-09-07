@@ -98,6 +98,7 @@ Obsoletes: gdm-plugin-fingerprint < 1:3.2.1
 Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
 
 Patch0: fix-auto-login.patch
+Patch1: fix-selinux-context.patch
 
 %package libs
 Summary: Client-side library to talk to gdm
@@ -127,6 +128,7 @@ Development files and headers for writing GDM greeters.
 %prep
 %setup -q
 %patch0 -p1 -b .fix-autologin
+%patch1 -p1 -b .fix-selinux-context
 
 autoreconf -i -f
 intltoolize -f
@@ -359,6 +361,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %changelog
 * Fri Sep 07 2012 Ray Strode <rstrode@redhat.com> 1:3.5.91-2
 - Fix autologin
+- Fix selinux context after forking session
 
 * Thu Sep 06 2012 Richard Hughes <hughsient@gmail.com> - 1:3.5.91-1
 - Update to 3.5.91
