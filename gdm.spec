@@ -97,9 +97,6 @@ Provides: gdm-plugin-smartcard = %{epoch}:%{version}-%{release}
 Obsoletes: gdm-plugin-fingerprint < 1:3.2.1
 Provides: gdm-plugin-fingerprint = %{epoch}:%{version}-%{release}
 
-Patch0: fix-auto-login.patch
-Patch1: fix-selinux-context.patch
-
 %package libs
 Summary: Client-side library to talk to gdm
 Group: Development/Libraries
@@ -127,8 +124,6 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
-%patch0 -p1 -b .fix-autologin
-%patch1 -p1 -b .fix-selinux-context
 
 autoreconf -i -f
 intltoolize -f
