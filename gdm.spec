@@ -13,14 +13,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.5.91
-Release: 2%{?dist}
+Version: 3.5.92.1
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/3.4/gdm-%{version}.tar.xz
+Source: http://download.gnome.org/sources/gdm/3.5/gdm-%{version}.tar.xz
 Source1: org.gnome.login-screen.gschema.override
 
 Requires(pre): /usr/sbin/useradd
@@ -359,6 +359,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Wed Sep 19 2012 Matthias Clasen <mclasen@redhat.com> 1:3.5.92.1-1
+- Update to 3.5.92.1
+
 * Fri Sep 07 2012 Ray Strode <rstrode@redhat.com> 1:3.5.91-2
 - Fix autologin
 - Fix selinux context after forking session
