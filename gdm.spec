@@ -286,7 +286,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gnome-session/sessions/gdm-shell.session
 %{_datadir}/gnome-session/sessions/gdm-fallback.session
 %{_datadir}/pixmaps/*.png
-%{_datadir}/icons/hicolor/*/apps/*.png
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.xml
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.override
 %{_datadir}/gdm/simple-greeter/extensions/unified/page.ui
@@ -300,9 +299,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_sbindir}/gdm-binary
 %{_bindir}/gdm-screenshot
 %{_datadir}/gdm/greeter/applications/*
+%{_datadir}/gdm/greeter/autostart/*
 %{_datadir}/gdm/*.ui
 %{_datadir}/gdm/locale.alias
-%{_datadir}/gnome-session/sessions/*
 %{_datadir}/gdm/gdb-cmd
 %{_libexecdir}/gdm-crash-logger
 %{_libdir}/libgdm*.so*
@@ -317,6 +316,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/greeter
 %dir %{_datadir}/gdm/greeter/applications
+%dir %{_datadir}/gdm/greeter/autostart
 %dir %{_localstatedir}/log/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(1755, gdm, gdm) %dir %{_localstatedir}/run/gdm/greeter
@@ -342,7 +342,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_unitdir}/gdm.service
 
 %files devel
-%dir %{_includedir}/gdm
 %dir %{_includedir}/gdm
 %{_includedir}/gdm/*.h
 %{_datadir}/gir-1.0/Gdm-1.0.gir
