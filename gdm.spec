@@ -13,14 +13,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.6.0
+Version: 3.6.1
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/3.5/gdm-%{version}.tar.xz
+Source: http://download.gnome.org/sources/gdm/3.6/gdm-%{version}.tar.xz
 Source1: org.gnome.login-screen.gschema.override
 
 Requires(pre): /usr/sbin/useradd
@@ -297,6 +297,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libexecdir}/gdm-xdmcp-chooser-slave
 %{_sbindir}/gdm
 %{_sbindir}/gdm-binary
+%{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
 %{_datadir}/gdm/greeter/applications/*
 %{_datadir}/gdm/greeter/autostart/*
@@ -353,6 +354,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Tue Oct 16 2012 Kalev Lember <kalevlember@gmail.com> - 1:3.6.1-1
+- Update to 3.6.1
+
 * Tue Sep 25 2012 Richard Hughes <hughsient@gmail.com> - 1:3.6.0-1
 - Update to 3.6.0
 
