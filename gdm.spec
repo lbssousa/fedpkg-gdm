@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.6.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -34,6 +34,7 @@ Requires: xorg-x11-xinit
 Requires: systemd >= 186
 Requires: accountsservice
 Requires: gnome-settings-daemon >= 2.21.92
+Requires: gnome-icon-theme-symbolic
 Requires: iso-codes
 Requires: gnome-session
 Requires: polkit-gnome
@@ -354,6 +355,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Thu Oct 18 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.6.1-2
+- Require gnome-icon-theme-symbolic (#867718)
+
 * Tue Oct 16 2012 Kalev Lember <kalevlember@gmail.com> - 1:3.6.1-1
 - Update to 3.6.1
 
