@@ -14,7 +14,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.6.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -62,7 +62,7 @@ BuildRequires: audit-libs-devel >= %{libauditver}
 BuildRequires: gobject-introspection-devel
 BuildRequires: autoconf automake libtool
 BuildRequires: intltool
-%ifnarch s390 s390x ppc64
+%ifnarch s390 s390x ppc ppc64
 BuildRequires: xorg-x11-server-Xorg
 %endif
 BuildRequires: nss-devel >= %{nss_version}
@@ -355,6 +355,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Mon Oct 29 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.6.1-3
+- Add ppc to %%ExcludeArch
+
 * Thu Oct 18 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.6.1-2
 - Require gnome-icon-theme-symbolic (#867718)
 
