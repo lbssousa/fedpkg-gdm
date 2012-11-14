@@ -1,12 +1,8 @@
 %define libauditver 1.0.6
 %define pango_version 1.2.0
 %define gtk3_version 2.99.2
-%define libglade2_version 2.0.0
-%define libgnomeui_version 2.2.0
-%define scrollkeeper_version 0.3.4
 %define pam_version 0.99.8.1-11
 %define desktop_file_utils_version 0.2.90
-%define gail_version 1.2.0
 %define nss_version 3.11.1
 %define fontconfig_version 2.6.0
 %define _default_patch_fuzz 999
@@ -47,7 +43,6 @@ Requires: libXau >= 1.0.4-4
 # and refuses to run if metacity is not present
 Requires: metacity
 BuildRequires: pkgconfig(libcanberra-gtk)
-BuildRequires: scrollkeeper >= 0:%{scrollkeeper_version}
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk3-devel >= 0:%{gtk3_version}
 BuildRequires: pam-devel >= 0:%{pam_version}
@@ -56,7 +51,6 @@ BuildRequires: desktop-file-utils >= %{desktop_file_utils_version}
 BuildRequires: libtool automake autoconf
 BuildRequires: libattr-devel
 BuildRequires: gettext
-BuildRequires: gnome-doc-utils
 BuildRequires: libdmx-devel
 BuildRequires: audit-libs-devel >= %{libauditver}
 BuildRequires: gobject-introspection-devel
@@ -179,8 +173,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow
 
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/gdm/greeter
-
-rm -rf $RPM_BUILD_ROOT%{_localstatedir}/scrollkeeper
 
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
