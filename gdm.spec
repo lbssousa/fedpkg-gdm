@@ -5,12 +5,11 @@
 %define desktop_file_utils_version 0.2.90
 %define nss_version 3.11.1
 %define fontconfig_version 2.6.0
-%define _default_patch_fuzz 999
 
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.6.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -347,6 +346,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Tue Nov 20 2012 Matthias Clasen <mclasen@redhat.com> - 1:3.6.2-2
+- Remove patch fuzz of 999
+
 * Wed Nov 14 2012 Kalev Lember <kalevlember@gmail.com> - 1:3.6.2-1
 - Update to 3.6.2
 
