@@ -8,14 +8,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.7.3.1
+Version: 3.7.5
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/3.6/gdm-%{version}.tar.xz
+Source: http://download.gnome.org/sources/gdm/3.7/gdm-%{version}.tar.xz
 Source1: org.gnome.login-screen.gschema.override
 
 Requires(pre): /usr/sbin/useradd
@@ -288,7 +288,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libexecdir}/gdm-simple-slave
 %{_libexecdir}/gdm-xdmcp-chooser-slave
 %{_sbindir}/gdm
-%{_sbindir}/gdm-binary
 %{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
 %{_datadir}/gdm/greeter/applications/*
@@ -296,7 +295,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gdm/*.ui
 %{_datadir}/gdm/locale.alias
 %{_datadir}/gdm/gdb-cmd
-%{_libexecdir}/gdm-crash-logger
 %{_libdir}/libgdm*.so*
 %dir %{_libdir}/gdm
 %dir %{_libdir}/gdm/simple-greeter
@@ -346,6 +344,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Wed Feb 06 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.7.5-1
+- Update to 3.7.5
+
 * Wed Jan 09 2013 Richard Hughes <hughsient@gmail.com> - 1:3.7.3.1-1
 - Update to 3.7.3.1
 
