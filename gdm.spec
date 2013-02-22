@@ -8,7 +8,7 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.7.5
+Version: 3.7.90
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
@@ -310,9 +310,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm/greeter/autostart
 %dir %{_localstatedir}/log/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
-%attr(1755, gdm, gdm) %dir %{_localstatedir}/run/gdm/greeter
 %attr(1770, root, gdm) %dir %{_localstatedir}/gdm
-%attr(1777, root, gdm) %dir %{_localstatedir}/run/gdm
 %attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
 %dir %{_sysconfdir}/dconf/db/gdm.d/locks
 %dir %{_sysconfdir}/dconf/db/gdm.d
@@ -320,6 +318,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_sysconfdir}/dconf/db/gdm.d/locks/00-upstream-settings-locks
 %{_sysconfdir}/dconf/profile/gdm
 %{_datadir}/icons/hicolor/*/*/*.png
+%config %{_sysconfdir}/pam.d/gdm-pin
 %config %{_sysconfdir}/pam.d/gdm-smartcard
 %dir %{_datadir}/gdm/simple-greeter/extensions/smartcard
 %{_datadir}/gdm/simple-greeter/extensions/smartcard/page.ui
@@ -344,6 +343,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Fri Feb 22 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.7.90-1
+- Update to 3.7.90
+
 * Wed Feb 06 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.7.5-1
 - Update to 3.7.5
 
