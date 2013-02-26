@@ -169,7 +169,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gtk-2.0/modules/*.la
 
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/gdm/autostart/LoginWindow
 
-mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/gdm/greeter
+mkdir -p $RPM_BUILD_ROOT/run/gdm
 
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
