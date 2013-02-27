@@ -125,7 +125,7 @@ intltoolize -f
 %build
 
 %configure --with-pam-prefix=%{_sysconfdir} \
-           --with-run-dir=/run \
+           --with-run-dir=/run/gdm \
            --enable-split-authentication \
            --enable-profiling      \
            --enable-console-helper \
