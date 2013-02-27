@@ -9,7 +9,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.7.90
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -344,6 +344,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Wed Feb 27 2013 Ray Strode <rstrode@redhat.com> 3.7.90-3
+- Fix up runtime dir for real
+
 * Tue Feb 26 2013 Ray Strode <rstrode@redhat.com> 3.7.90-2
 - Fix up runtime dir path (spotted by dwalsh)
 
