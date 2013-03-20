@@ -9,7 +9,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.7.92
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -32,7 +32,6 @@ Requires: gnome-settings-daemon >= 2.21.92
 Requires: gnome-icon-theme-symbolic
 Requires: iso-codes
 Requires: gnome-session
-Requires: polkit-gnome
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires: pulseaudio-gdm-hooks
@@ -344,6 +343,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Thu Mar 21 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.7.92-2
+- Drop the polkit-gnome dep now that the fallback greeter is gone
+
 * Wed Mar 20 2013 Richard Hughes <rhughes@redhat.com> - 1:3.7.92-1
 - Update to 3.7.92
 
