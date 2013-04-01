@@ -9,7 +9,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -37,9 +37,6 @@ Requires: gnome-keyring-pam
 Requires: pulseaudio-gdm-hooks
 # We need 1.0.4-5 since it lets us use "localhost" in auth cookies
 Requires: libXau >= 1.0.4-4
-# RH #746693: gdm's fallback session specifies metacity as the WM
-# and refuses to run if metacity is not present
-Requires: metacity
 BuildRequires: pkgconfig(libcanberra-gtk)
 BuildRequires: pango-devel >= 0:%{pango_version}
 BuildRequires: gtk3-devel >= 0:%{gtk3_version}
@@ -343,6 +340,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Mon Apr 01 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.8.0-2
+- Drop the metacity dep now that the fallback greeter is gone
+
 * Tue Mar 26 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.8.0-1
 - Update to 3.8.0
 
