@@ -1,3 +1,5 @@
+%global _hardened_build 1
+
 %define libauditver 1.0.6
 %define pango_version 1.2.0
 %define gtk3_version 2.99.2
@@ -9,7 +11,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.1.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -340,6 +342,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Fri May 17 2013 Ray Strode <rstrode@redhat.com> - 1:3.8.1.1-3
+- Build with -fpie
+  Resolves: #955154
+
 * Thu May 16 2013 Florian Müllner <fmuellner@redhat.com> - 1:3.8.1.1-2
 - Update branding
 
