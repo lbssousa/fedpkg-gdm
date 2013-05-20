@@ -11,7 +11,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.1.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -310,7 +310,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_datadir}/gdm/greeter/autostart
 %dir %{_localstatedir}/log/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
-%attr(1770, root, gdm) %dir /run/gdm
+%attr(0711, root, gdm) %dir /run/gdm
 %attr(1755, root, gdm) %dir %{_localstatedir}/cache/gdm
 %dir %{_sysconfdir}/dconf/db/gdm.d/locks
 %dir %{_sysconfdir}/dconf/db/gdm.d
@@ -343,6 +343,11 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Mon May 20 2013 Ray Strode <rstrode@redhat.com> 1:3.8.1.1-5
+- Fix permissions on /run/gdm
+  Resolves: #fudge
+  (http://lists.fedoraproject.org/pipermail/devel/2013-May/182906.html)
+
 * Mon May 20 2013 Ray Strode <rstrode@redhat.com> 1:3.8.1.1-4
 - Require gnome-shell. We no longer use the fallback greeter.
   (Since gdm 3.7.92).
