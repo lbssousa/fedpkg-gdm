@@ -11,7 +11,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.1.1
-Release: 3%{?dist}
+Release: 4%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -34,6 +34,7 @@ Requires: gnome-settings-daemon >= 2.21.92
 Requires: gnome-icon-theme-symbolic
 Requires: iso-codes
 Requires: gnome-session
+Requires: gnome-shell
 # since we use it, and pam spams the log if the module is missing
 Requires: gnome-keyring-pam
 Requires: pulseaudio-gdm-hooks
@@ -342,6 +343,10 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Mon May 20 2013 Ray Strode <rstrode@redhat.com> 1:3.8.1.1-4
+- Require gnome-shell. We no longer use the fallback greeter.
+  (Since gdm 3.7.92).
+
 * Fri May 17 2013 Ray Strode <rstrode@redhat.com> - 1:3.8.1.1-3
 - Build with -fpie
   Resolves: #955154
