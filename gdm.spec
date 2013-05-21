@@ -11,7 +11,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.1.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -173,6 +173,17 @@ mkdir -p $RPM_BUILD_ROOT/run/gdm
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
+# don't install fallback greeter
+rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/simple-greeter
+rm -rf $RPM_BUILD_ROOT%{_libdir}/gdm/simple-greeter
+rm $RPM_BUILD_ROOT%{_libdir}/libgdmsimplegreeter.so*
+rm $RPM_BUILD_ROOT%{_libexecdir}/gdm-simple-greeter
+rm $RPM_BUILD_ROOT%{_datadir}/gnome-session/sessions/gdm-fallback.session
+rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/gdm-simple-greeter.desktop
+rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/polkit-gnome-authentication-agent-1.desktop
+rm $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
+rm -rf $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter
+
 %find_lang gdm --with-gnome
 
 %pre
@@ -276,15 +287,12 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %dir %{_sysconfdir}/gdm/PostSession
 %dir %{_sysconfdir}/gdm/PostLogin
 %{_datadir}/gnome-session/sessions/gdm-shell.session
-%{_datadir}/gnome-session/sessions/gdm-fallback.session
 %{_datadir}/pixmaps/*.png
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.xml
 %{_datadir}/glib-2.0/schemas/org.gnome.login-screen.gschema.override
-%{_datadir}/gdm/simple-greeter/extensions/unified/page.ui
 %{_libexecdir}/gdm-host-chooser
 %{_libexecdir}/gdm-session-worker
 %{_libexecdir}/gdm-simple-chooser
-%{_libexecdir}/gdm-simple-greeter
 %{_libexecdir}/gdm-simple-slave
 %{_libexecdir}/gdm-xdmcp-chooser-slave
 %{_sbindir}/gdm
@@ -297,13 +305,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/gdm/gdb-cmd
 %{_libdir}/libgdm*.so*
 %dir %{_libdir}/gdm
-%dir %{_libdir}/gdm/simple-greeter
-%dir %{_libdir}/gdm/simple-greeter/extensions
-%{_libdir}/gdm/simple-greeter/extensions/libpassword.so
-%dir %{_datadir}/gdm/simple-greeter
-%dir %{_datadir}/gdm/simple-greeter/extensions
-%dir %{_datadir}/gdm/simple-greeter/extensions/password
-%{_datadir}/gdm/simple-greeter/extensions/password/page.ui
 %dir %{_datadir}/gdm
 %dir %{_datadir}/gdm/greeter
 %dir %{_datadir}/gdm/greeter/applications
@@ -320,14 +321,8 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/icons/hicolor/*/*/*.png
 %config %{_sysconfdir}/pam.d/gdm-pin
 %config %{_sysconfdir}/pam.d/gdm-smartcard
-%dir %{_datadir}/gdm/simple-greeter/extensions/smartcard
-%{_datadir}/gdm/simple-greeter/extensions/smartcard/page.ui
-%{_libdir}/gdm/simple-greeter/extensions/libsmartcard.so
 %{_libexecdir}/gdm-smartcard-worker
 %config %{_sysconfdir}/pam.d/gdm-fingerprint
-%dir %{_datadir}/gdm/simple-greeter/extensions/fingerprint
-%{_datadir}/gdm/simple-greeter/extensions/fingerprint/page.ui
-%{_libdir}/gdm/simple-greeter/extensions/libfingerprint.so
 %{_sysconfdir}/pam.d/gdm-launch-environment
 %{_unitdir}/gdm.service
 
@@ -336,13 +331,14 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_includedir}/gdm/*.h
 %{_datadir}/gir-1.0/Gdm-1.0.gir
 %{_libdir}/pkgconfig/gdm.pc
-%{_includedir}/gdm/simple-greeter/gdm-login-extension.h
-%{_libdir}/pkgconfig/gdmsimplegreeter.pc
 
 %files libs
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Tue May 21 2013 Matthias Clasen <mclasen@redhat.com> 1:3.8.1.1-6
+- Don't include the fallback greeter
+
 * Mon May 20 2013 Ray Strode <rstrode@redhat.com> 1:3.8.1.1-5
 - Fix permissions on /run/gdm
   Resolves: #fudge
