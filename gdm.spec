@@ -10,8 +10,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.8.1.1
-Release: 6%{?dist}
+Version: 3.8.3
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -173,16 +173,7 @@ mkdir -p $RPM_BUILD_ROOT/run/gdm
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
-# don't install fallback greeter
-rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/simple-greeter
-rm -rf $RPM_BUILD_ROOT%{_libdir}/gdm/simple-greeter
-rm $RPM_BUILD_ROOT%{_libdir}/libgdmsimplegreeter.so*
-rm $RPM_BUILD_ROOT%{_libexecdir}/gdm-simple-greeter
-rm $RPM_BUILD_ROOT%{_datadir}/gnome-session/sessions/gdm-fallback.session
-rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/gdm-simple-greeter.desktop
 rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/polkit-gnome-authentication-agent-1.desktop
-rm $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
-rm -rf $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter
 
 %find_lang gdm --with-gnome
 
@@ -300,15 +291,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_bindir}/gdm-screenshot
 %{_datadir}/gdm/greeter/applications/*
 %{_datadir}/gdm/greeter/autostart/*
-%{_datadir}/gdm/*.ui
 %{_datadir}/gdm/locale.alias
 %{_datadir}/gdm/gdb-cmd
 %{_libdir}/libgdm*.so*
-%dir %{_libdir}/gdm
-%dir %{_datadir}/gdm
-%dir %{_datadir}/gdm/greeter
-%dir %{_datadir}/gdm/greeter/applications
-%dir %{_datadir}/gdm/greeter/autostart
 %dir %{_localstatedir}/log/gdm
 %attr(1770, gdm, gdm) %dir %{_localstatedir}/lib/gdm
 %attr(0711, root, gdm) %dir /run/gdm
@@ -321,7 +306,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_datadir}/icons/hicolor/*/*/*.png
 %config %{_sysconfdir}/pam.d/gdm-pin
 %config %{_sysconfdir}/pam.d/gdm-smartcard
-%{_libexecdir}/gdm-smartcard-worker
 %config %{_sysconfdir}/pam.d/gdm-fingerprint
 %{_sysconfdir}/pam.d/gdm-launch-environment
 %{_unitdir}/gdm.service
@@ -336,6 +320,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Fri Jun 14 2013 Ray Strode <rstrode@redhat.com> 3.8.3-1
+- Update to 3.8.3
+
 * Tue May 21 2013 Matthias Clasen <mclasen@redhat.com> 1:3.8.1.1-6
 - Don't include the fallback greeter
 
