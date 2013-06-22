@@ -1,3 +1,4 @@
+%global _changelog_trimtime %(date +%s -d "1 year ago")
 %global _hardened_build 1
 
 %define libauditver 1.0.6
@@ -11,7 +12,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -320,6 +321,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Sat Jun 22 2013 Matthias Clasen <mclasen@redhat.com> - 3.8.3-2
+- Trim %%changelog
+
 * Fri Jun 14 2013 Ray Strode <rstrode@redhat.com> 3.8.3-1
 - Update to 3.8.3
 
