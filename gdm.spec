@@ -174,7 +174,18 @@ mkdir -p $RPM_BUILD_ROOT/run/gdm
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
+# don't install fallback greeter
+rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/simple-greeter
+rm -rf $RPM_BUILD_ROOT%{_libdir}/gdm/simple-greeter
+rm $RPM_BUILD_ROOT%{_libdir}/libgdmsimplegreeter.so*
+rm $RPM_BUILD_ROOT%{_libexecdir}/gdm-simple-greeter
+rm $RPM_BUILD_ROOT%{_datadir}/gnome-session/sessions/gdm-fallback.session
+rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/gdm-simple-greeter.desktop
 rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/polkit-gnome-authentication-agent-1.desktop
+rm $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
+rm -rf $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/gdm-smartcard-worker
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/gdm-greeter-login-window.ui
 
 %find_lang gdm --with-gnome
 
