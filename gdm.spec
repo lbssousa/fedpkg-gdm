@@ -11,14 +11,14 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.8.3.1
+Version: 3.9.5
 Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
 URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
-Source: http://download.gnome.org/sources/gdm/3.8/gdm-%{version}.tar.xz
+Source: http://download.gnome.org/sources/gdm/3.9/gdm-%{version}.tar.xz
 Source1: org.gnome.login-screen.gschema.override
 
 Requires(pre): /usr/sbin/useradd
@@ -175,17 +175,8 @@ find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
 # don't install fallback greeter
-rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/simple-greeter
-rm -rf $RPM_BUILD_ROOT%{_libdir}/gdm/simple-greeter
-rm $RPM_BUILD_ROOT%{_libdir}/libgdmsimplegreeter.so*
-rm $RPM_BUILD_ROOT%{_libexecdir}/gdm-simple-greeter
-rm $RPM_BUILD_ROOT%{_datadir}/gnome-session/sessions/gdm-fallback.session
 rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/gdm-simple-greeter.desktop
 rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/polkit-gnome-authentication-agent-1.desktop
-rm $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
-rm -rf $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter
-rm -f $RPM_BUILD_ROOT%{_libexecdir}/gdm-smartcard-worker
-rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/gdm-greeter-login-window.ui
 
 %find_lang gdm --with-gnome
 
@@ -332,6 +323,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Sat Aug 10 2013 Kalev Lember <kalevlember@gmail.com> - 1:3.9.5-1
+- Update to 3.9.5
+
 * Tue Jul 16 2013 Richard Hughes <rhughes@redhat.com> - 1:3.8.3.1-1
 - Update to 3.8.3.1
 
