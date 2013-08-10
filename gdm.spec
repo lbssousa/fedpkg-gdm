@@ -11,8 +11,8 @@
 
 Summary: The GNOME Display Manager
 Name: gdm
-Version: 3.8.3
-Release: 2%{?dist}
+Version: 3.8.4
+Release: 1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -174,7 +174,22 @@ mkdir -p $RPM_BUILD_ROOT/run/gdm
 find $RPM_BUILD_ROOT -name '*.a' -delete
 find $RPM_BUILD_ROOT -name '*.la' -delete
 
+# don't install fallback greeter
+rm -rf $RPM_BUILD_ROOT%{_datadir}/gdm/simple-greeter
+rm -rf $RPM_BUILD_ROOT%{_libdir}/gdm/simple-greeter
+rm $RPM_BUILD_ROOT%{_libdir}/libgdmsimplegreeter.so*
+rm $RPM_BUILD_ROOT%{_libexecdir}/gdm-simple-greeter
+rm $RPM_BUILD_ROOT%{_datadir}/gnome-session/sessions/gdm-fallback.session
+rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/gdm-simple-greeter.desktop
 rm $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/polkit-gnome-authentication-agent-1.desktop
+rm $RPM_BUILD_ROOT%{_libdir}/pkgconfig/gdmsimplegreeter.pc
+rm -rf $RPM_BUILD_ROOT%{_includedir}/gdm/simple-greeter
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/gdm-smartcard-worker
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/gdm-greeter-login-window.ui
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/gnome-shell.desktop
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/mime-dummy-handler.desktop
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/applications/mimeapps.list
+rm -f $RPM_BUILD_ROOT%{_datadir}/gdm/greeter/autostart/orca-autostart.desktop
 
 %find_lang gdm --with-gnome
 
@@ -290,8 +305,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_sbindir}/gdm
 %{_bindir}/gdmflexiserver
 %{_bindir}/gdm-screenshot
-%{_datadir}/gdm/greeter/applications/*
-%{_datadir}/gdm/greeter/autostart/*
 %{_datadir}/gdm/locale.alias
 %{_datadir}/gdm/gdb-cmd
 %{_libdir}/libgdm*.so*
@@ -321,6 +334,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Sat Aug 10 2013 Ray Strode <rstrode@redhat.com> 3.8.4-1
+- Update to 3.8.4
+
 * Sat Jun 22 2013 Matthias Clasen <mclasen@redhat.com> - 3.8.3-2
 - Trim %%changelog
 
