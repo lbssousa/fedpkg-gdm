@@ -12,7 +12,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.4
-Release: 2%{?dist}
+Release: 3%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -73,6 +73,8 @@ BuildRequires: pkgconfig(libsystemd-daemon)
 BuildRequires: pkgconfig(ply-boot-client)
 BuildRequires: systemd
 
+Patch0: fix-pam-crasher.patch
+
 Requires(post):   systemd
 Requires(preun):  systemd
 Requires(postun): systemd
@@ -118,6 +120,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch0 -p1 -b .fix-pam-crasher
 
 autoreconf -i -f
 intltoolize -f
@@ -332,6 +335,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >&/dev/null || :
 %{_libdir}/girepository-1.0/Gdm-1.0.typelib
 
 %changelog
+* Tue Aug 20 2013 Ray Strode <rstrode@redhat.com> 3.8.4-3
+- Fix crasher bug in gdm-session-wroker
+
 * Mon Aug 12 2013 Ray Strode <rstrode@redhat.com> 3.8.4-2
 - Fix packaging snafu introduced in 3.8.4-1
 

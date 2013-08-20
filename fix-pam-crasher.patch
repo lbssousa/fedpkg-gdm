@@ -1,0 +1,91 @@
+From 87a3663d1734915efefb2bea29c8ed4488441364 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Michel=20D=C3=A4nzer?= <michel@daenzer.net>
+Date: Tue, 20 Aug 2013 11:25:00 -0400
+Subject: [PATCH] worker: Fix memory corruption error/crasher
+
+gdm_session_worker_process_pam_message() contains this code:
+
+                         *response_text = strndup (user_answer,
+PAM_MAX_RESP_SIZE - 1);
+                        (*response_text)[PAM_MAX_RESP_SIZE - 1] = '\0';
+
+If the string pointed to by user_answer is shorter than PAM_MAX_RESP_SIZE - 1
+(which will generally be the case), the second line clobbers unrelated memory.
+On this powerpc laptop, that causes gdm-session-worker to crash while verifying
+the password, leaving me unable to log into any user session.
+
+strndup() already ensures that the resulting string is 0-terminated anyway, so
+this commit just removes the second line.
+---
+ daemon/gdm-session-worker.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/daemon/gdm-session-worker.c b/daemon/gdm-session-worker.c
+index dd58af7..f6e38a2 100644
+--- a/daemon/gdm-session-worker.c
++++ b/daemon/gdm-session-worker.c
+@@ -768,61 +768,60 @@ gdm_session_worker_process_pam_message (GdmSessionWorker          *worker,
+         switch (query->msg_style) {
+         case PAM_PROMPT_ECHO_ON:
+                 res = gdm_session_worker_ask_question (worker, utf8_msg, &user_answer);
+                 break;
+         case PAM_PROMPT_ECHO_OFF:
+                 res = gdm_session_worker_ask_for_secret (worker, utf8_msg, &user_answer);
+                 break;
+         case PAM_TEXT_INFO:
+                 res = gdm_session_worker_report_info (worker, utf8_msg);
+                 break;
+         case PAM_ERROR_MSG:
+                 res = gdm_session_worker_report_problem (worker, utf8_msg);
+                 break;
+         default:
+                 g_assert_not_reached ();
+                 break;
+         }
+ 
+         if (worker->priv->timed_out) {
+                 gdm_dbus_worker_emit_cancel_pending_query (GDM_DBUS_WORKER (worker));
+                 worker->priv->timed_out = FALSE;
+         }
+ 
+         if (user_answer != NULL) {
+                 /* we strndup and g_free to make sure we return malloc'd
+                  * instead of g_malloc'd memory.  PAM_MAX_RESP_SIZE includes
+                  * the '\0' terminating character, thus the "- 1".
+                  */
+                 if (res && response_text != NULL) {
+                         *response_text = strndup (user_answer, PAM_MAX_RESP_SIZE - 1);
+-                        (*response_text)[PAM_MAX_RESP_SIZE - 1] = '\0';
+                 }
+ 
+                 memset (user_answer, '\0', strlen (user_answer));
+                 g_free (user_answer);
+ 
+                 g_debug ("GdmSessionWorker: trying to get updated username");
+ 
+                 res = TRUE;
+         }
+ 
+         g_free (utf8_msg);
+ 
+         return res;
+ }
+ 
+ static int
+ gdm_session_worker_pam_new_messages_handler (int                        number_of_messages,
+                                              const struct pam_message **messages,
+                                              struct pam_response      **responses,
+                                              GdmSessionWorker          *worker)
+ {
+         struct pam_response *replies;
+         int                  return_value;
+         int                  i;
+ 
+         g_debug ("GdmSessionWorker: %d new messages received from PAM\n", number_of_messages);
+ 
+         return_value = PAM_CONV_ERR;
+ 
+         if (number_of_messages < 0) {
+-- 
+1.8.3.1
+
