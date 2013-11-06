@@ -12,7 +12,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.8.4
-Release: 3.multiseat1%{?dist}
+Release: 3.multiseat2%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -76,6 +76,7 @@ BuildRequires: systemd
 Patch0: fix-pam-crasher.patch
 
 # My custom patches
+Patch9998: delay_non_seat0_display_servers_startup.patch
 Patch9999: multiseat_fix_autologin.patch
 
 Requires(post):   systemd
@@ -124,6 +125,9 @@ Development files and headers for writing GDM greeters.
 %prep
 %setup -q
 %patch0 -p1 -b .fix-pam-crasher
+
+# My custom patches
+%patch9998 -p1
 %patch9999 -p1
 
 autoreconf -i -f
