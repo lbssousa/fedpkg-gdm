@@ -12,7 +12,7 @@
 Summary: The GNOME Display Manager
 Name: gdm
 Version: 3.10.0.1
-Release: 1%{?dist}
+Release: 1.multiseat1%{?dist}
 Epoch: 1
 License: GPLv2+
 Group: User Interface/X
@@ -20,6 +20,7 @@ URL: http://download.gnome.org/sources/gdm
 #VCS: git:git://git.gnome.org/gdm
 Source: http://download.gnome.org/sources/gdm/3.10/gdm-%{version}.tar.xz
 Source1: org.gnome.login-screen.gschema.override
+Patch9999: fix-multiseat-autologin.patch
 
 Requires(pre): /usr/sbin/useradd
 
@@ -118,6 +119,7 @@ Development files and headers for writing GDM greeters.
 
 %prep
 %setup -q
+%patch9999 -p1
 
 autoreconf -i -f
 intltoolize -f

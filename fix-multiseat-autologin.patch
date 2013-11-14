@@ -1,0 +1,143 @@
+From: Glen Gray <slaine@slaine.org>
+Subject: Enable timed/automatic login for multiseat displays
+Origin: other, https://bug704581.bugzilla-attachments.gnome.org/attachment.cgi?id=249655
+Bug: https://bugzilla.gnome.org/show_bug.cgi?id=704581
+
+diff -up gdm-3.8.4.orig/daemon/gdm-display.c gdm-3.8.4/daemon/gdm-display.c
+--- gdm-3.8.4.orig/daemon/gdm-display.c	2013-10-24 13:59:25.675664920 -0200
++++ gdm-3.8.4/daemon/gdm-display.c	2013-10-24 13:46:46.635650208 -0200
+@@ -353,6 +353,11 @@ gdm_display_real_get_timed_login_details
+         int      delay;
+         char    *username;
+ 
++#ifdef WITH_SYSTEMD
++        int      username_len;
++        username_len = 0;
++#endif
++
+         enabled = FALSE;
+         username = NULL;
+         delay = 0;
+@@ -364,7 +369,27 @@ gdm_display_real_get_timed_login_details
+          */
+         if (LOGIND_RUNNING()) {
+                 if (g_strcmp0 (display->priv->seat_id, "seat0") != 0) {
+-                        goto out;
++                        res = gdm_settings_direct_get_string (GDM_KEY_AUTO_LOGIN_USER,
++                                                              &username);
++                       /* A script may be used to generate the automatic/timed login
++                        * name based on the display/host by ending the name with the
++                        * pipe symbol '|'. In this case the user can ensure the
++                        * correct user is logged in for the correct seat.
++                        */
++                        if (username != NULL && username[0] != '\0') {
++                                username_len = strlen (username);
++                                if (username[username_len - 1] != '|') {
++                                        g_warning ("GdmSlave: Get timed login details for display %s: seat '%s', username['%s'] is not a script.",
++                                        display->priv->x11_display_name,
++                                        display->priv->seat_id,
++                                        username ? username : "(null)");
++                                        g_free (username);
++                                        username = NULL;
++                                        goto out;
++                                }
++                                g_free (username);
++                                username = NULL;
++                        }
+                 }
+         }
+ #endif
+diff -up gdm-3.8.4.orig/daemon/gdm-simple-slave.c gdm-3.8.4/daemon/gdm-simple-slave.c
+--- gdm-3.8.4.orig/daemon/gdm-simple-slave.c	2013-10-24 13:59:25.675664920 -0200
++++ gdm-3.8.4/daemon/gdm-simple-slave.c	2013-10-24 13:47:03.703650539 -0200
+@@ -105,6 +105,7 @@ struct GdmSimpleSlavePrivate
+         guint              plymouth_is_running : 1;
+ #endif
+         guint              doing_initial_setup : 1;
++        char              *gdm_ran_once_seat_marker_file;
+ };
+ 
+ enum {
+@@ -648,7 +649,8 @@ start_autologin_conversation_if_necessar
+ {
+         gboolean enabled;
+ 
+-        if (g_file_test (GDM_RAN_ONCE_MARKER_FILE, G_FILE_TEST_EXISTS)) {
++        if (g_file_test (slave->priv->gdm_ran_once_seat_marker_file, 
++							G_FILE_TEST_EXISTS)) {
+                 return;
+         }
+ 
+@@ -869,11 +871,11 @@ touch_marker_file (GdmSimpleSlave *slave
+ {
+         int fd;
+ 
+-        fd = g_creat (GDM_RAN_ONCE_MARKER_FILE, 0644);
++        fd = g_creat (slave->priv->gdm_ran_once_seat_marker_file, 0644);
+ 
+         if (fd < 0 && errno != EEXIST) {
+                 g_warning ("could not create %s to mark run, this may cause auto login "
+-                           "to repeat: %m", GDM_RAN_ONCE_MARKER_FILE);
++                           "to repeat: %m", slave->priv->gdm_ran_once_seat_marker_file);
+                 return;
+         }
+ 
+@@ -925,6 +927,12 @@ create_new_session (GdmSimpleSlave  *sla
+                                                 display_is_local,
+                                                 NULL);
+ 
++       /* Allocate a filepath for a per seat ran once file marker. */
++        slave->priv->gdm_ran_once_seat_marker_file = g_strdup_printf ("%s_%s",
++                                               GDM_RAN_ONCE_MARKER_FILE,
++                                               display_seat_id);
++
++
+         g_free (display_name);
+         g_free (display_device);
+         g_free (display_hostname);
+@@ -1300,7 +1308,10 @@ wants_autologin (GdmSimpleSlave *slave)
+         int delay = 0;
+         /* FIXME: handle wait-for-go */
+ 
+-        if (g_file_test (GDM_RAN_ONCE_MARKER_FILE, G_FILE_TEST_EXISTS)) {
++        if (g_file_test (slave->priv->gdm_ran_once_seat_marker_file, 
++							G_FILE_TEST_EXISTS)) {
++                g_warning ("GdmRanOnceMarkerFile exists '%s'", 
++				slave->priv->gdm_ran_once_seat_marker_file);
+                 return FALSE;
+         }
+ 
+@@ -1705,6 +1716,12 @@ gdm_simple_slave_stop (GdmSlave *slave)
+                 g_clear_object (&self->priv->server);
+         }
+ 
++        if (self->priv->gdm_ran_once_seat_marker_file != NULL) {
++                unlink (self->priv->gdm_ran_once_seat_marker_file);
++                g_free (self->priv->gdm_ran_once_seat_marker_file);
++		self->priv->gdm_ran_once_seat_marker_file = NULL;
++        }
++
+         g_clear_object (&self->priv->accountsservice_proxy);
+ 
+         return TRUE;
+
+diff -up gdm-3.8.4.orig/daemon/gdm-slave.c gdm-3.8.4/daemon/gdm-slave.c
+--- gdm-3.8.4.orig/daemon/gdm-slave.c	2013-10-24 13:59:25.671664920 -0200
++++ gdm-3.8.4/daemon/gdm-slave.c	2013-10-24 13:32:46.503633924 -0200
+@@ -257,6 +257,16 @@ get_script_environment (GdmSlave   *slav
+         /* Runs as root */
+         g_hash_table_insert (hash, g_strdup ("XAUTHORITY"), g_strdup (slave->priv->display_x11_authority_file));
+         g_hash_table_insert (hash, g_strdup ("DISPLAY"), g_strdup (slave->priv->display_name));
++        if (slave->priv->display_seat_id != NULL) {
++                char *seat_id;
++
++                seat_id = slave->priv->display_seat_id;
++                if (g_str_has_prefix (seat_id, "/org/freedesktop/ConsoleKit/")) {
++                        seat_id += strlen ("/org/freedesktop/ConsoleKit/");
++                }
++
++                g_hash_table_insert (hash, g_strdup ("GDM_SEAT_ID"), g_strdup (seat_id));
++        }
+         g_hash_table_insert (hash, g_strdup ("PATH"), g_strdup (GDM_SESSION_DEFAULT_PATH));
+         g_hash_table_insert (hash, g_strdup ("RUNNING_UNDER_GDM"), g_strdup ("true"));
+ 
